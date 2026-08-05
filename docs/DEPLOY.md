@@ -36,7 +36,8 @@ the DNS provider. That export is the rollback.
       build. **The build will fail if any remain.**
 - [ ] Destination inbox confirmed (`docs/OPEN-QUESTIONS.md` B1).
 - [ ] SMTP credential in hand (B3).
-- [ ] Canonical host decided — apex or `www` (C2). This cannot be deferred.
+- [x] Canonical host decided: **apex, `https://marenbeauty.com`**; `www` 301s
+      to it (C2).
 - [ ] Current zone file exported and saved.
 - [ ] All TTLs on records being changed lowered to **300s at least 24–48 hours
       before** cutover, so a rollback propagates in minutes rather than hours.
@@ -56,18 +57,27 @@ the DNS provider. That export is the rollback.
 Set for Production and Preview. Values come from `.env.example`; never commit
 real values.
 
-| Variable | Example | Notes |
-| --- | --- | --- |
-| `SITE_URL` | `https://marenbeauty.com` | Canonical origin — must match the §1 decision |
-| `SMTP_HOST` | `smtp.gmail.com` | Google Workspace |
-| `SMTP_PORT` | `587` | STARTTLS |
-| `SMTP_USER` | `…@marenbeauty.com` | The authenticated Workspace account |
-| `SMTP_PASS` | — | App password. **Secret.** |
-| `MAIL_FROM` | `…@marenbeauty.com` | Must be `SMTP_USER` or a verified send-as alias |
-| `MAIL_TO` | — | Destination inbox (B1) |
-| `ALTCHA_HMAC_KEY` | — | Random 32+ bytes. **Secret.** |
-| `UMAMI_SCRIPT_URL` | — | Optional; omit to ship without analytics |
-| `UMAMI_WEBSITE_ID` | — | Optional |
+| Variable           | Example                   | Notes                                          |
+| ------------------ | ------------------------- | ---------------------------------------------- |
+| `SITE_URL`         | `https://marenbeauty.com` | Canonical origin — apex, decided (C2)          |
+| `SMTP_HOST`        | `smtp.gmail.com`          | Google Workspace                               |
+| `SMTP_PORT`        | `587`                     | STARTTLS                                       |
+| `SMTP_USER`        | `info@marenbeauty.com`    | The authenticated Workspace account (B1)       |
+| `SMTP_PASS`        | —                         | App password on that account. **Secret.** (B3) |
+| `MAIL_FROM`        | `info@marenbeauty.com`    | Same as `SMTP_USER` — **no send-as alias**     |
+| `MAIL_TO`          | `info@marenbeauty.com`    | Same mailbox. One identity.                    |
+| `ALTCHA_HMAC_KEY`  | —                         | Random 32+ bytes. **Secret.**                  |
+| `UMAMI_SCRIPT_URL` | _(unset)_                 | **Unused at launch** (C5). Not required.       |
+| `UMAMI_WEBSITE_ID` | _(unset)_                 | **Unused at launch** (C5). Not required.       |
+
+`SMTP_USER`, `MAIL_FROM` and `MAIL_TO` are deliberately the same address. A
+single identity means the authenticated account and the `From` header always
+align, so SPF and DKIM pass with no alias configuration and nothing to keep in
+sync.
+
+**No analytics backend is deployed at launch** (C5). The `UMAMI_*` variables are
+listed so the shape is known; `env.ts` does not require them and a missing value
+is not a startup failure.
 
 `src/config/env.ts` parses these with Zod at startup and **throws on a missing
 required value** — a misconfigured deployment fails loudly rather than serving a
@@ -95,14 +105,14 @@ Work in this order. Web records first, email records untouched.
 
 Read the exact targets from the Vercel dashboard.
 
-| Host | Type | Value | Note |
-| --- | --- | --- | --- |
-| `@` | `A` | *(from Vercel)* | Apex cannot be a CNAME |
-| `www` | `CNAME` | *(from Vercel)* | |
+| Host  | Type    | Value           | Note                   |
+| ----- | ------- | --------------- | ---------------------- |
+| `@`   | `A`     | _(from Vercel)_ | Apex cannot be a CNAME |
+| `www` | `CNAME` | _(from Vercel)_ |                        |
 
 - [ ] Add the domain in Vercel **first** so it can begin certificate issuance.
-- [ ] Set the redirect direction in Vercel to match the canonical decision:
-      one host serves, the other 301s to it.
+- [ ] Set the redirect in Vercel so the **apex serves** and **`www` 301s to it**
+      (C2) — not the reverse.
 - [ ] `next.config.ts` enforces the same canonical. The two must agree — a
       disagreement is a redirect loop.
 
@@ -140,9 +150,9 @@ needed** for the website.
 There must be **one** `TXT` record on the apex beginning `v=spf1`. Two SPF
 records is a permanent failure, not a warning: receivers treat it as `permerror`.
 
-| Host | Type | Value |
-| --- | --- | --- |
-| `@` | `TXT` | `v=spf1 include:_spf.google.com ~all` |
+| Host | Type  | Value                                 |
+| ---- | ----- | ------------------------------------- |
+| `@`  | `TXT` | `v=spf1 include:_spf.google.com ~all` |
 
 - [ ] Confirm only one `v=spf1` record exists.
 - [ ] If one already exists with `include:_spf.google.com`, **leave it alone.**
@@ -164,8 +174,8 @@ the website.
 
 ### 4.3 DMARC — start permissive, then tighten
 
-| Host | Type | Value |
-| --- | --- | --- |
+| Host     | Type  | Value                                                      |
+| -------- | ----- | ---------------------------------------------------------- |
 | `_dmarc` | `TXT` | `v=DMARC1; p=none; rua=mailto:dmarc@marenbeauty.com; fo=1` |
 
 - [ ] Publish with `p=none` and collect reports for **at least two weeks**.
@@ -250,12 +260,12 @@ variables. Nothing in the application changes.
 
 ## 8. What is deliberately not automated
 
-| Not automated | Why |
-| --- | --- |
-| DNS changes | Owner-controlled. An error takes down business email. |
-| Vercel project settings | Owner-controlled. |
-| Google Workspace admin | Owner-controlled, and holds live credentials. |
-| DMARC tightening | Requires reading two weeks of real reports and judging them. |
+| Not automated           | Why                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------- |
+| DNS changes             | Owner-controlled. An error takes down business email.                                 |
+| Vercel project settings | Owner-controlled.                                                                     |
+| Google Workspace admin  | Owner-controlled, and holds live credentials.                                         |
+| DMARC tightening        | Requires reading two weeks of real reports and judging them.                          |
 | Google Business Profile | Needs a verifiable address (`docs/OPEN-QUESTIONS.md` C1) and the business to be open. |
 
 An agent may prepare, draft and verify any of these. It does not execute them.

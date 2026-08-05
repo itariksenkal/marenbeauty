@@ -12,17 +12,17 @@ quoted example of site copy is Turkish, because that is what ships.
 brow/lash services delivered one client at a time in a quiet, warm, private
 space.
 
-| | |
-| --- | --- |
-| Brand name | Maren Beauty |
-| Category | Güzellik merkezi — **not** a medical clinic, not a polyclinic |
-| Location shown publicly | Konya, Selçuklu |
-| Street address | Deliberately not published — see `docs/OPEN-QUESTIONS.md` |
-| Domain | marenbeauty.com |
-| Status | **Pre-launch.** Not yet open, no operating history |
-| Legal entity | Undecided — `{{LEGAL_ENTITY}}` until confirmed |
-| Team | One-to-one service; team not yet named publicly |
-| Price positioning | Premium. **No prices published anywhere**, not even ranges |
+|                         |                                                               |
+| ----------------------- | ------------------------------------------------------------- |
+| Brand name              | Maren Beauty                                                  |
+| Category                | Güzellik merkezi — **not** a medical clinic, not a polyclinic |
+| Location shown publicly | Konya, Selçuklu                                               |
+| Street address          | Deliberately not published — see `docs/OPEN-QUESTIONS.md`     |
+| Domain                  | marenbeauty.com                                               |
+| Status                  | **Pre-launch.** Not yet open, no operating history            |
+| Legal entity            | Undecided — `{{LEGAL_ENTITY}}` until confirmed                |
+| Team                    | One-to-one service; team not yet named publicly               |
+| Price positioning       | Premium. **No prices published anywhere**, not even ranges    |
 
 ### What "boutique" means here, operationally
 
@@ -36,7 +36,7 @@ space.
 
 ## 2. The name
 
-**Maren** relates to the sea (*mare*). This is not decoration — it is the
+**Maren** relates to the sea (_mare_). This is not decoration — it is the
 organising idea for the entire site.
 
 The sea gives us the register the brand needs and the medical register it must
@@ -50,7 +50,7 @@ This reads through into:
   behind the services, settling again at the closing call to action. Full spec
   in `docs/MOTION.md`.
 - **Colour** — warm cream, nude, rose beige and ivory: sand and light, not
-  cold blue. The sea reference is in the *behaviour*, not the palette. A blue
+  cold blue. The sea reference is in the _behaviour_, not the palette. A blue
   beauty site would read clinical, which is precisely wrong.
 - **Copy rhythm** — short sentences. Space between ideas. Nothing shouted.
 
@@ -90,8 +90,8 @@ timeline, not a hard sell.
 
 ### Tertiary — "the researcher"
 
-Someone searching a question, not a business: *lazer epilasyon nedir*,
-*kirpik lifting ne kadar kalıcı*, *karma cilt nasıl anlaşılır*. They may not
+Someone searching a question, not a business: _lazer epilasyon nedir_,
+_kirpik lifting ne kadar kalıcı_, _karma cilt nasıl anlaşılır_. They may not
 convert this visit. The blog exists for them: answer the question completely,
 without a sales pitch, and be the place they remember when they are ready.
 
@@ -111,13 +111,13 @@ them.
 
 ### Positioning axes
 
-| Dimension | Maren sits at | Not |
-| --- | --- | --- |
-| Pace | Unhurried, appointment-led | Walk-in, high-volume |
-| Register | Editorial, restrained | Promotional, discount-led |
-| Authority | Craft and consistency | Clinical / medical authority |
-| Proof | Transparency about process | Results photography, statistics |
-| Scale | Boutique, personal | Chain, franchise |
+| Dimension | Maren sits at              | Not                             |
+| --------- | -------------------------- | ------------------------------- |
+| Pace      | Unhurried, appointment-led | Walk-in, high-volume            |
+| Register  | Editorial, restrained      | Promotional, discount-led       |
+| Authority | Craft and consistency      | Clinical / medical authority    |
+| Proof     | Transparency about process | Results photography, statistics |
+| Scale     | Boutique, personal         | Chain, franchise                |
 
 ### Competitive reality in Konya
 
@@ -208,25 +208,25 @@ them would position Maren as something it is not licensed to be. Avoid them.
 
 ### Register by page type
 
-| Page | Register | Length |
-| --- | --- | --- |
-| Home | Editorial, atmospheric, few words | Very short |
-| Service detail | Informative, procedural, reassuring | 500–800 words |
-| Blog post | Helpful, plain, complete | 900–1400 words |
-| Legal | Formal, precise, unstyled | As long as required |
-| Forms & errors | Plain, human, never cute | One line |
+| Page           | Register                            | Length              |
+| -------------- | ----------------------------------- | ------------------- |
+| Home           | Editorial, atmospheric, few words   | Very short          |
+| Service detail | Informative, procedural, reassuring | 500–800 words       |
+| Blog post      | Helpful, plain, complete            | 900–1400 words      |
+| Legal          | Formal, precise, unstyled           | As long as required |
+| Forms & errors | Plain, human, never cute            | One line            |
 
 ### Microcopy examples
 
-| Context | Turkish |
-| --- | --- |
-| Primary CTA | "Randevu için yazın" |
-| Secondary CTA | "Hizmetleri inceleyin" |
-| Pre-launch band | "Yakında Konya Selçuklu'da açılıyoruz." |
-| Form success | "Mesajınız bize ulaştı. En kısa sürede dönüş yapacağız." |
-| Form error | "Mesajınız gönderilemedi. Lütfen tekrar deneyin." |
-| Field error | "Lütfen adınızı yazın." |
-| Empty testimonials | Section is not rendered at all. |
+| Context            | Turkish                                                  |
+| ------------------ | -------------------------------------------------------- |
+| Primary CTA        | "Randevu için yazın"                                     |
+| Secondary CTA      | "Hizmetleri inceleyin"                                   |
+| Pre-launch band    | "Yakında Konya Selçuklu'da açılıyoruz."                  |
+| Form success       | "Mesajınız bize ulaştı. En kısa sürede dönüş yapacağız." |
+| Form error         | "Mesajınız gönderilemedi. Lütfen tekrar deneyin."        |
+| Field error        | "Lütfen adınızı yazın."                                  |
+| Empty testimonials | Section is not rendered at all.                          |
 
 ---
 

@@ -46,19 +46,19 @@ into `tel:` links we did not author — which would otherwise defeat the
 
 ### Title and description formulas
 
-| Route | Title | Description |
-| --- | --- | --- |
-| `/` | `Maren Beauty — Konya Selçuklu Güzellik Merkezi` | Positioning + location + pre-launch status. |
-| `/hizmetler` | `Hizmetler` | The 20 services, grouped, one sentence. |
-| `/hizmetler/[slug]` | `{title}` | `summary` frontmatter verbatim (60–165 chars). |
-| `/hakkimizda` | `Hakkımızda` | The approach, in a sentence. |
-| `/blog` | `Blog` | What the blog covers. |
-| `/blog/[slug]` | `seo.title ?? title` | `seo.description ?? summary`. |
-| `/blog/kategori/[slug]` | `{category} yazıları` | Category description from config. |
-| `/blog/sayfa/[n]` | `Blog — Sayfa {n}` | Same base description. |
-| `/sss` | `Sık Sorulan Sorular` | — |
-| `/iletisim` | `İletişim` | Location + how to reach us. |
-| Legal | Page name | Short, factual. |
+| Route                   | Title                                            | Description                                    |
+| ----------------------- | ------------------------------------------------ | ---------------------------------------------- |
+| `/`                     | `Maren Beauty — Konya Selçuklu Güzellik Merkezi` | Positioning + location + pre-launch status.    |
+| `/hizmetler`            | `Hizmetler`                                      | The 20 services, grouped, one sentence.        |
+| `/hizmetler/[slug]`     | `{title}`                                        | `summary` frontmatter verbatim (60–165 chars). |
+| `/hakkimizda`           | `Hakkımızda`                                     | The approach, in a sentence.                   |
+| `/blog`                 | `Blog`                                           | What the blog covers.                          |
+| `/blog/[slug]`          | `seo.title ?? title`                             | `seo.description ?? summary`.                  |
+| `/blog/kategori/[slug]` | `{category} yazıları`                            | Category description from config.              |
+| `/blog/sayfa/[n]`       | `Blog — Sayfa {n}`                               | Same base description.                         |
+| `/sss`                  | `Sık Sorulan Sorular`                            | —                                              |
+| `/iletisim`             | `İletişim`                                       | Location + how to reach us.                    |
+| Legal                   | Page name                                        | Short, factual.                                |
 
 Rules:
 
@@ -75,16 +75,18 @@ Rules:
 - **`/blog/sayfa/1` does not exist**; `/blog` is page 1. Pages 2+ are
   self-canonical and indexable.
 - Category archives are self-canonical.
-- Trailing slashes off, `www` → apex (or the reverse — one decision, made at
-  DNS cutover, then enforced in `next.config.ts`; see `docs/OPEN-QUESTIONS.md`).
+- Trailing slashes off. **Canonical host is the apex,
+  `https://marenbeauty.com`** (decided — `docs/OPEN-QUESTIONS.md` C2);
+  `www` 301s to it. Enforced in `next.config.ts` **and** in the Vercel domain
+  settings — the two must agree or it is a redirect loop.
 
 ### Open Graph images
 
-| Scope | Source |
-| --- | --- |
-| Default | `app/opengraph-image.tsx` — wordmark on the cream/nude wash |
-| Service | `app/hizmetler/[slug]/opengraph-image.tsx` — service title |
-| Post | `app/blog/[slug]/opengraph-image.tsx` — post title + category |
+| Scope   | Source                                                        |
+| ------- | ------------------------------------------------------------- |
+| Default | `app/opengraph-image.tsx` — wordmark on the cream/nude wash   |
+| Service | `app/hizmetler/[slug]/opengraph-image.tsx` — service title    |
+| Post    | `app/blog/[slug]/opengraph-image.tsx` — post title + category |
 
 Generated at build with `next/og`, 1200×630, using the design tokens and the
 self-hosted display font. **No photography in OG images** until real
@@ -126,18 +128,18 @@ https://marenbeauty.com/#organization  → Organization
 
 ### 2.2 Per route
 
-| Route | Types in `@graph` |
-| --- | --- |
-| `/` | `BeautySalon`, `WebSite`, `Organization`, `WebPage` |
-| `/hizmetler` | `CollectionPage`, `BreadcrumbList` |
-| `/hizmetler/[slug]` | `Service`, `WebPage`, `BreadcrumbList`, `FAQPage` (when `faq` is non-empty) |
-| `/hakkimizda` | `AboutPage`, `BreadcrumbList` |
-| `/blog` | `Blog`, `CollectionPage`, `BreadcrumbList` |
-| `/blog/[slug]` | `BlogPosting`, `WebPage`, `BreadcrumbList`, `FAQPage` (when present) |
-| `/blog/kategori/[slug]` | `CollectionPage`, `BreadcrumbList` |
-| `/sss` | `FAQPage`, `BreadcrumbList` |
-| `/iletisim` | `ContactPage`, `BreadcrumbList` |
-| Legal pages | `WebPage`, `BreadcrumbList` |
+| Route                   | Types in `@graph`                                                           |
+| ----------------------- | --------------------------------------------------------------------------- |
+| `/`                     | `BeautySalon`, `WebSite`, `Organization`, `WebPage`                         |
+| `/hizmetler`            | `CollectionPage`, `BreadcrumbList`                                          |
+| `/hizmetler/[slug]`     | `Service`, `WebPage`, `BreadcrumbList`, `FAQPage` (when `faq` is non-empty) |
+| `/hakkimizda`           | `AboutPage`, `BreadcrumbList`                                               |
+| `/blog`                 | `Blog`, `CollectionPage`, `BreadcrumbList`                                  |
+| `/blog/[slug]`          | `BlogPosting`, `WebPage`, `BreadcrumbList`, `FAQPage` (when present)        |
+| `/blog/kategori/[slug]` | `CollectionPage`, `BreadcrumbList`                                          |
+| `/sss`                  | `FAQPage`, `BreadcrumbList`                                                 |
+| `/iletisim`             | `ContactPage`, `BreadcrumbList`                                             |
+| Legal pages             | `WebPage`, `BreadcrumbList`                                                 |
 
 `BeautySalon` is a subtype of `HealthAndBeautyBusiness` → `LocalBusiness`. It is
 the correct type for a güzellik merkezi and carries no medical implication.
@@ -154,11 +156,11 @@ the correct type for a güzellik merkezi and carries no medical implication.
     "@type": "PostalAddress",
     "addressLocality": "Selçuklu",
     "addressRegion": "Konya",
-    "addressCountry": "TR"
+    "addressCountry": "TR",
     // streetAddress and postalCode intentionally OMITTED — not guessed
   },
   "areaServed": { "@type": "City", "name": "Konya" },
-  "hasOfferCatalog": { /* the 20 services, names + URLs only, no prices */ }
+  "hasOfferCatalog": {/* the 20 services, names + URLs only, no prices */},
   // telephone, sameAs, openingHoursSpecification, aggregateRating,
   // review, priceRange, geo, hasMap — all omitted while unknown
 }
@@ -183,7 +185,7 @@ has values — the schema builder maps `null` to omission.
   "provider": { "@id": "https://marenbeauty.com/#business" },
   "areaServed": { "@type": "City", "name": "Konya" },
   "url": "https://marenbeauty.com/hizmetler/hydrafacial",
-  "description": "…summary…"
+  "description": "…summary…",
 }
 ```
 
@@ -192,12 +194,13 @@ has values — the schema builder maps `null` to omission.
 ```jsonc
 {
   "@type": "BlogPosting",
-  "headline": "…",                                  // ≤ 110 chars
-  "author":    { "@id": "https://marenbeauty.com/#organization" },
+  "headline": "…", // ≤ 110 chars
+  "author": { "@id": "https://marenbeauty.com/#organization" },
   "publisher": { "@id": "https://marenbeauty.com/#organization" },
-  "datePublished": "…", "dateModified": "…",
+  "datePublished": "…",
+  "dateModified": "…",
   "inLanguage": "tr-TR",
-  "isPartOf": { "@id": "https://marenbeauty.com/#website" }
+  "isPartOf": { "@id": "https://marenbeauty.com/#website" },
 }
 ```
 
@@ -241,15 +244,15 @@ until the business does.
 
 What is achievable without a physical presence:
 
-| Action | Detail |
-| --- | --- |
-| Locality in metadata | "Konya", "Selçuklu" in the home title, description and body copy — naturally, not stuffed. |
-| `BeautySalon` + `areaServed` | Correct entity type and service area, no invented address. |
-| Service pages | 20 well-written pages are the main organic asset before local signals exist. |
-| Blog clusters | Informational queries where local ranking factors matter less. |
-| NAP decision | Agree the canonical Name / Address / Phone string **now** so every later listing matches exactly. Recorded in `docs/OPEN-QUESTIONS.md`. |
-| Technical hygiene | Static, fast, accessible, crawlable, correct canonicals. |
-| Search Console | Verify the domain via DNS TXT at cutover, submit the sitemap. |
+| Action                       | Detail                                                                                                                                  |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Locality in metadata         | "Konya", "Selçuklu" in the home title, description and body copy — naturally, not stuffed.                                              |
+| `BeautySalon` + `areaServed` | Correct entity type and service area, no invented address.                                                                              |
+| Service pages                | 20 well-written pages are the main organic asset before local signals exist.                                                            |
+| Blog clusters                | Informational queries where local ranking factors matter less.                                                                          |
+| NAP decision                 | Agree the canonical Name / Address / Phone string **now** so every later listing matches exactly. Recorded in `docs/OPEN-QUESTIONS.md`. |
+| Technical hygiene            | Static, fast, accessible, crawlable, correct canonicals.                                                                                |
+| Search Console               | Verify the domain via DNS TXT at cutover, submit the sitemap.                                                                           |
 
 **What we do not do pre-launch:** claim to be open, invent hours, create a GBP
 for an address that is not operating, buy directory listings, or publish "Konya'nın
@@ -257,24 +260,24 @@ en iyi…" claims.
 
 ### Phase 2 — at opening
 
-| Action | Detail |
-| --- | --- |
-| Google Business Profile | Create and verify. Primary category **"Güzellik salonu"**; secondary categories only for services actually offered. |
-| Address decision | The display address is "Konya, Selçuklu" by choice. GBP requires a verifiable address — the owner decides between a public street address or a service-area listing with the address hidden. **Open question — see `docs/OPEN-QUESTIONS.md`.** |
-| Hours | Real hours → flip `isPreLaunch: false` → `openingHoursSpecification` appears automatically. |
-| Photos | Real venue photography → GBP and the image manifest updated together. |
-| NAP consistency | Identical string everywhere: GBP, site footer, schema, any directory. |
-| Apple Business Connect | Secondary but cheap. Same NAP. |
+| Action                  | Detail                                                                                                                                                                                                                                         |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Google Business Profile | Create and verify. Primary category **"Güzellik salonu"**; secondary categories only for services actually offered.                                                                                                                            |
+| Address decision        | The display address is "Konya, Selçuklu" by choice. GBP requires a verifiable address — the owner decides between a public street address or a service-area listing with the address hidden. **Open question — see `docs/OPEN-QUESTIONS.md`.** |
+| Hours                   | Real hours → flip `isPreLaunch: false` → `openingHoursSpecification` appears automatically.                                                                                                                                                    |
+| Photos                  | Real venue photography → GBP and the image manifest updated together.                                                                                                                                                                          |
+| NAP consistency         | Identical string everywhere: GBP, site footer, schema, any directory.                                                                                                                                                                          |
+| Apple Business Connect  | Secondary but cheap. Same NAP.                                                                                                                                                                                                                 |
 
 ### Phase 3 — post-launch, ongoing
 
-| Action | Detail |
-| --- | --- |
-| Reviews | Ask real clients, in person, after a real visit. **Never incentivised, never written for them, never gated.** Only then does `aggregateRating` become truthful. |
-| GBP posts | Occasional, factual updates. |
-| Q&A | Seed with genuine questions the team actually receives. |
-| Local content | Only if it is genuinely useful — see below. |
-| Monitoring | Search Console queries, GBP insights, Umami. Quarterly review. |
+| Action        | Detail                                                                                                                                                          |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reviews       | Ask real clients, in person, after a real visit. **Never incentivised, never written for them, never gated.** Only then does `aggregateRating` become truthful. |
+| GBP posts     | Occasional, factual updates.                                                                                                                                    |
+| Q&A           | Seed with genuine questions the team actually receives.                                                                                                         |
+| Local content | Only if it is genuinely useful — see below.                                                                                                                     |
+| Monitoring    | Search Console queries, GBP insights, Umami. Quarterly review.                                                                                                  |
 
 ### Considered and deferred: district landing pages
 
@@ -317,13 +320,13 @@ Per milestone that touches routing or content:
 
 Pre-launch there is nothing to measure, and that is fine. From launch:
 
-| Signal | Source | Cadence |
-| --- | --- | --- |
-| Impressions, clicks, position by query | Search Console | Monthly |
-| Indexed vs submitted | Search Console | Monthly |
-| Page views, entry pages, referrers | Umami (cookieless) | Monthly |
-| Contact form submissions | Inbox volume | Monthly |
-| GBP views, direction requests, calls | GBP Insights | Monthly (post-opening) |
+| Signal                                 | Source             | Cadence                |
+| -------------------------------------- | ------------------ | ---------------------- |
+| Impressions, clicks, position by query | Search Console     | Monthly                |
+| Indexed vs submitted                   | Search Console     | Monthly                |
+| Page views, entry pages, referrers     | Umami (cookieless) | Monthly                |
+| Contact form submissions               | Inbox volume       | Monthly                |
+| GBP views, direction requests, calls   | GBP Insights       | Monthly (post-opening) |
 
 Core Web Vitals are monitored, but per the brief **Lighthouse is a target, not
 an acceptance criterion**. Correctness and accessibility come first; a

@@ -7,18 +7,16 @@ written here and left unresolved in the code. It is never guessed, never
 approximated, and never filled with a plausible-sounding placeholder that could
 be mistaken for fact.
 
-**Status:** 🔴 blocking a milestone · 🟡 needed before launch · 🟢 informational
+**Status:** 🔴 blocking a milestone · 🟡 needed before launch · 🟢 informational ·
+✅ answered
 
-Last updated: 2026-08-05 (Phase 0).
+Last updated: 2026-08-06 (M0).
 
 ---
 
 ## A. Recorded decisions — the owner's call, not our assumption
 
-These are not questions. They are decisions the owner has made, recorded here so
-the reasoning is not lost and so no one later mistakes them for our inference.
-
-### A1 — Operating permits 🟢
+### A1 — Operating permits ✅ 🟡
 
 **Recorded as instructed by the owner.**
 
@@ -26,331 +24,469 @@ the reasoning is not lost and so no one later mistakes them for our inference.
 > service menu is published on that basis.
 
 **This is the owner's decision, not an assumption made by the build team.**
-Publication of all 20 services — including those listed in A2 — assumes the
-relevant permits are in hand at launch. The site does not verify, and cannot
-verify, permit status.
 
-**Before launch the owner should confirm** that each service in A2 is covered by
-the permits actually obtained. If any is not, its page must be removed **before**
-the site goes live — a published service page for an unpermitted service is a
-live regulatory exposure, and one that the site's own content makes easy to find.
+**Answered 2026-08-06:** assume all six services in A2 are covered. Build and
+publish the full menu.
 
-### A2 — Services with regulatory sensitivity 🟡
+**The pre-launch checklist item stands** and is not closed by this answer: before
+go-live, each service in A2 must be verified against the permits actually
+obtained. If any is not covered, its page is removed **before** the site is
+public. A published service page for an unpermitted service is a live regulatory
+exposure that the site's own content makes easy to find.
 
-Listed so the owner can check them individually against the permits, not to
-re-open A1.
+Service copy stays within appearance language regardless of permit status.
 
-| Service | Why it warrants a specific check |
-| --- | --- |
-| `lazer-epilasyon` | Laser device operation is regulated; device class, operator qualification and premises approval are typically specified. |
-| `dermapen` | Micro-needling. Needle depth is usually the line between beauty and medical scope. |
-| `bb-glow` | Needle-based pigment delivery. Regulatory status is contested in several jurisdictions. |
-| `kalici-makyaj` | Permanent make-up — needle-based pigment; usually its own permit and hygiene certification. |
-| `microblading` | As above. |
-| `kimyasal-peeling` | Acid concentration and depth usually determine whether it is within beauty scope. |
+### A2 — Services with regulatory sensitivity 🟡 (verify pre-launch)
 
-**Question:** does the permit set cover all six, and are there depth /
-concentration / device-class limits that the service page copy should reflect?
+Assumed covered per A1. Listed so the owner can tick them off individually
+against the real permits.
 
-**Meanwhile:** all six have full pages. Copy stays within appearance language
-and describes the session, never a clinical outcome.
+| Service            | Verify | Why                                                                                                                      |
+| ------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `lazer-epilasyon`  | ☐      | Laser device operation is regulated; device class, operator qualification and premises approval are typically specified. |
+| `dermapen`         | ☐      | Micro-needling. Needle depth is usually the line between beauty and medical scope.                                       |
+| `bb-glow`          | ☐      | Needle-based pigment delivery. Regulatory status is contested in several jurisdictions.                                  |
+| `kalici-makyaj`    | ☐      | Permanent make-up — needle-based pigment; usually its own permit and hygiene certification.                              |
+| `microblading`     | ☐      | As above.                                                                                                                |
+| `kimyasal-peeling` | ☐      | Acid concentration and depth usually determine whether it is within beauty scope.                                        |
 
-### A3 — Other recorded decisions 🟢
+**Still open:** whether any permit carries depth / concentration / device-class
+limits that the service copy should reflect. Since copy publishes **no** device
+names, depths or concentrations (§H), this is unlikely to force a rewrite — but
+it should be checked at the same time as the boxes above.
 
-| Decision | Recorded |
-| --- | --- |
-| No prices anywhere, not even ranges | Owner |
-| Testimonials ship empty; none fabricated | Owner |
-| Photography deferred until after opening; free stock at launch | Owner |
-| Turkish only; no i18n scaffolding | Owner |
-| No dark mode | Owner |
-| No booking system | Owner |
-| Display address "Konya, Selçuklu" only | Owner |
-| Every dependency MIT / Apache / ISC / BSD | Owner |
-| Hosting on Vercel but the app stays self-hostable | Owner |
+### A3 — Other recorded decisions ✅ 🟢
+
+| Decision                                                       | Recorded |
+| -------------------------------------------------------------- | -------- |
+| No prices anywhere, not even ranges                            | Owner    |
+| Testimonials ship empty; none fabricated                       | Owner    |
+| Photography deferred until after opening; free stock at launch | Owner    |
+| Turkish only; no i18n scaffolding                              | Owner    |
+| No dark mode                                                   | Owner    |
+| No booking system                                              | Owner    |
+| Display address "Konya, Selçuklu" only                         | Owner    |
+| Every dependency MIT / Apache / ISC / BSD                      | Owner    |
+| Hosting on Vercel but the app stays self-hostable              | Owner    |
+| Copy stays general; no invented operational detail (§H)        | Owner    |
 
 ---
 
-## B. Blocking — a milestone cannot complete
+## B. Blockers
 
-### B1 — Destination inbox for the contact form 🔴 → M11
+### B1 — Destination inbox ✅ → M11
 
-**Need:** the email address that contact form submissions are delivered to, and
-the Google Workspace account that sends them.
+**Answered 2026-08-06.**
 
-**Why it matters:** the form is the only live conversion path pre-launch. Without
-a destination, submissions go nowhere.
+- Destination and sender: **`info@marenbeauty.com`**
+- Same address for `SMTP_USER`, `MAIL_FROM` and `MAIL_TO`.
+- **No send-as alias, no second identity.** One mailbox, one identity.
 
-**Also needed:** whether the `From` address is the authenticated Workspace
-account or a verified send-as alias (`iletisim@marenbeauty.com`). Workspace SMTP
-rejects a `From` that is neither.
+This removes the Workspace `From`-alignment risk entirely: the authenticated
+account and the `From` header are the same address, so SPF and DKIM align with
+no extra configuration.
 
-**Meanwhile:** the address comes from `env.ts`. M11 is verified against a test
-mailbox, and the blocker is reported — never worked around with a hardcoded
-address.
+Recorded in `.env.example`. The password itself is B3 and is never committed.
 
 ### B2 — Legal entity name 🔴 → M12
+
+**Still unresolved. Confirmed 2026-08-06 that it stays unresolved, and that the
+build gate must not be softened.**
 
 **Need:** the registered ünvan (and tax office / registration number, if the KVKK
 text should carry them).
 
 **Why it matters:** KVKK aydınlatma metni, çerez politikası and kullanım
-koşulları must name the data controller. A wrong or invented name makes the
-notice legally worthless.
+koşulları must name the data controller. An invented name makes the notice
+legally worthless.
 
 **Meanwhile:** the literal token `{{LEGAL_ENTITY}}` appears in all three pages,
 and `npm run guard` **fails the production build** if any `{{…}}` reaches
-output. The site cannot ship with this unresolved. That is deliberate.
+output. The site cannot ship with this unresolved. That is deliberate and is
+not to be relaxed for a deploy, a demo, or a preview.
 
-### B3 — Google Workspace SMTP credentials 🔴 → M11
+### B3 — SMTP authentication ✅ → M11
 
-**Need:** which authentication method, and the credential.
+**Answered 2026-08-06:** **app password** on the `info@marenbeauty.com`
+Workspace account. Requires 2FA on that account.
 
-| Option | Trade-off |
-| --- | --- |
-| App password (2FA required on the account) | Simplest. One env var. Tied to a personal account. |
-| OAuth2 service account with domain-wide delegation | More robust, survives password changes, more setup. |
-
-**Recommendation:** app password for launch, revisit if the sending account
-changes hands.
-
-**Also confirm:** Workspace SMTP daily send limits are per-account. Contact form
-volume will be far below any limit, but the sending account should not also be
-used for bulk mail.
+- Not used for bulk mail. Contact-form volume only.
+- Stored as `SMTP_PASS`, environment only, never committed.
+- Revisit if the mailbox changes hands (OAuth2 with domain-wide delegation is
+  the fallback).
 
 ---
 
-## C. Needed before launch
+## C. Pre-launch items
 
-### C1 — Street address and Google Business Profile 🟡
+### C1 — Street address and Google Business Profile ✅ 🟢 → post-launch
 
-**Decided:** the site displays "Konya, Selçuklu" and omits `streetAddress` from
-`LocalBusiness` schema rather than guessing.
+**Answered 2026-08-06:** the premises are not finalised. **District-only stands.**
+GBP setup with the real address happens after opening.
 
-**Open:** GBP requires a verifiable address. The owner chooses between:
+- `LocalBusiness` omits `streetAddress` and `postalCode` entirely.
+- Display address stays "Konya, Selçuklu".
+- **Not a blocker for any build milestone.** Post-launch backlog item 1.
 
-| Option | Effect |
-| --- | --- |
-| Publish the street address | Strongest local ranking. Appears on the map and in schema. |
-| Service-area listing, address hidden | Address verified with Google but not shown publicly. Weaker for "near me", still eligible for local results. |
+### C2 — Canonical host ✅ → DNS cutover
 
-**Question:** is district-only a deliberate privacy choice, or simply what was
-available at Phase 0?
+**Answered 2026-08-06:** **apex — `https://marenbeauty.com`.** `www` 301s to it.
 
-**Blocks:** post-launch backlog item 1. Does not block any build milestone.
+Enforced in two places, which must agree: the Vercel domain redirect setting and
+`next.config.ts`. A disagreement is a redirect loop.
 
-### C2 — Canonical host: `www` or apex 🟡 → DNS cutover
+### C3 — Canonical NAP string ✅ 🟡
 
-**Need:** `marenbeauty.com` or `www.marenbeauty.com` as canonical. The other 301s
-to it.
+**Answered 2026-08-06.** Locked as:
 
-**Recommendation:** apex. Shorter, and matches how the brand reads.
+```
+Name:    Maren Beauty
+Address: Konya, Selçuklu
+Phone:   (none)
+```
 
-**Why now:** changing it after indexing means a site-wide redirect and a
-temporary ranking dip. Decide once, before launch.
+**Locked until a phone number and street address exist**, at which point all
+three are updated **everywhere at once** — footer, schema, GBP, every directory
+listing — in a single change. Partial updates create the inconsistency this
+lock exists to prevent.
 
-### C3 — Canonical NAP string 🟡
+### C4 — Session durations ✅ → M8
 
-**Need:** the exact Name / Address / Phone string to be used identically in the
-footer, schema, GBP and every future directory listing.
+**Answered 2026-08-06: publish none.** `durationLabel` stays `null` on all 20
+services and renders **nothing** — no dash, no "TBD", no estimate.
 
-**Why it matters:** local ranking depends on exact-match consistency. Agreeing it
-before the first listing exists is free; fixing it later means editing every
-listing.
+This is now a standing content rule, not a temporary state (§H). The "Süre"
+block has been removed from the service page structure in
+`docs/CONTENT-PLAN.md` §2 rather than left as a null-rendering slot.
 
-**Meanwhile:** name is "Maren Beauty"; address displays as "Konya, Selçuklu";
-phone is absent.
+### C5 — Analytics at launch ✅ → M14
 
-### C4 — Session durations 🟡 → affects M8 content
+**Answered 2026-08-06: skip at launch.**
 
-**Need:** realistic session lengths per service, or explicit confirmation that
-none should be published.
+- **Do not** stand up Umami. **Do not** provision a VPS. **Do not** add a DNS
+  record.
+- Build the analytics module behind a flag that is **off**, so it can be
+  switched on later without a refactor.
 
-**Meanwhile:** `durationLabel` is `null` on all 20 services and renders
-**nothing** — no dash, no "TBD", no estimate. A guessed duration is a promise the
-centre would have to keep.
+Reasoning, as given: there is no traffic to measure before opening, and a second
+server to maintain is real cost for zero return.
 
-### C5 — Umami hosting location 🟡 → M14
+**Consequence for M14:** the milestone still ships — it builds the module, the
+flag and the consent gate (C6). It does not deploy an analytics backend.
 
-**Need:** where self-hosted Umami runs, and its hostname.
+### C6 — Advertising and consent ✅ → M14
 
-**Recommendation:** `analytics.marenbeauty.com` on a small VPS or container.
-Requires one DNS record — the owner's action, per `CLAUDE.md` §17.
+**Answered 2026-08-06: assume yes within 12 months.**
 
-**Alternative:** skip analytics entirely at launch. The site is honest without
-it, and it can be added any time.
+**Ship the consent gate live at launch with all tags off**, so tracking can never
+start before consent exists.
 
-### C6 — Advertising plans 🟡 → M14
+This is the only ordering that works: adding a consent gate after tracking has
+begun means a window during which data was collected without consent, which
+cannot be retroactively fixed.
 
-**Need:** will Google Ads or Meta ads run within 12 months?
+At launch, therefore:
 
-**Effect:** if no, cookieless Umami only and no consent banner is required. If
-yes, the consent gate must be live at launch — retrofitting consent after
-tracking has started is the wrong order.
+- Consent gate: **live**.
+- Umami: **not deployed** (C5).
+- GA4 / Meta Pixel: **flagged off, absent from the production bundle.**
+- Result: no cookies, no third-party requests, and a gate already in place for
+  the day advertising starts.
 
-**Meanwhile:** both code paths exist; both flags are `false`; neither ships in
-the production bundle.
+### C7 — Photography ✅ 🟢 → M8
 
-### C7 — Photography source and budget 🟡 → M8
+**Answered 2026-08-06:** free stock at launch, curated to **one narrow visual
+family**. Manifest as specified.
 
-**Decided:** free stock at launch, one narrow visual family, no stock person
-presented as owner, staff or client.
+Paid stock is revisited **only if the free set looks generic in review** — a
+judgement made when the images are on the page, not in advance.
 
-**Open:** the owner may prefer paid licensed stock (Adobe Stock / Stocksy,
-roughly €100–300 for a launch set) for images competitors are not also using.
-Free stock in this category is heavily reused locally.
+### C8 — KVKK review and VERBİS 🟡 → M12
 
-**Meanwhile:** every image is recorded in the manifest with `licence`,
-`sourceUrl` and `replaceable: true`. Swapping the entire set is a one-file
-change.
+**Answered 2026-08-06:** the owner's lawyer reviews pre-launch, including the
+VERBİS registration question.
 
-### C8 — KVKK legal review 🟡 → M12
+**Build-side obligation:** draft the pages accurately for what the site actually
+does — a form that emails and stores nothing, no cookies at launch — and **mark
+them unreviewed**. The unreviewed marker is removed only when the owner confirms
+the review has happened.
 
-**Need:** a Turkish lawyer or consultant to review the aydınlatma metni, çerez
-politikası and kullanım koşulları.
+Still outstanding: the review itself, and the VERBİS determination.
 
-**Also:** whether the business must register with **VERBİS**. Thresholds depend
-on employee count and annual turnover; a single-operator beauty centre is often
-exempt, but that determination is not ours to make.
+### C9 — Disclaimer wording ✅ → M12
 
-**Meanwhile:** the pages are drafted accurately for what the site actually does
-(a form that emails and stores nothing, cookieless analytics). They are not a
-substitute for legal review.
+**Answered 2026-08-06: reword. No allowlist entry.** The exact sentence:
 
-### C9 — Disclaimer wording vs the content guard 🟡 → M12
+> Bu uygulamalar kozmetik bakım amaçlıdır ve tıbbi bir hizmetin yerine geçmez.
 
-A genuine conflict worth deciding deliberately.
+This contains no blocking term. `tıbbi` is **warning tier** (D1), which is why
+`tıbbi` must stay non-blocking.
 
-A sensible disclaimer might read *"Bu uygulamalar tıbbi tedavi yerine geçmez."* —
-which contains a **banned word** and would fail `npm run guard`.
+**M3 acceptance criterion:** a fixture test asserting this exact sentence passes
+`npm run guard`. If a future change to the lexicon would break it, the test
+fails first.
 
-| Option | Effect |
-| --- | --- |
-| Add an exact-phrase entry to `scripts/guard.allow.json` with a reason | Keeps the disclaimer, keeps the guard strict everywhere else. **Recommended.** |
-| Reword without the banned term | e.g. *"Uygulamalarımız güzellik bakımı kapsamındadır ve tıbbi bir hizmet değildir."* Avoids the exception entirely. |
-| Omit the disclaimer | Not recommended. |
-
-**Question:** does the owner want an explicit disclaimer, and if so, in which
-form?
-
----
-
-## D. Proposals awaiting approval
-
-### D1 — Advisory banned-word tier 🟢
-
-The blocking list is exactly as specified: `tedavi`, `terapi`, `kür`,
-`iyileştir`, `yok ed`, `garanti`, `kesin sonuç`.
-
-**Proposed additions**, as a **warning** tier only — not blocking unless the
-owner asks:
-
-`mucize` · `kalıcı çözüm` · `kanıtlanmış` · `klinik` · `tıbbi` ·
-`doktor kontrolünde` · `%100` · `en iyi` · `1 numaralı` · `risksiz` ·
-`yan etkisiz` · `ağrısız`
-
-Rationale: each either implies medical status, or is an unverifiable
-superlative, or is a claim the centre would have to defend. Several are also
-against the tone in `docs/BRIEF.md` §5.
-
-**Question:** add as warnings, promote to blocking, or leave out?
-
-### D2 — Percentage rule tier 🟢 → M3
-
-`%\d` currently **warns**. Promoting it to blocking would prevent any efficacy
-percentage reaching production, but would also flag legitimate uses (e.g. a
-product concentration in a blog post).
-
-**Recommendation:** keep as a warning; every hit is reviewed by hand before
-merge. Promote to blocking if a percentage ever slips through.
-
-### D3 — Sixth signature interaction or third pinned section 🟢
-
-The art direction fixes **five** signature interactions plus grain, and
-**exactly two** pinned sections. Anything beyond that needs owner approval and is
-recorded here — never added quietly during a build milestone.
-
-No requests outstanding.
+`scripts/guard.allow.json` therefore ships **empty** — the exception mechanism
+exists but is unused, which is the better outcome.
 
 ---
 
-## E. Licence and dependency flags
+## D. Guard configuration ✅
 
-### E1 — `axe-core` is MPL-2.0 🟡 → M15
+### D1 — Lexicon tiers ✅ → M3
 
-Accessibility testing (`@axe-core/playwright`) is **MPL-2.0**, which is outside
-the stated policy of MIT / Apache / ISC / BSD.
+**Answered 2026-08-06.** The proposed advisory tier is split:
 
-**Context:** MPL-2.0 is weak, file-level copyleft. It applies to modifications of
-MPL files themselves, not to a project that merely uses the tool. It is a
-**devDependency** that never ships in the bundle.
+**BLOCKING — build fails** (16 terms)
 
-**Options:**
+`tedavi` · `terapi` · `kür` · `iyileştir` · `yok ed` · `garanti` ·
+`kesin sonuç` · `mucize` · `kalıcı çözüm` · `kanıtlanmış` · `%100` ·
+`risksiz` · `yan etkisiz` · `ağrısız` · `1 numaralı` · `en iyi`
 
-| Option | Effect |
-| --- | --- |
-| Approve as a devDependency exception | Keeps the best-in-class a11y tooling. **Recommended.** |
-| Use Playwright's built-in checks plus manual auditing | No exception needed; materially weaker coverage. |
+**WARNING — reported, does not fail** (3 terms + the percentage rule)
 
-**Question:** approve the exception?
+`klinik` · `tıbbi` · `doktor kontrolünde`
 
-### E2 — Plausible CE is AGPL-3.0 🟡 → M14
+**`tıbbi` must remain non-blocking** — the C9 disclaimer contains it. This is a
+load-bearing constraint, not a preference. It is recorded here, in `CLAUDE.md`
+§9, and asserted by the M3 fixture test.
 
-The brief named "self-hostable Umami **or** Plausible CE". Plausible Community
-Edition is **AGPL-3.0** — outside the licence policy.
+Two known strictnesses, accepted deliberately:
 
-It is a separate service rather than a linked dependency, so the practical risk
-is low, but AGPL's network clause is exactly the kind of thing the policy exists
-to avoid arguing about later.
+- **`en iyi`** will also flag benign uses such as "cildinizi en iyi şekilde
+  desteklemek". Rewriting around it is cheap; the phrase reads as marketing
+  regardless. No allowlist entry.
+- **`%100`** is blocking while other percentages only warn (D2). The guard must
+  therefore check `%100` **before** the generic percentage rule, or the blocking
+  hit is masked by the warning.
 
-**Recommendation: Umami (MIT).** It satisfies the policy with no exception and
-meets every stated requirement — self-hostable, cookieless.
+### D2 — Percentage rule ✅ → M3
 
-**Decision needed only if the owner specifically wants Plausible.**
+**Answered 2026-08-06:** `%\d` stays a **warning**. Every hit is reviewed by
+hand before merge. `%100` specifically is blocking (D1).
+
+### D3 — Motion scope ✅ 🟢
+
+**Answered 2026-08-06: no sixth signature interaction, no third pinned section.**
+
+Five signature interactions plus the grain overlay. Exactly two pinned sections.
+Closed.
+
+---
+
+## E. Licence decisions ✅
+
+### E1 — `axe-core` exception ✅ **APPROVED** → M15
+
+**Approved 2026-08-06 as a devDependency exception.**
+
+Reasoning, recorded as instructed:
+
+> MPL-2.0 is **file-level** copyleft. Its obligations attach to modifications of
+> MPL-licensed files themselves. `@axe-core/playwright` is consumed unmodified,
+> is a devDependency, and is never shipped or distributed in the built site.
+> **No obligation is triggered.**
+
+Recorded in `docs/LICENSES.md` §5. The audit allow-list carries a scoped
+exclusion for this package only — not a widening of the policy.
+
+### E2 — Analytics engine ✅
+
+**Answered 2026-08-06: Umami. Plausible CE rejected** (AGPL-3.0, outside
+policy).
+
+Note this interacts with C5: Umami is the chosen engine but is **not deployed at
+launch**. The decision matters for when analytics is switched on, not for M14's
+shipped output.
 
 ### E3 — Rejected picks, recorded 🟢
 
-| Rejected | Reason | Chosen instead |
-| --- | --- | --- |
-| `next-mdx-remote` | MPL-2.0 | `@mdx-js/mdx` `evaluate()` (MIT) |
-| GSAP / ScrollTrigger | Not an OSI licence | `motion` (MIT) |
+| Rejected                  | Reason                                                                                 | Chosen instead                              |
+| ------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `next-mdx-remote`         | MPL-2.0                                                                                | `@mdx-js/mdx` `evaluate()` (MIT)            |
+| GSAP / ScrollTrigger      | Not an OSI licence                                                                     | `motion` (MIT)                              |
 | Lenis / Locomotive Scroll | MIT, but they rewrite native scrolling — banned by the motion contract, not by licence | `position: sticky` + scroll-linked progress |
-| Resend | Proprietary SaaS | Nodemailer over Workspace SMTP |
-| Cloudflare Turnstile | Proprietary SaaS | Altcha (MIT) |
-| `@vercel/analytics` | Proprietary, and a Vercel-only API | Self-hosted Umami |
+| Resend                    | Proprietary SaaS                                                                       | Nodemailer over Workspace SMTP              |
+| Cloudflare Turnstile      | Proprietary SaaS                                                                       | Altcha (MIT)                                |
+| `@vercel/analytics`       | Proprietary, and a Vercel-only API                                                     | Umami (deferred, C5)                        |
+| Plausible CE              | AGPL-3.0                                                                               | Umami (MIT)                                 |
 
 ---
 
-## F. Verification tasks — assumptions we must not carry
+### E4 — The licence policy is not satisfiable as written 🔴 **NEW — needs a ruling**
 
-Things currently taken on trust that must be confirmed by testing, not by
-reasoning.
+The M0 audit installed 474 packages. **454 conform. 20 do not.** All 20 are
+transitive; none was chosen deliberately. Full detail in `docs/LICENSES.md` §5.
 
-| # | Assumption | How it gets confirmed | When |
-| --- | --- | --- | --- |
-| F1 | Fraunces and Manrope both render `ı İ ş Ş ğ Ğ ü Ü ö Ö ç Ç` correctly in the subset build | Visual check at display and body sizes; swap the family if not | M1 |
-| F2 | Every dependency's actual licence matches the provisional table in `docs/LICENSES.md` | `npm run licenses` after a real install; audit output replaces the table | M0 |
-| F3 | Vercel Node functions can open outbound SMTP on port 587 | A real send from a preview deployment | M11 |
-| F4 | The aurora holds AA contrast for overlaid text at **every** scroll position | Worst-case check per section, not at rest | M7, M15 |
-| F5 | View Transitions degrade cleanly where unsupported | Test in a browser without `document.startViewTransition` | M8 |
-| F6 | The `static` motion tier heuristics do not misclassify mid-range Android devices | Real-device check; absent APIs must resolve to `full` | M15 |
-| F7 | Turkish stem matching in the guard does not flag `kürk`, `kürek`, `şükür`, `küresel` | Fixture tests, both directions | M3 |
+**The finding:** the policy as written — MIT / Apache / ISC / BSD only — cannot
+be met by this stack. Tailwind v4 pulls an MPL-2.0 transformer, Next.js pulls
+CC-BY-4.0 browser data, and `sharp`'s prebuilt binaries carry **LGPL-3.0**
+libvips into production. This is not a technicality; it was worth finding.
+
+**The one real decision — `sharp` / libvips (LGPL-3.0-or-later, ships in the
+container).** `sharp` is Apache-2.0; the copyleft is libvips, used unmodified
+and dynamically linked. LGPL explicitly permits that, so obligations reduce to
+shipping the licence text and not obstructing replacement of the library.
+Avoiding it means giving up `next/image` optimisation. **Recommend accepting**
+as a named, permanent exception.
+
+**Build-time only — `lightningcss` (MPL-2.0).** Tailwind v4's transformer.
+Identical reasoning to the `axe-core` exception already approved in E1.
+**Recommend accepting.**
+
+**Not really exceptions — 15 packages.** `BlueOak-1.0.0` (11 packages —
+permissive, patent grant, no copyleft; isaacs relicensed much of npm's core
+tooling to it), `Python-2.0` (1 — OSI-approved permissive), and three
+attribution-only data packages under `CC-BY-4.0` / `CC-BY-3.0`.
+
+**Recommendation:** amend the policy in `CLAUDE.md` §2 to add
+**`BlueOak-1.0.0`, `Python-2.0`, `CC-BY-4.0`, `CC-BY-3.0`**. That clears 15 of
+19 and leaves a list that is meaningful rather than aspirational. Keep `sharp`
+and `lightningcss` as named exceptions so they stay visible.
+
+**Meanwhile:** all 19 sit at `status: "awaiting-approval"` in
+`licenses.exceptions.json`, each with a written reason, and are **printed on
+every `npm run licenses` run**. The gate exits 0 — nothing is hidden, nothing
+was silently widened.
+
+**Question:** amend the policy for Groups C and D, and accept A and B as named
+exceptions?
 
 ---
 
-## G. Answered — kept for the record
+## F. Verification tasks
 
-| Question | Answer | Date |
-| --- | --- | --- |
-| Content source | MDX + Zod frontmatter; Git-backed admin UI later | 2026-08-05 |
-| Contact backend | Route Handler + Nodemailer + Altcha; nothing persisted | 2026-08-05 |
-| Deploy target | Vercel, but the app stays self-hostable | 2026-08-05 |
-| Email | Google Workspace SMTP, not Resend | 2026-08-05 |
-| Spam protection | Altcha, not Turnstile | 2026-08-05 |
-| Analytics | Cookieless Umami; GA4/Pixel flagged off | 2026-08-05 |
-| Dark mode | No. `color-scheme: light`, semantic tokens throughout | 2026-08-05 |
-| English version | No. Turkish only, no i18n scaffolding | 2026-08-05 |
-| Prices | None, anywhere, not even ranges | 2026-08-05 |
-| Package manager | npm; Node 24 pinned | 2026-08-05 |
-| Author byline | `PENDING`; no fabricated name | 2026-08-05 |
-| Blog volume | System scales to 50+; 12 written now | 2026-08-05 |
+Assumptions that must be confirmed by testing, not by reasoning.
+
+| #   | Assumption                                                                          | How it gets confirmed                                          | When    | Status                                                  |
+| --- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------- | ------------------------------------------------------- |
+| F1  | Fraunces and Manrope render `ı İ ş Ş ğ Ğ ü Ü ö Ö ç Ç` correctly in the subset build | Visual check at display and body sizes; swap the family if not | M1      | ☐                                                       |
+| F2  | Every dependency's actual licence matches the table in `docs/LICENSES.md`           | `npm run licenses` after a real install                        | M0      | ✅ **Done** — audit output now in `docs/LICENSES.md` §3 |
+| F3  | Vercel Node functions can open outbound SMTP on port 587                            | A real send from a preview deployment                          | M11     | ☐                                                       |
+| F4  | The aurora holds AA contrast for overlaid text at **every** scroll position         | Worst-case check per section, not at rest                      | M7, M15 | ☐                                                       |
+| F5  | View Transitions degrade cleanly where unsupported                                  | Test in a browser without `document.startViewTransition`       | M8      | ☐                                                       |
+| F6  | The `static` motion tier heuristics do not misclassify mid-range Android devices    | Real-device check; absent APIs must resolve to `full`          | M15     | ☐                                                       |
+| F7  | Turkish stem matching does not flag `kürk`, `kürek`, `şükür`, `küresel`             | Fixture tests, both directions                                 | M3      | ☐                                                       |
+| F8  | The C9 disclaimer sentence passes the guard unmodified                              | Fixture test on the exact sentence                             | M3      | ☐                                                       |
+| F9  | `%100` is caught as blocking and is not masked by the `%\d` warning                 | Fixture test, ordering asserted                                | M3      | ☐                                                       |
+
+---
+
+## G. New questions raised during the build
+
+### G1 — TypeScript major version 🟢 → resolved at M0
+
+**Not a question for the owner; recorded because it deviates from what a reader
+would expect from "latest".**
+
+TypeScript **7.0.2** is the current `latest` tag. It is **not usable yet**:
+`typescript-eslint@8.66.0` declares `typescript: ">=4.8.4 <6.1.0"`. Installing
+TS 7 would either break linting or force `--force`, which hides a real
+incompatibility.
+
+**Resolved:** pinned to **TypeScript 6.0.3** — the newest stable release inside
+the supported range. Revisit when `typescript-eslint` widens its peer range.
+
+### G2 — Analytics environment variables 🟢
+
+Given C5, `UMAMI_SCRIPT_URL` and `UMAMI_WEBSITE_ID` are in `.env.example` but
+are **unused at launch** and documented as such. They are not required by
+`env.ts`; a missing value is not a startup failure.
+
+---
+
+### G3 — ESLint major version 🟢 → resolved at M0
+
+Same shape as G1, recorded for the same reason.
+
+ESLint **10.8.0** is current. It is **not usable yet**: `eslint-config-next@16.3.0`
+pulls `eslint-plugin-import`, `eslint-plugin-jsx-a11y` and `eslint-plugin-react`,
+all of which cap at `eslint@^9`. Installing ESLint 10 succeeded only with npm
+overriding three peer dependencies — which does not fix the incompatibility, it
+just stops npm mentioning it.
+
+**Resolved:** pinned to **ESLint 9.39.5**. Peer resolution is now clean — zero
+`ERESOLVE` warnings. Revisit when `eslint-config-next` updates its plugins.
+
+### G4 — `licenses` is a wrapper, not the raw CLI 🟢 → M0 deviation
+
+`docs/LICENSES.md` originally specified
+`license-checker-rseidelsohn --onlyAllow "…"`. That proved inadequate in
+practice: it exits on the **first** violation (so the 20 findings in E4 would
+have surfaced one run at a time) and its exclusion list is a semicolon string
+with nowhere to record _why_.
+
+**Resolved:** `npm run licenses` runs `scripts/licenses.mjs`, which wraps the
+same tool's `--json` output and enforces `licenses.exceptions.json`. It reports
+every violation at once, requires a written reason per exception, fails if an
+excepted package **changes licence**, flags stale exceptions, and prints
+everything still awaiting approval on each run.
+
+A small deviation from the M0 file list, taken because the specified approach
+would have hidden the E4 finding rather than surfaced it.
+
+---
+
+## H. Content posture — standing rule
+
+**Recorded 2026-08-06. This is a working rule, not a question.** Also written
+into `CLAUDE.md` §9 and `docs/CONTENT-PLAN.md`.
+
+> Service and page copy stays **general and non-specific**. The business has not
+> opened and few operational details are confirmed.
+
+**Never invent specifics to fill space:**
+
+| Never publish                                 | Why                                                          |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| Session durations                             | Not confirmed (C4). A published duration is a promise.       |
+| Product or device brand names                 | Not confirmed, and naming a device makes a capability claim. |
+| Staff names, credentials or qualifications    | No team is named publicly yet.                               |
+| Claims about equipment                        | Unverifiable, and edges toward medical positioning.          |
+| Depths, concentrations, wavelengths, settings | Regulatory exposure (A2) and unverifiable.                   |
+| Session counts, intervals, recovery times     | Outcome promises in disguise.                                |
+
+**Where a section would need a fact we do not have, cut the section rather than
+pad it.** A shorter page that is entirely true is better than a longer one
+padded with plausible detail.
+
+The effort goes into **design and motion quality**, not into invented detail.
+
+**Consequences already applied:**
+
+- The "Süre" block is removed from the service page structure
+  (`docs/CONTENT-PLAN.md` §2), not merely left rendering `null`.
+- Service body target reduced from 500–800 to **350–600 words** — the honest
+  length for what is actually known.
+- `suitableFor` and `aftercare` stay general; neither may carry a number.
+
+---
+
+## I. Answered — kept for the record
+
+| Question            | Answer                                                 | Date       |
+| ------------------- | ------------------------------------------------------ | ---------- |
+| Content source      | MDX + Zod frontmatter; Git-backed admin UI later       | 2026-08-05 |
+| Contact backend     | Route Handler + Nodemailer + Altcha; nothing persisted | 2026-08-05 |
+| Deploy target       | Vercel, but the app stays self-hostable                | 2026-08-05 |
+| Email               | Google Workspace SMTP, not Resend                      | 2026-08-05 |
+| Spam protection     | Altcha, not Turnstile                                  | 2026-08-05 |
+| Analytics engine    | Umami; Plausible CE rejected (AGPL)                    | 2026-08-05 |
+| Dark mode           | No. `color-scheme: light`, semantic tokens throughout  | 2026-08-05 |
+| English version     | No. Turkish only, no i18n scaffolding                  | 2026-08-05 |
+| Prices              | None, anywhere, not even ranges                        | 2026-08-05 |
+| Package manager     | npm; Node 24 pinned                                    | 2026-08-05 |
+| Author byline       | `PENDING`; no fabricated name                          | 2026-08-05 |
+| Blog volume         | System scales to 50+; 12 written now                   | 2026-08-05 |
+| Permits             | Assume all six covered; verify pre-launch              | 2026-08-06 |
+| Destination inbox   | `info@marenbeauty.com`, no alias                       | 2026-08-06 |
+| SMTP auth           | App password on `info@`                                | 2026-08-06 |
+| Canonical host      | Apex; `www` 301s to it                                 | 2026-08-06 |
+| Session durations   | Publish none                                           | 2026-08-06 |
+| Analytics at launch | Skip; module behind an off flag                        | 2026-08-06 |
+| Consent gate        | Live at launch, all tags off                           | 2026-08-06 |
+| Disclaimer          | Reword, no allowlist entry                             | 2026-08-06 |
+| Lexicon tiers       | 16 blocking, 3 warning                                 | 2026-08-06 |
+| `axe-core` MPL-2.0  | Approved, devDependency only                           | 2026-08-06 |
+| Motion scope        | Five interactions, two pinned sections. Closed.        | 2026-08-06 |
+| TypeScript version  | 6.0.3 — TS 7 blocked by `typescript-eslint` peer range | 2026-08-06 |

@@ -12,39 +12,62 @@ when every box is ticked and the command exits 0.
 
 ---
 
-## M0 — Repository foundation ☐
+## M0 — Repository foundation ☑ **DONE 2026-08-06**
 
 **Goal.** A Next.js App Router project that builds, typechecks, lints and
 formats cleanly on Node 24, with the licence policy enforced. No design, no
 content, no components.
 
-**Files touched**
+**Files touched** — as planned, plus four additions noted below.
 
 ```
 package.json  package-lock.json  .nvmrc  tsconfig.json
-next.config.ts  eslint.config.mjs  .prettierrc  .editorconfig
+next.config.ts  eslint.config.mjs  .prettierrc  .prettierignore  .editorconfig
 .gitignore  .env.example  Dockerfile  .dockerignore
+postcss.config.mjs                       ← added: Tailwind v4 requires it
+scripts/stub.mjs                         ← added: test / test:a11y placeholders
+scripts/guard.mjs                        ← added: guard placeholder, self-failing
+scripts/licenses.mjs                     ← added: see G4
+licenses.exceptions.json                 ← added: see G4 / E4
 src/app/layout.tsx  src/app/page.tsx  src/styles/globals.css
 ```
 
 **Acceptance criteria**
 
-- [ ] `.nvmrc` contains `24`; `package.json#engines.node` is `>=24 <25`.
-- [ ] `tsconfig.json` has `strict: true` **and** `noUncheckedIndexedAccess: true`.
-- [ ] `next.config.ts` sets `output: 'standalone'`.
-- [ ] ESLint flat config; `prettier-plugin-tailwindcss` installed and ordering
-      classes.
-- [ ] ESLint `no-restricted-syntax` rule rejects numeric duration literals in
-      `src/components/` (`docs/MOTION.md` §7).
-- [ ] `<html lang="tr">` in the root layout.
-- [ ] `.env.example` lists every variable with a comment; no real secret in git.
-- [ ] Every npm script from `CLAUDE.md` §4 exists, even if some are stubs.
-- [ ] `npm run licenses` passes with the allow-list from `CLAUDE.md` §2 and the
-      results are written into `docs/LICENSES.md` §3 — **actual audit output,
-      replacing the provisional table**.
-- [ ] Initial commit on `main`, pushed.
+- [x] `.nvmrc` contains `24`; `package.json#engines.node` is `>=24 <25`.
+- [x] `tsconfig.json` has `strict: true` **and** `noUncheckedIndexedAccess: true`.
+      Next.js rewrote `jsx` to `react-jsx` on first build; both required flags
+      survived.
+- [x] `next.config.ts` sets `output: 'standalone'`. Also carries the apex
+      canonical redirect (C2).
+- [x] ESLint flat config; `prettier-plugin-tailwindcss` installed and ordering
+      classes — **verified against a probe file**:
+      `p-4 flex text-sm items-center bg-white` → `flex items-center bg-white p-4 text-sm`.
+- [x] ESLint `no-restricted-syntax` rule rejects numeric duration literals in
+      `src/components/` (`docs/MOTION.md` §7) — **verified**: a probe with
+      `duration: 0.6` and `delay: 120` produced 2 errors. Probe deleted.
+- [x] `<html lang="tr">` in the root layout.
+- [x] `.env.example` lists every variable with a comment; no real secret in git.
+      `SMTP_USER` / `MAIL_FROM` / `MAIL_TO` all `info@marenbeauty.com` (B1).
+- [x] Every npm script from `CLAUDE.md` §4 exists. `guard`, `test` and
+      `test:a11y` are stubs that **announce themselves loudly**; `guard`
+      additionally **fails the build** the moment `content/**/*.mdx` exists, so
+      it cannot silently pass once it becomes load-bearing — verified both ways.
+- [x] `npm run licenses` passes, and `docs/LICENSES.md` §3.0 now holds **actual
+      audit output**: 474 packages, 454 conforming, 20 exceptions.
+      **⚠ 19 await owner approval — see `docs/OPEN-QUESTIONS.md` E4.** The policy
+      as written is not satisfiable by this stack; nothing was widened silently.
+- [x] Initial commit on `main`, pushed.
 
-**Verify**
+**Deviations, all recorded in `docs/OPEN-QUESTIONS.md`**
+
+- **TypeScript 6.0.3, not 7.0.2** (G1) — `typescript-eslint` peers cap at `<6.1.0`.
+- **ESLint 9.39.5, not 10.8.0** (G3) — `eslint-config-next`'s plugins cap at `^9`.
+- **`licenses` is a wrapper script**, not the raw `--onlyAllow` CLI (G4) — the
+  raw flag exits on the first violation and would have hidden 19 of the 20
+  findings.
+
+**Verify** — `npm run verify` (the full gate) exits **0**.
 
 ```bash
 npm run typecheck && npm run lint && npm run format:check && npm run build && npm run licenses
@@ -144,18 +167,26 @@ docs/OPEN-QUESTIONS.md
 - [ ] Scans `.next/server/app/**/*.{html,rsc}` and
       `.next/static/chunks/**/*.js`. **Does not scan `docs/` or source** — this
       repo discusses the banned words openly.
-- [ ] Rule 1 — banned lexicon with Turkish suffix matching: `tedavi`, `terapi`,
-      `kür`, `iyileştir`, `yok ed`, `garanti`, `kesin sonuç`. Verified to catch
-      `tedavisi`/`tedaviler` and verified **not** to flag `kürk`, `kürek`,
-      `şükür`, `küresel`.
+- [ ] Rule 1 — **blocking lexicon, all 16 terms** (`CLAUDE.md` §9): `tedavi`,
+      `terapi`, `kür`, `iyileştir`, `yok ed`, `garanti`, `kesin sonuç`,
+      `mucize`, `kalıcı çözüm`, `kanıtlanmış`, `%100`, `risksiz`, `yan etkisiz`,
+      `ağrısız`, `1 numaralı`, `en iyi`. Verified to catch `tedavisi`/`tedaviler`
+      and verified **not** to flag `kürk`, `kürek`, `şükür`, `küresel` (F7).
 - [ ] Rule 2 — any `{{…}}` in output fails the build.
 - [ ] Rule 3 — empty-target links fail: `href="tel:"`, `href="mailto:"`,
       `wa.me/` with no number, `href="#"` on a channel button.
 - [ ] Rule 4 — `lorem ipsum` / `dolor sit amet` fail.
-- [ ] Rule 5 — `%\d` warns (error tier pending owner approval, `docs/OPEN-QUESTIONS.md`).
-- [ ] Reports **every** violation with file, line and excerpt — not just the first.
+- [ ] Rule 5 — **warning lexicon**: `klinik`, `tıbbi`, `doktor kontrolünde`.
+      Reported, exit 0.
+- [ ] Rule 6 — `%\d` warns. **Tested after rule 1**, so a `%100` hit reports as
+      blocking and is not masked by the warning (F9).
+- [ ] **F8 — the C9 disclaimer passes unmodified.** Fixture test on the exact
+      sentence: _"Bu uygulamalar kozmetik bakım amaçlıdır ve tıbbi bir hizmetin
+      yerine geçmez."_ This is what keeps `tıbbi` non-blocking honest.
+- [ ] Reports **every** violation with file, line, excerpt and tier — not just
+      the first.
 - [ ] `guard.allow.json` supports exact-phrase exceptions, each with a
-      `reason` field; an entry without a reason is rejected.
+      `reason` field; an entry without a reason is rejected. **Ships empty.**
 - [ ] Fixture test: a deliberately bad page fails the guard; a clean page passes.
 - [ ] CI runs `npm run verify` on every push and pull request.
 
@@ -244,6 +275,7 @@ src/app/layout.tsx  public/grain.png
 ```bash
 npm run verify
 ```
+
 Plus the manual checks in `docs/MOTION.md` §9.
 
 ---
@@ -344,13 +376,18 @@ src/config/images.ts
 
 - [ ] All 20 services from `docs/CONTENT-PLAN.md` §1 exist, correct slugs,
       correct groups.
-- [ ] Every page follows the §2 skeleton; body prose 500–800 words of real
-      Turkish.
+- [ ] Every page follows the §2 skeleton; body prose **350–600 words** of real
+      Turkish. A page that is 350 honest words is finished — padding it is a
+      defect.
 - [ ] **No prices, no ranges, anywhere.** No before/after. No percentages. No
       session-count promises.
-- [ ] `npm run guard` passes on all 20 — no banned lexicon.
-- [ ] `durationLabel` is `null` on every service and renders **nothing** — not
-      an em dash, not "TBD".
+- [ ] **Content posture held** (`CLAUDE.md` §9): no durations, no device or
+      product brand names, no staff credentials, no equipment claims, no depths,
+      concentrations or machine settings. Sections lacking a known fact are cut,
+      not padded.
+- [ ] `npm run guard` passes on all 20 — no blocking lexicon; warnings reviewed.
+- [ ] `durationLabel` is `null` on every service and there is **no "Süre" block
+      in the template** — the field is unrendered, not rendering empty.
 - [ ] `relatedServices` resolves for all 20; reciprocity checked.
 - [ ] Every image goes through the manifest with `licence` and `sourceUrl`
       recorded. One narrow visual family. No stock person presented as owner,
@@ -476,6 +513,7 @@ src/lib/mail/{transport,templates}.ts  src/config/env.ts
 ```bash
 npm run verify
 ```
+
 Plus a real send to a test mailbox, and a no-JS submission.
 
 ---
@@ -550,14 +588,20 @@ generateMetadata across every route
 ```bash
 npm run verify
 ```
+
 Plus Rich Results Test and the Schema.org validator.
 
 ---
 
 ## M14 — Analytics and consent ☐
 
-**Goal.** Cookieless measurement, with advertising trackers implemented but
-provably absent.
+**Goal.** The consent gate **live at launch**, every tag off, and no analytics
+backend deployed.
+
+Per `docs/OPEN-QUESTIONS.md` C5 and C6: advertising is expected within 12
+months, so the gate ships now — tracking must never be able to start before
+consent exists. Umami is the chosen engine but is **not stood up at launch**;
+there is no traffic to measure and a second server is real cost for zero return.
 
 **Files touched**
 
@@ -568,24 +612,28 @@ src/app/cerez-politikasi/page.tsx
 
 **Acceptance criteria**
 
-- [ ] Umami, self-hosted, cookieless, script self-served — **no third-party
-      origin in the network waterfall**.
-- [ ] GA4 and Meta Pixel code paths exist but are `false` by default, and are
-      **tree-shaken out of the production bundle** — verified by searching the
-      built chunks, not by inspecting source.
-- [ ] With flags off: zero cookies set, zero third-party requests, no consent
-      banner shown.
-- [ ] Consent gate implemented and tested behind a flag: opt-in only, Consent
-      Mode v2 default denied, rejecting exactly as easy as accepting.
-- [ ] Cookie policy matches actual behaviour.
-- [ ] Umami host decision recorded (`analytics.marenbeauty.com` needs DNS —
-      `docs/OPEN-QUESTIONS.md`).
+- [ ] **Consent gate is live**: opt-in only, Consent Mode v2 default denied,
+      rejecting exactly as easy as accepting, choice persisted, re-openable.
+- [ ] **No analytics backend is deployed.** No Umami instance, no VPS, no DNS
+      record. The Umami adapter exists behind an off flag.
+- [ ] Umami, GA4 and Meta Pixel adapters all exist and are all `false`, and are
+      **absent from the production bundle** — verified by searching the built
+      chunks, not by inspecting source.
+- [ ] With flags off: **zero cookies set, zero third-party requests** — verified
+      in a clean browser profile.
+- [ ] Switching any adapter on later is a config change, not a refactor.
+      Demonstrated by flipping a flag in a local build.
+- [ ] Cookie policy describes actual behaviour — **it does not describe cookies
+      the site does not set.** At launch that means: none.
+- [ ] `UMAMI_*` env vars documented as unused-at-launch and **not required** by
+      `env.ts`; a missing value is not a startup failure (G2).
 
 **Verify**
 
 ```bash
 npm run verify
 ```
+
 Plus a clean-profile network + storage inspection.
 
 ---
@@ -673,15 +721,15 @@ and the Workspace console are the owner's (`CLAUDE.md` §17).
 
 Ordered by expected value, to be scheduled one at a time after launch.
 
-| # | Item | Notes |
-| --- | --- | --- |
-| 1 | Google Business Profile | Needs the address decision (`docs/OPEN-QUESTIONS.md`). Biggest local lever. |
-| 2 | Flip `isPreLaunch: false` | Real hours → opening hours in schema. One config change. |
-| 3 | Real photography | Swap the manifest, set `replaceable: false`. No component changes. |
-| 4 | Contact channels | Phone / WhatsApp / Instagram appear the moment config has values. |
-| 5 | Blog Batch 2 | Posts 13–50, ~2 per week. |
-| 6 | Git-backed admin UI | So the owner publishes without a developer. Same MDX files. Licence-check the CMS first. |
-| 7 | Real author byline | Widen the schema; `BlogPosting.author` becomes a `Person`. |
-| 8 | Testimonials | Only from real clients, unincentivised. Then `aggregateRating` becomes truthful. |
-| 9 | Booking integration | Only if the owner adopts a booking system. |
-| 10 | District landing pages | Only if Search Console shows real demand, and only with distinct content. |
+| #   | Item                      | Notes                                                                                    |
+| --- | ------------------------- | ---------------------------------------------------------------------------------------- |
+| 1   | Google Business Profile   | Needs the address decision (`docs/OPEN-QUESTIONS.md`). Biggest local lever.              |
+| 2   | Flip `isPreLaunch: false` | Real hours → opening hours in schema. One config change.                                 |
+| 3   | Real photography          | Swap the manifest, set `replaceable: false`. No component changes.                       |
+| 4   | Contact channels          | Phone / WhatsApp / Instagram appear the moment config has values.                        |
+| 5   | Blog Batch 2              | Posts 13–50, ~2 per week.                                                                |
+| 6   | Git-backed admin UI       | So the owner publishes without a developer. Same MDX files. Licence-check the CMS first. |
+| 7   | Real author byline        | Widen the schema; `BlogPosting.author` becomes a `Person`.                               |
+| 8   | Testimonials              | Only from real clients, unincentivised. Then `aggregateRating` becomes truthful.         |
+| 9   | Booking integration       | Only if the owner adopts a booking system.                                               |
+| 10  | District landing pages    | Only if Search Console shows real demand, and only with distinct content.                |

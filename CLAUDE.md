@@ -31,29 +31,39 @@ Konya / Selçuklu, Turkey. Domain: `marenbeauty.com`.
 Pinned choices. Do not add, swap or upgrade a major dependency without an
 entry in `docs/LICENSES.md` and owner sign-off.
 
-| Concern | Choice | Notes |
-| --- | --- | --- |
-| Runtime | Node 24 | Pinned in `.nvmrc` and `package.json#engines` |
-| Package manager | npm | Lockfile committed. No pnpm/yarn. |
-| Framework | Next.js (App Router) | Server Components by default |
-| Language | TypeScript, `strict: true` | Plus `noUncheckedIndexedAccess` |
-| Styling | Tailwind CSS v4 (`@theme`) | CSS-first tokens, no JS config object |
-| Components | shadcn/ui (MIT) on Radix | Vendored into `src/components/ui/` |
-| Icons | Lucide (ISC) | No other icon set |
-| Motion | `motion` (MIT), `motion/react` | See `docs/MOTION.md` |
-| Content | MDX + Zod frontmatter | Loader is ours; see §5 |
-| Mail | Nodemailer over Google Workspace SMTP | Node runtime only, never Edge |
-| Spam | Altcha (MIT, proof-of-work) | No third-party CAPTCHA |
-| Analytics | Self-hosted Umami, cookieless | GA4/Pixel gated off; see §11 |
-| Fonts | Self-hosted OFL via `next/font/local` | Zero runtime font CDN calls |
-| Hosting | Vercel | **App must stay self-hostable** — §3 |
+| Concern         | Choice                                | Notes                                         |
+| --------------- | ------------------------------------- | --------------------------------------------- |
+| Runtime         | Node 24                               | Pinned in `.nvmrc` and `package.json#engines` |
+| Package manager | npm                                   | Lockfile committed. No pnpm/yarn.             |
+| Framework       | Next.js (App Router)                  | Server Components by default                  |
+| Language        | TypeScript, `strict: true`            | Plus `noUncheckedIndexedAccess`               |
+| Styling         | Tailwind CSS v4 (`@theme`)            | CSS-first tokens, no JS config object         |
+| Components      | shadcn/ui (MIT) on Radix              | Vendored into `src/components/ui/`            |
+| Icons           | Lucide (ISC)                          | No other icon set                             |
+| Motion          | `motion` (MIT), `motion/react`        | See `docs/MOTION.md`                          |
+| Content         | MDX + Zod frontmatter                 | Loader is ours; see §5                        |
+| Mail            | Nodemailer over Google Workspace SMTP | Node runtime only, never Edge                 |
+| Spam            | Altcha (MIT, proof-of-work)           | No third-party CAPTCHA                        |
+| Analytics       | Self-hosted Umami, cookieless         | GA4/Pixel gated off; see §11                  |
+| Fonts           | Self-hosted OFL via `next/font/local` | Zero runtime font CDN calls                   |
+| Hosting         | Vercel                                | **App must stay self-hostable** — §3          |
 
 ### Licence policy
 
 Every runtime and dev dependency must be **MIT, MIT-0, Apache-2.0, ISC, BSD-2,
 BSD-3, 0BSD, CC0 or Unlicense**. Fonts may be OFL-1.1. Anything else (GPL, AGPL,
 MPL, SSPL, source-available, "free for non-commercial") requires explicit owner
-approval recorded in `docs/LICENSES.md`. `npm run licenses` enforces this.
+approval recorded in `docs/LICENSES.md`.
+
+`npm run licenses` enforces this via `licenses.exceptions.json`, which holds the
+policy list and every exception. Each exception must carry a licence, scope,
+reason and approval status — the audit fails if one is missing, and fails again
+if an excepted package later **changes** licence.
+
+> **Open ruling needed.** The M0 audit found the policy as written is not
+> satisfiable by this stack: Tailwind v4 pulls MPL-2.0, Next.js pulls CC-BY-4.0
+> data, and `sharp`'s binaries carry LGPL-3.0 into production. 19 exceptions are
+> pending. **`docs/OPEN-QUESTIONS.md` E4.**
 
 ---
 
@@ -152,18 +162,18 @@ Rules:
 
 ## 6. Naming
 
-| Thing | Convention | Example |
-| --- | --- | --- |
-| Component file | `PascalCase.tsx` | `ServicePanel.tsx` |
-| Non-component file | `kebab-case.ts` | `format-date.ts` |
-| Directory | `kebab-case` | `content-layer/` |
-| Type / interface | `PascalCase`, no `I` prefix | `ServiceFrontmatter` |
-| Zod schema | `camelCase` + `Schema` | `serviceSchema` |
-| Hook | `useThing` | `useMotionTier` |
-| Boolean | `is` / `has` / `should` prefix | `isPreLaunch` |
-| CSS token | `--color-*`, `--space-*`, `--ease-*` | `--color-surface-raised` |
-| Route slug | Turkish, **ASCII-folded**, kebab | `cilt-bakimi` |
-| Content file | matches its slug exactly | `content/services/cilt-bakimi.mdx` |
+| Thing              | Convention                           | Example                            |
+| ------------------ | ------------------------------------ | ---------------------------------- |
+| Component file     | `PascalCase.tsx`                     | `ServicePanel.tsx`                 |
+| Non-component file | `kebab-case.ts`                      | `format-date.ts`                   |
+| Directory          | `kebab-case`                         | `content-layer/`                   |
+| Type / interface   | `PascalCase`, no `I` prefix          | `ServiceFrontmatter`               |
+| Zod schema         | `camelCase` + `Schema`               | `serviceSchema`                    |
+| Hook               | `useThing`                           | `useMotionTier`                    |
+| Boolean            | `is` / `has` / `should` prefix       | `isPreLaunch`                      |
+| CSS token          | `--color-*`, `--space-*`, `--ease-*` | `--color-surface-raised`           |
+| Route slug         | Turkish, **ASCII-folded**, kebab     | `cilt-bakimi`                      |
+| Content file       | matches its slug exactly             | `content/services/cilt-bakimi.mdx` |
 
 **Slug rule:** Turkish characters are folded, never dropped —
 `ı→i, İ→i, ş→s, ğ→g, ü→u, ö→o, ç→c`. So `Cilt Bakımı → cilt-bakimi`,
@@ -176,15 +186,15 @@ requires a redirect entry in `next.config.ts`.
 
 Every value that could plausibly change lives in `src/config/`, typed.
 
-| File | Owns |
-| --- | --- |
-| `site.ts` | Brand name, domain, locale, display address, feature flags |
-| `contact.ts` | Phone / WhatsApp / Instagram / email channels |
-| `navigation.ts` | Header, footer and mobile menu trees |
-| `images.ts` | The image manifest — §8 |
-| `legal.ts` | Legal-page placeholders and effective dates |
-| `analytics.ts` | Analytics provider + consent flags |
-| `motion.ts` | Durations, easings, thresholds — §13 |
+| File            | Owns                                                       |
+| --------------- | ---------------------------------------------------------- |
+| `site.ts`       | Brand name, domain, locale, display address, feature flags |
+| `contact.ts`    | Phone / WhatsApp / Instagram / email channels              |
+| `navigation.ts` | Header, footer and mobile menu trees                       |
+| `images.ts`     | The image manifest — §8                                    |
+| `legal.ts`      | Legal-page placeholders and effective dates                |
+| `analytics.ts`  | Analytics provider + consent flags                         |
+| `motion.ts`     | Durations, easings, thresholds — §13                       |
 
 ### Contact channels
 
@@ -220,15 +230,15 @@ single component.
 
   ```ts
   type ManagedImage = {
-    readonly id: string;          // stable key components reference
-    readonly src: string;         // path under /public/images
-    readonly alt: string;         // Turkish, descriptive, never empty for content images
+    readonly id: string; // stable key components reference
+    readonly src: string; // path under /public/images
+    readonly alt: string; // Turkish, descriptive, never empty for content images
     readonly width: number;
     readonly height: number;
     readonly credit: string | null;
-    readonly licence: string;     // e.g. 'Unsplash Licence', 'CC0-1.0'
+    readonly licence: string; // e.g. 'Unsplash Licence', 'CC0-1.0'
     readonly sourceUrl: string | null;
-    readonly replaceable: true;   // false only once real photography lands
+    readonly replaceable: true; // false only once real photography lands
   };
   ```
 
@@ -251,22 +261,51 @@ health claims for medical institutions. This applies to service pages, blog
 posts, meta descriptions, alt text, schema markup, form copy and OG images —
 everywhere, no exceptions.
 
-### Banned (build fails)
+### Blocking lexicon — build fails (16 terms)
 
-| Never write | Write instead |
-| --- | --- |
-| tedavi | bakım, uygulama |
-| terapi | uygulama, seans |
-| kür | bakım programı |
-| iyileştirir | görünümünü iyileştirmeye yardımcı olur |
-| yok eder | görünümünü azaltmaya destek olur |
-| garanti | — (no substitute; remove the claim) |
-| kesin sonuç | — (no substitute; remove the claim) |
+| Never write  | Write instead                            |
+| ------------ | ---------------------------------------- |
+| tedavi       | bakım, uygulama                          |
+| terapi       | uygulama, seans                          |
+| kür          | bakım programı                           |
+| iyileştirir  | görünümünü iyileştirmeye yardımcı olur   |
+| yok eder     | görünümünü azaltmaya destek olur         |
+| garanti      | — (no substitute; remove the claim)      |
+| kesin sonuç  | — (no substitute; remove the claim)      |
+| mucize       | — (remove)                               |
+| kalıcı çözüm | — (remove)                               |
+| kanıtlanmış  | — (remove)                               |
+| %100         | — (remove)                               |
+| risksiz      | — (remove)                               |
+| yan etkisiz  | — (remove)                               |
+| ağrısız      | — (remove; describe the session instead) |
+| 1 numaralı   | — (remove)                               |
+| en iyi       | — (remove; rewrite the sentence)         |
 
 Matching is stem-based with Turkish suffixes (`tedavi` catches `tedavisi`,
 `tedaviler`, `tedavide`). False positives go in
 `scripts/guard.allow.json` with a one-line justification — never by
 weakening the pattern.
+
+Two deliberate strictnesses:
+
+- **`en iyi`** also flags benign phrasing such as "en iyi şekilde desteklemek".
+  Rewrite the sentence; do not add an allowlist entry.
+- **`%100` is blocking** while other percentages only warn, so the guard must
+  test `%100` **before** the generic percentage rule or the blocking hit is
+  masked.
+
+### Warning lexicon — reported, does not fail the build
+
+`klinik` · `tıbbi` · `doktor kontrolünde`
+
+**`tıbbi` must stay non-blocking.** The required disclaimer contains it:
+
+> Bu uygulamalar kozmetik bakım amaçlıdır ve tıbbi bir hizmetin yerine geçmez.
+
+This is load-bearing, not a preference. A fixture test asserts that this exact
+sentence passes the guard (`docs/OPEN-QUESTIONS.md` F8). Anyone promoting
+`tıbbi` to blocking breaks the disclaimer and the test fails first.
 
 ### Also banned
 
@@ -279,6 +318,25 @@ weakening the pattern.
 - **Diagnosis or advice.** No "cildinizde X varsa Y yapın" framing that reads
   as clinical guidance.
 - **Lorem ipsum.** Every string that ships is real Turkish copy.
+
+### Content posture — never invent specifics
+
+Copy stays **general and non-specific**. The business has not opened and few
+operational details are confirmed.
+
+| Never publish                                         | Why                                                       |
+| ----------------------------------------------------- | --------------------------------------------------------- |
+| Session durations                                     | Not confirmed. A published duration is a promise.         |
+| Product or device brand names                         | Not confirmed, and naming a device is a capability claim. |
+| Staff names, credentials, qualifications              | No team is named publicly yet.                            |
+| Claims about equipment                                | Unverifiable, and edges toward medical positioning.       |
+| Depths, concentrations, wavelengths, machine settings | Regulatory exposure and unverifiable.                     |
+| Session counts, intervals, recovery times             | Outcome promises in disguise.                             |
+
+**Where a section would need a fact we do not have, cut the section rather than
+pad it.** A shorter page that is entirely true beats a longer one padded with
+plausible detail. The effort goes into design and motion quality, not into
+invented detail.
 
 ### Required tone
 
@@ -333,16 +391,24 @@ guard.
 
 Rules, all of which fail the build with a file, line and excerpt:
 
-1. **Banned lexicon** (§9) — stem + Turkish suffix matching.
+**Error tier — exit non-zero:**
+
+1. **Blocking lexicon** (§9, 16 terms) — stem + Turkish suffix matching.
 2. **Unresolved tokens** — any `{{…}}` reaching output, e.g. `{{LEGAL_ENTITY}}`.
 3. **Empty channel links** — `href="tel:"`, `href="mailto:"`, `href="tel:#"`,
    bare `wa.me/` with no number.
 4. **Lorem ipsum** — `lorem ipsum`, `dolor sit amet`.
-5. **Percentage claims** — `%\d` outside the allowlist (warning tier; promoted
-   to error once the owner confirms the advisory list in
-   `docs/OPEN-QUESTIONS.md`).
 
-Exit non-zero on any error-tier hit. Print every violation, not just the first.
+**Warning tier — reported, exit 0:**
+
+5. **Warning lexicon** (§9) — `klinik`, `tıbbi`, `doktor kontrolünde`.
+6. **Percentage claims** — `%\d`. Reviewed by hand before merge. Note `%100` is
+   rule 1, and must be tested **before** this rule so the blocking hit is not
+   masked by the warning.
+
+Exit non-zero on any error-tier hit. Print every violation of either tier, not
+just the first. `scripts/guard.allow.json` ships empty — the exception
+mechanism exists but is deliberately unused.
 
 ---
 
@@ -357,7 +423,7 @@ Authoritative spec: `docs/MOTION.md`. The hard limits:
 - **`prefers-reduced-motion: reduce` is honoured everywhere.** Reduced means
   the final state, immediately — not a faster animation.
 - **Scroll is never hijacked.** Native scrolling is preserved; only animation
-  *progress* is bound to scroll position. No scrolljacking, no forced snapping,
+  _progress_ is bound to scroll position. No scrolljacking, no forced snapping,
   no `preventDefault` on wheel or touch.
 - **Exactly five signature interactions and one grain overlay.** Adding a sixth
   requires owner approval. Decoration is not a feature.

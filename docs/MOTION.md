@@ -13,12 +13,12 @@ never in blue (`docs/BRIEF.md` §2).
 
 One continuous water-surface form transforms down the page:
 
-| Position | State of the form |
-| --- | --- |
-| Hero | **Still.** A held surface. Nothing moves but the light. |
-| Brand story | **Spreading.** The surface widens as the wordmark contracts away. |
-| Services | **Dispersed.** Broken into light refraction, sitting behind the panels. |
-| Contact CTA | **Settled.** Gathered again, at rest. |
+| Position    | State of the form                                                       |
+| ----------- | ----------------------------------------------------------------------- |
+| Hero        | **Still.** A held surface. Nothing moves but the light.                 |
+| Brand story | **Spreading.** The surface widens as the wordmark contracts away.       |
+| Services    | **Dispersed.** Broken into light refraction, sitting behind the panels. |
+| Contact CTA | **Settled.** Gathered again, at rest.                                   |
 
 Between those states the page has **no hard section boundaries**. A single
 gradient wash runs the full length of the document and shifts with scroll
@@ -39,7 +39,7 @@ These outrank any visual idea, including everything below.
    `width`, `height`, `top`, `left`, `margin`, `background-position`,
    `box-shadow`, or `border-radius` on a per-frame basis.
 3. **Scroll is never hijacked.** Native scrolling is preserved exactly. Only
-   animation *progress* is bound to scroll position.
+   animation _progress_ is bound to scroll position.
    - No `preventDefault` on `wheel` or `touchmove`.
    - No smooth-scroll library. **Lenis, Locomotive and GSAP ScrollSmoother are
      banned** — the first two rewrite native scrolling; GSAP is also outside the
@@ -47,7 +47,7 @@ These outrank any visual idea, including everything below.
    - No forced `scroll-snap` on long sections.
    - The scrollbar always tells the truth about position.
 4. **`prefers-reduced-motion: reduce` is honoured everywhere**, and means the
-   *final state immediately* — not a shorter animation.
+   _final state immediately_ — not a shorter animation.
 5. **Exactly five signature interactions plus the grain overlay.** A sixth
    requires owner approval. Decoration is not a feature.
 6. **Pinned storytelling in exactly two places**: the hero → brand story
@@ -125,14 +125,14 @@ cover it.
 
 **Specification**
 
-| Property | Value |
-| --- | --- |
-| Panel top radius | `var(--radius-panel)` = `40px 40px 0 0` |
-| Outgoing panel scale | `1 → var(--motion-panel-scale)` = `0.96` |
-| Transform origin | `top center` |
-| Outgoing dim | overlay `opacity 0 → var(--motion-panel-dim)` (`0.55`), colour `--scrim-soft` |
-| Separation | `--shadow-panel` (casts upward) |
-| Easing | `--ease-water` |
+| Property             | Value                                                                         |
+| -------------------- | ----------------------------------------------------------------------------- |
+| Panel top radius     | `var(--radius-panel)` = `40px 40px 0 0`                                       |
+| Outgoing panel scale | `1 → var(--motion-panel-scale)` = `0.96`                                      |
+| Transform origin     | `top center`                                                                  |
+| Outgoing dim         | overlay `opacity 0 → var(--motion-panel-dim)` (`0.55`), colour `--scrim-soft` |
+| Separation           | `--shadow-panel` (casts upward)                                               |
+| Easing               | `--ease-water`                                                                |
 
 The dim is a child overlay animated via `opacity` — **not** a `filter:
 brightness()` on the panel, which would force the whole subtree onto a filter
@@ -152,10 +152,10 @@ For display headings and the brand-story lines.
 
 **Per line**
 
-| From | To |
-| --- | --- |
-| `clip-path: inset(0 0 100% 0)` | `inset(0 0 0 0)` |
-| `transform: translateY(0.36em)` | `translateY(0)` |
+| From                            | To               |
+| ------------------------------- | ---------------- |
+| `clip-path: inset(0 0 100% 0)`  | `inset(0 0 0 0)` |
+| `transform: translateY(0.36em)` | `translateY(0)`  |
 
 Duration `--duration-slow` (320ms), easing `--ease-entrance`, stagger
 `--stagger-line` (60ms), **capped at `--stagger-cap` (6) lines** — six lines at
@@ -191,10 +191,10 @@ observer.
 
 Every content image entering the viewport for the first time.
 
-| Layer | From | To |
-| --- | --- | --- |
-| Frame | `clip-path: inset(100% 0 0 0 round var(--radius-xl))` | `inset(0 0 0 0 round var(--radius-xl))` |
-| Inner `<img>` | `scale(1.12)` | `scale(1)` |
+| Layer         | From                                                  | To                                      |
+| ------------- | ----------------------------------------------------- | --------------------------------------- |
+| Frame         | `clip-path: inset(100% 0 0 0 round var(--radius-xl))` | `inset(0 0 0 0 round var(--radius-xl))` |
+| Inner `<img>` | `scale(1.12)`                                         | `scale(1)`                              |
 
 Duration `--duration-slowest` (400ms — the ceiling, used here deliberately),
 easing `--ease-water`. Frame and inner run together; the inner scale is what
@@ -227,13 +227,15 @@ fails if two elements share a name.
 
 ```css
 ::view-transition-group(*) {
-  animation-duration: var(--duration-slow);   /* 320ms — under the cap */
+  animation-duration: var(--duration-slow); /* 320ms — under the cap */
   animation-timing-function: var(--ease-water);
 }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),
-  ::view-transition-new(*) { animation: none; }
+  ::view-transition-new(*) {
+    animation: none;
+  }
 }
 ```
 
@@ -248,14 +250,14 @@ elements reads as a slideshow.
 
 4% grain across the whole viewport, above everything.
 
-| Property | Value |
-| --- | --- |
-| Source | **Pre-rendered PNG tile** in `public/grain.png`, repeated |
-| Opacity | `var(--grain-opacity)` = `0.04`, fixed |
-| Position | `fixed; inset: 0` |
-| Layer | `var(--z-grain)` = 60 |
-| Interaction | `pointer-events: none`, `aria-hidden="true"` |
-| Blend | **None.** No `mix-blend-mode`. |
+| Property    | Value                                                     |
+| ----------- | --------------------------------------------------------- |
+| Source      | **Pre-rendered PNG tile** in `public/grain.png`, repeated |
+| Opacity     | `var(--grain-opacity)` = `0.04`, fixed                    |
+| Position    | `fixed; inset: 0`                                         |
+| Layer       | `var(--z-grain)` = 60                                     |
+| Interaction | `pointer-events: none`, `aria-hidden="true"`              |
+| Blend       | **None.** No `mix-blend-mode`.                            |
 
 Deliberately **not** a live `<svg><feTurbulence>` filter. A full-viewport SVG
 filter re-rasterises on scroll and on any repaint underneath it, which violates
@@ -278,15 +280,15 @@ container with a `position: sticky; top: 0; height: 100svh` stage inside.
 Scroll distance: **300vh** desktop, **180vh** below 768px. `svh` — not `vh` —
 so mobile browser chrome resizing does not cause a jump.
 
-| p | Stage | What happens |
-| --- | --- | --- |
-| `0.00 – 0.18` | **Still water** | Oversized serif **"Maren"** at `--text-hero`. The surface behind is held — only the aurora breathes. One positioning line below, already visible. Nothing else on screen. |
+| p             | Stage           | What happens                                                                                                                                                                |
+| ------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0.00 – 0.18` | **Still water** | Oversized serif **"Maren"** at `--text-hero`. The surface behind is held — only the aurora breathes. One positioning line below, already visible. Nothing else on screen.   |
 | `0.18 – 0.42` | **Contraction** | The wordmark scales and translates toward its resting place in the top bar, handing off to `SiteHeader`. Simultaneously the water spreads: aurora blobs widen and separate. |
-| `0.42 – 0.72` | **Brand story** | Story lines reveal one by one (§3.3), progress-driven rather than time-driven so the reader controls the pace. |
-| `0.72 – 0.92` | **Dispersal** | The surface breaks into light refraction — blobs scale up, separate, and drop in opacity. The venue image opens behind them via the image reveal (§3.4). |
-| `0.92 – 1.00` | **Release** | The stage settles to its final composition; the pin releases into normal document flow. |
-| — | **Normal flow** | Services (sticky panels), experience/process (second pinned sequence), blog teaser. |
-| — | **Settling** | At the contact CTA the water form returns, gathers and comes to rest. |
+| `0.42 – 0.72` | **Brand story** | Story lines reveal one by one (§3.3), progress-driven rather than time-driven so the reader controls the pace.                                                              |
+| `0.72 – 0.92` | **Dispersal**   | The surface breaks into light refraction — blobs scale up, separate, and drop in opacity. The venue image opens behind them via the image reveal (§3.4).                    |
+| `0.92 – 1.00` | **Release**     | The stage settles to its final composition; the pin releases into normal document flow.                                                                                     |
+| —             | **Normal flow** | Services (sticky panels), experience/process (second pinned sequence), blog teaser.                                                                                         |
+| —             | **Settling**    | At the contact CTA the water form returns, gathers and comes to rest.                                                                                                       |
 
 **Handoff detail.** The hero wordmark and the header wordmark are two elements,
 cross-faded by scroll progress across `0.18 – 0.42`. One does not travel into
@@ -354,11 +356,11 @@ Resolved **once**, before first paint, by a tiny inline script in `<head>` that
 writes `data-motion-tier` onto `<html>`. CSS branches on the attribute, so
 there is no flash of animated content and no hydration dependency.
 
-| Tier | When | Behaviour |
-| --- | --- | --- |
-| `reduced` | `prefers-reduced-motion: reduce` | Everything at final state. No scroll binding, no reveals, no view transitions. Aurora frozen. Grain stays. |
-| `static` | `navigator.connection.saveData`, or `deviceMemory ≤ 4`, or `hardwareConcurrency ≤ 4`, or `prefers-reduced-data: reduce` | Aurora → flat gradient. Panels → plain stack. No pinning. No reveals. Grain dropped. |
-| `full` | Everything else, **including when those APIs are unavailable** | The full art direction. |
+| Tier      | When                                                                                                                    | Behaviour                                                                                                  |
+| --------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `reduced` | `prefers-reduced-motion: reduce`                                                                                        | Everything at final state. No scroll binding, no reveals, no view transitions. Aurora frozen. Grain stays. |
+| `static`  | `navigator.connection.saveData`, or `deviceMemory ≤ 4`, or `hardwareConcurrency ≤ 4`, or `prefers-reduced-data: reduce` | Aurora → flat gradient. Panels → plain stack. No pinning. No reveals. Grain dropped.                       |
+| `full`    | Everything else, **including when those APIs are unavailable**                                                          | The full art direction.                                                                                    |
 
 `deviceMemory` and `connection` are Chromium-only. Absent means `full` — we do
 not punish Safari and Firefox for not reporting.
@@ -374,17 +376,17 @@ checked for "does it still work".
 
 ## 7. Budget and enforcement
 
-| Limit | Value |
-| --- | --- |
-| Max discrete duration | **400ms** (`--duration-slowest`) |
-| Max scroll-linked settle | **200ms** (`--duration-settle`) |
-| Max staggered items | **6** (`--stagger-cap`) |
-| Max total stagger span | ~620ms (6 × 60ms + 320ms) |
-| Pinned sections | **Exactly 2** |
-| Signature interactions | **Exactly 5** + grain |
-| Concurrent animated layers in view | **≤ 8** |
-| Aurora blobs | **3** |
-| Hover lift | `-4px` |
+| Limit                              | Value                            |
+| ---------------------------------- | -------------------------------- |
+| Max discrete duration              | **400ms** (`--duration-slowest`) |
+| Max scroll-linked settle           | **200ms** (`--duration-settle`)  |
+| Max staggered items                | **6** (`--stagger-cap`)          |
+| Max total stagger span             | ~620ms (6 × 60ms + 320ms)        |
+| Pinned sections                    | **Exactly 2**                    |
+| Signature interactions             | **Exactly 5** + grain            |
+| Concurrent animated layers in view | **≤ 8**                          |
+| Aurora blobs                       | **3**                            |
+| Hover lift                         | `-4px`                           |
 
 **Enforcement**
 

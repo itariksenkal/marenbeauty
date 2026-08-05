@@ -1,0 +1,27 @@
+@import 'tailwindcss';
+
+/* Design tokens (@theme) arrive at M1 in src/styles/theme.css.
+   docs/DESIGN-SYSTEM.md is the source of truth for every value. */
+
+:root {
+  /* No dark mode — decided. Every colour is still a semantic token so a dark
+     theme stays addable without a refactor. docs/DESIGN-SYSTEM.md §1. */
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Motion contract — docs/MOTION.md §2.4. Reduced motion means the final state
+   immediately, not a faster animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -29,37 +29,37 @@ admin UI (a later milestone) a drop-in rather than a migration.
 All user-facing slugs are Turkish, ASCII-folded (`CLAUDE.md` §6). `/api/*` is
 English because it is not user-facing.
 
-| Route | File | Render | Purpose |
-| --- | --- | --- | --- |
-| `/` | `app/page.tsx` | Static | Home. The pinned water sequence, services, process, blog teaser, CTA. |
-| `/hizmetler` | `app/hizmetler/page.tsx` | Static | Service index — all 20, grouped. |
-| `/hizmetler/[slug]` | `app/hizmetler/[slug]/page.tsx` | SSG ×20 | Service detail. View Transition target from the card. |
-| `/hakkimizda` | `app/hakkimizda/page.tsx` | Static | The centre, the approach, the space. |
-| `/blog` | `app/blog/page.tsx` | Static | Latest posts + category filter. |
-| `/blog/sayfa/[page]` | `app/blog/sayfa/[page]/page.tsx` | SSG | Pagination, 12 per page. Page 1 canonicalises to `/blog`. |
-| `/blog/[slug]` | `app/blog/[slug]/page.tsx` | SSG ×12→50+ | Post detail. |
-| `/blog/kategori/[slug]` | `app/blog/kategori/[slug]/page.tsx` | SSG ×6 | Category archive. |
-| `/sss` | `app/sss/page.tsx` | Static | FAQ. `FAQPage` schema. |
-| `/iletisim` | `app/iletisim/page.tsx` | Static | Contact form, location, channels. |
-| `/kvkk` | `app/kvkk/page.tsx` | Static | KVKK Aydınlatma Metni. |
-| `/cerez-politikasi` | `app/cerez-politikasi/page.tsx` | Static | Cookie policy. |
-| `/kullanim-kosullari` | `app/kullanim-kosullari/page.tsx` | Static | Terms of use. |
-| `/api/contact` | `app/api/contact/route.ts` | **Node runtime** | `POST` → Altcha verify → Zod → Nodemailer. Persists nothing. |
-| `/api/altcha` | `app/api/altcha/route.ts` | **Node runtime** | `GET` → signed proof-of-work challenge. |
+| Route                   | File                                | Render           | Purpose                                                               |
+| ----------------------- | ----------------------------------- | ---------------- | --------------------------------------------------------------------- |
+| `/`                     | `app/page.tsx`                      | Static           | Home. The pinned water sequence, services, process, blog teaser, CTA. |
+| `/hizmetler`            | `app/hizmetler/page.tsx`            | Static           | Service index — all 20, grouped.                                      |
+| `/hizmetler/[slug]`     | `app/hizmetler/[slug]/page.tsx`     | SSG ×20          | Service detail. View Transition target from the card.                 |
+| `/hakkimizda`           | `app/hakkimizda/page.tsx`           | Static           | The centre, the approach, the space.                                  |
+| `/blog`                 | `app/blog/page.tsx`                 | Static           | Latest posts + category filter.                                       |
+| `/blog/sayfa/[page]`    | `app/blog/sayfa/[page]/page.tsx`    | SSG              | Pagination, 12 per page. Page 1 canonicalises to `/blog`.             |
+| `/blog/[slug]`          | `app/blog/[slug]/page.tsx`          | SSG ×12→50+      | Post detail.                                                          |
+| `/blog/kategori/[slug]` | `app/blog/kategori/[slug]/page.tsx` | SSG ×6           | Category archive.                                                     |
+| `/sss`                  | `app/sss/page.tsx`                  | Static           | FAQ. `FAQPage` schema.                                                |
+| `/iletisim`             | `app/iletisim/page.tsx`             | Static           | Contact form, location, channels.                                     |
+| `/kvkk`                 | `app/kvkk/page.tsx`                 | Static           | KVKK Aydınlatma Metni.                                                |
+| `/cerez-politikasi`     | `app/cerez-politikasi/page.tsx`     | Static           | Cookie policy.                                                        |
+| `/kullanim-kosullari`   | `app/kullanim-kosullari/page.tsx`   | Static           | Terms of use.                                                         |
+| `/api/contact`          | `app/api/contact/route.ts`          | **Node runtime** | `POST` → Altcha verify → Zod → Nodemailer. Persists nothing.          |
+| `/api/altcha`           | `app/api/altcha/route.ts`           | **Node runtime** | `GET` → signed proof-of-work challenge.                               |
 
 ### Generated files
 
-| Output | File |
-| --- | --- |
-| `sitemap.xml` | `app/sitemap.ts` |
-| `robots.txt` | `app/robots.ts` |
-| `manifest.webmanifest` | `app/manifest.ts` |
-| Default OG image | `app/opengraph-image.tsx` |
-| Per-service OG | `app/hizmetler/[slug]/opengraph-image.tsx` |
-| Per-post OG | `app/blog/[slug]/opengraph-image.tsx` |
-| 404 | `app/not-found.tsx` |
-| Route error boundary | `app/error.tsx` |
-| Root error boundary | `app/global-error.tsx` |
+| Output                 | File                                       |
+| ---------------------- | ------------------------------------------ |
+| `sitemap.xml`          | `app/sitemap.ts`                           |
+| `robots.txt`           | `app/robots.ts`                            |
+| `manifest.webmanifest` | `app/manifest.ts`                          |
+| Default OG image       | `app/opengraph-image.tsx`                  |
+| Per-service OG         | `app/hizmetler/[slug]/opengraph-image.tsx` |
+| Per-post OG            | `app/blog/[slug]/opengraph-image.tsx`      |
+| 404                    | `app/not-found.tsx`                        |
+| Route error boundary   | `app/error.tsx`                            |
+| Root error boundary    | `app/global-error.tsx`                     |
 
 ### Not built
 
@@ -88,26 +88,36 @@ fails the build — it never degrades silently at runtime.
 
 ```ts
 const serviceSchema = z.object({
-  title:        z.string().min(2),              // "Hydrafacial"
-  eyebrow:      z.string().nullable(),          // "Cilt bakımı"
-  summary:      z.string().min(60).max(165),    // doubles as meta description
-  group:        z.enum(SERVICE_GROUPS),         // see §3.2
-  order:        z.number().int(),               // sort within group
-  heroImageId:  z.string(),                     // → images manifest
-  durationLabel: z.string().nullable(),         // null until owner confirms
-  suitableFor:  z.array(z.string()).max(6),     // cilt tipleri / ihtiyaçlar
-  steps: z.array(z.object({                     // what happens in the room
-    title: z.string(),
-    body:  z.string(),
-  })).min(2).max(6),
-  aftercare:    z.array(z.string()).max(6),
-  faq: z.array(z.object({
-    question: z.string(),
-    answer:   z.string(),
-  })).max(8),
-  relatedServices: z.array(z.string()).max(4),  // slugs, referential-checked
+  title: z.string().min(2), // "Hydrafacial"
+  eyebrow: z.string().nullable(), // "Cilt bakımı"
+  summary: z.string().min(60).max(165), // doubles as meta description
+  group: z.enum(SERVICE_GROUPS), // see §3.2
+  order: z.number().int(), // sort within group
+  heroImageId: z.string(), // → images manifest
+  durationLabel: z.string().nullable(), // null until owner confirms
+  suitableFor: z.array(z.string()).max(6), // cilt tipleri / ihtiyaçlar
+  steps: z
+    .array(
+      z.object({
+        // what happens in the room
+        title: z.string(),
+        body: z.string(),
+      }),
+    )
+    .min(2)
+    .max(6),
+  aftercare: z.array(z.string()).max(6),
+  faq: z
+    .array(
+      z.object({
+        question: z.string(),
+        answer: z.string(),
+      }),
+    )
+    .max(8),
+  relatedServices: z.array(z.string()).max(4), // slugs, referential-checked
   seo: z.object({
-    title:       z.string().max(60).nullable(),
+    title: z.string().max(60).nullable(),
     description: z.string().max(165).nullable(),
   }),
 });
@@ -124,11 +134,11 @@ in `CLAUDE.md` §9.
 
 ```ts
 const SERVICE_GROUPS = [
-  'cilt-bakimi',        // Cilt Bakımı
-  'epilasyon',          // Epilasyon
-  'cilt-yenileme',      // Cilt Yenileme Uygulamaları
-  'kas-kirpik',         // Kaş & Kirpik
-  'ozel-paket',         // Özel Paketler
+  'cilt-bakimi', // Cilt Bakımı
+  'epilasyon', // Epilasyon
+  'cilt-yenileme', // Cilt Yenileme Uygulamaları
+  'kas-kirpik', // Kaş & Kirpik
+  'ozel-paket', // Özel Paketler
 ] as const;
 ```
 
@@ -136,20 +146,20 @@ const SERVICE_GROUPS = [
 
 ```ts
 const postSchema = z.object({
-  title:       z.string().min(10).max(70),
-  summary:     z.string().min(80).max(165),
+  title: z.string().min(10).max(70),
+  summary: z.string().min(80).max(165),
   publishedAt: z.string().date(),
-  updatedAt:   z.string().date().nullable(),
-  category:    z.enum(BLOG_CATEGORIES),
-  tags:        z.array(z.string()).max(5),
-  service:     z.string(),                      // slug — every post maps to one
-  author:      z.literal('PENDING'),            // never a fabricated name
+  updatedAt: z.string().date().nullable(),
+  category: z.enum(BLOG_CATEGORIES),
+  tags: z.array(z.string()).max(5),
+  service: z.string(), // slug — every post maps to one
+  author: z.literal('PENDING'), // never a fabricated name
   heroImageId: z.string(),
-  keyword:     z.string(),                      // primary target keyword
-  intent:      z.enum(['informational', 'commercial', 'transactional']),
-  draft:       z.boolean().default(false),
+  keyword: z.string(), // primary target keyword
+  intent: z.enum(['informational', 'commercial', 'transactional']),
+  draft: z.boolean().default(false),
   seo: z.object({
-    title:       z.string().max(60).nullable(),
+    title: z.string().max(60).nullable(),
     description: z.string().max(165).nullable(),
   }),
 });
@@ -184,13 +194,13 @@ The only place a path under `public/images/` may appear (`CLAUDE.md` §8).
 type ManagedImage = {
   readonly id: string;
   readonly src: string;
-  readonly alt: string;            // Turkish, meaningful
+  readonly alt: string; // Turkish, meaningful
   readonly width: number;
   readonly height: number;
   readonly credit: string | null;
-  readonly licence: string;        // 'Unsplash Licence' | 'Pexels Licence' | 'CC0-1.0'
+  readonly licence: string; // 'Unsplash Licence' | 'Pexels Licence' | 'CC0-1.0'
   readonly sourceUrl: string | null;
-  readonly replaceable: boolean;   // true for all launch stock
+  readonly replaceable: boolean; // true for all launch stock
 };
 ```
 
@@ -210,10 +220,10 @@ array — no heading, no "coming soon", no skeleton.
 
 ```ts
 export const contact = {
-  whatsapp:  null,                       // primary once configured
-  phone:     null,
+  whatsapp: null, // primary once configured
+  phone: null,
   instagram: null,
-  email:     null,                       // destination inbox PENDING
+  email: null, // destination inbox PENDING
 } as const satisfies Record<string, ContactChannel>;
 ```
 
@@ -337,80 +347,80 @@ marenbeauty/
 
 ### `components/ui/` — shadcn primitives, no business logic
 
-| Component | | Notes |
-| --- | --- | --- |
-| `Button` | S | `variant`: solid / outline / ghost / link. `asChild` for links. |
-| `Input` `Textarea` `Label` `Checkbox` | S | `border-strong` only — §1.5 of design system. |
-| `Accordion` | C | Radix. FAQ, mobile nav. |
-| `Dialog` | C | Radix. Mobile menu only. |
-| `Separator` `Tag` `VisuallyHidden` | S | |
+| Component                             |     | Notes                                                           |
+| ------------------------------------- | --- | --------------------------------------------------------------- |
+| `Button`                              | S   | `variant`: solid / outline / ghost / link. `asChild` for links. |
+| `Input` `Textarea` `Label` `Checkbox` | S   | `border-strong` only — §1.5 of design system.                   |
+| `Accordion`                           | C   | Radix. FAQ, mobile nav.                                         |
+| `Dialog`                              | C   | Radix. Mobile menu only.                                        |
+| `Separator` `Tag` `VisuallyHidden`    | S   |                                                                 |
 
 ### `components/layout/`
 
-| Component | | Notes |
-| --- | --- | --- |
-| `SiteHeader` | C | Transparent over hero → solid on scroll. Hosts the contracted "Maren" wordmark from the pinned sequence. |
-| `SiteFooter` | S | Nav, display address, legal links, channels (omitted when `null`). |
-| `MobileMenu` | C | Dialog + focus trap. |
-| `SkipLink` | S | First focusable. → `#main`. |
-| `Container` `Section` | S | Width and rhythm tokens. No ad-hoc padding anywhere else. |
-| `Breadcrumbs` | S | Visual + `BreadcrumbList` JSON-LD. |
-| `PreLaunchBand` | S | Renders only while `site.isPreLaunch`. |
+| Component             |     | Notes                                                                                                    |
+| --------------------- | --- | -------------------------------------------------------------------------------------------------------- |
+| `SiteHeader`          | C   | Transparent over hero → solid on scroll. Hosts the contracted "Maren" wordmark from the pinned sequence. |
+| `SiteFooter`          | S   | Nav, display address, legal links, channels (omitted when `null`).                                       |
+| `MobileMenu`          | C   | Dialog + focus trap.                                                                                     |
+| `SkipLink`            | S   | First focusable. → `#main`.                                                                              |
+| `Container` `Section` | S   | Width and rhythm tokens. No ad-hoc padding anywhere else.                                                |
+| `Breadcrumbs`         | S   | Visual + `BreadcrumbList` JSON-LD.                                                                       |
+| `PreLaunchBand`       | S   | Renders only while `site.isPreLaunch`.                                                                   |
 
 ### `components/motion/` — every animated primitive lives here
 
-| Component | | Notes |
-| --- | --- | --- |
-| `MotionTierProvider` | C | Resolves `full` / `reduced` / `static` once; context. |
-| `AuroraBackground` | C | Signature #1. Scroll-linked wash. `--z-aurora`. |
-| `GrainOverlay` | S | 4% tile, `pointer-events: none`, `--z-grain`. No JS. |
-| `PinnedSequence` | C | Sticky viewport + scroll progress. **Used exactly twice.** |
-| `StickyPanelStack` / `StickyPanel` | C | Signature #2. 40px top radius, 0.96 scale, dim. |
-| `TextReveal` | C | Signature #3. Line-by-line `clip-path`. Capped at 6 lines. |
-| `ImageReveal` | C | Signature #4. `inset()` wipe + inner scale 1.12→1. |
-| `ViewTransitionLink` | C | Signature #5. Feature-detected; plain `Link` otherwise. |
-| `WaterForm` | C | The transforming surface tying the narrative together. |
+| Component                          |     | Notes                                                      |
+| ---------------------------------- | --- | ---------------------------------------------------------- |
+| `MotionTierProvider`               | C   | Resolves `full` / `reduced` / `static` once; context.      |
+| `AuroraBackground`                 | C   | Signature #1. Scroll-linked wash. `--z-aurora`.            |
+| `GrainOverlay`                     | S   | 4% tile, `pointer-events: none`, `--z-grain`. No JS.       |
+| `PinnedSequence`                   | C   | Sticky viewport + scroll progress. **Used exactly twice.** |
+| `StickyPanelStack` / `StickyPanel` | C   | Signature #2. 40px top radius, 0.96 scale, dim.            |
+| `TextReveal`                       | C   | Signature #3. Line-by-line `clip-path`. Capped at 6 lines. |
+| `ImageReveal`                      | C   | Signature #4. `inset()` wipe + inner scale 1.12→1.         |
+| `ViewTransitionLink`               | C   | Signature #5. Feature-detected; plain `Link` otherwise.    |
+| `WaterForm`                        | C   | The transforming surface tying the narrative together.     |
 
 ### `components/content/`
 
-| Component | | Notes |
-| --- | --- | --- |
-| `Mdx` | S | Compiled MDX + component map. |
-| `Prose` | S | Typographic rhythm for long form. 68ch. |
-| `ManagedImage` | S | Takes a manifest `id`. **The only `next/image` caller.** |
-| `ImageCredit` | S | Renders licence/credit when the manifest has one. |
-| `ServiceCard` / `ServiceGrid` | S | Card is the View Transition source. |
-| `PostCard` / `PostGrid` / `CategoryPills` | S | |
-| `Faq` | C | Accordion + `FAQPage` JSON-LD. |
-| `RelatedServices` / `RelatedPosts` | S | Internal linking map (`docs/CONTENT-PLAN.md` §5). |
+| Component                                 |     | Notes                                                    |
+| ----------------------------------------- | --- | -------------------------------------------------------- |
+| `Mdx`                                     | S   | Compiled MDX + component map.                            |
+| `Prose`                                   | S   | Typographic rhythm for long form. 68ch.                  |
+| `ManagedImage`                            | S   | Takes a manifest `id`. **The only `next/image` caller.** |
+| `ImageCredit`                             | S   | Renders licence/credit when the manifest has one.        |
+| `ServiceCard` / `ServiceGrid`             | S   | Card is the View Transition source.                      |
+| `PostCard` / `PostGrid` / `CategoryPills` | S   |                                                          |
+| `Faq`                                     | C   | Accordion + `FAQPage` JSON-LD.                           |
+| `RelatedServices` / `RelatedPosts`        | S   | Internal linking map (`docs/CONTENT-PLAN.md` §5).        |
 
 ### `components/sections/`
 
-| Component | | Notes |
-| --- | --- | --- |
-| `HeroWater` | C | Pinned stage 1–3. |
-| `BrandStory` | C | Pinned stage 2, line-by-line reveal. |
-| `ServicesPanels` | C | Sticky stack. |
-| `ExperienceProcess` | C | Second and last pinned sequence. |
-| `BlogTeaser` | S | 3 latest posts. |
-| `LocationCard` | S | "Konya, Selçuklu". No map embed (third-party cookies). |
-| `ContactCta` | S | Water settles. WhatsApp-first hierarchy. |
-| `TestimonialsSection` | S | Returns `null` while empty. |
+| Component             |     | Notes                                                  |
+| --------------------- | --- | ------------------------------------------------------ |
+| `HeroWater`           | C   | Pinned stage 1–3.                                      |
+| `BrandStory`          | C   | Pinned stage 2, line-by-line reveal.                   |
+| `ServicesPanels`      | C   | Sticky stack.                                          |
+| `ExperienceProcess`   | C   | Second and last pinned sequence.                       |
+| `BlogTeaser`          | S   | 3 latest posts.                                        |
+| `LocationCard`        | S   | "Konya, Selçuklu". No map embed (third-party cookies). |
+| `ContactCta`          | S   | Water settles. WhatsApp-first hierarchy.               |
+| `TestimonialsSection` | S   | Returns `null` while empty.                            |
 
 ### `components/forms/`
 
-| Component | | Notes |
-| --- | --- | --- |
-| `ContactForm` | C | Progressive enhancement: works without JS via a plain POST. |
-| `AltchaField` | C | Proof-of-work widget, self-hosted. |
-| `FormField` | S | Label + hint + error wiring (`aria-describedby`). |
-| `FormStatus` | C | `role="status"`, `aria-live="polite"`. Not a toast. |
+| Component     |     | Notes                                                       |
+| ------------- | --- | ----------------------------------------------------------- |
+| `ContactForm` | C   | Progressive enhancement: works without JS via a plain POST. |
+| `AltchaField` | C   | Proof-of-work widget, self-hosted.                          |
+| `FormField`   | S   | Label + hint + error wiring (`aria-describedby`).           |
+| `FormStatus`  | C   | `role="status"`, `aria-live="polite"`. Not a toast.         |
 
 ### `components/seo/`
 
-| Component | | Notes |
-| --- | --- | --- |
-| `JsonLd` | S | Serialises a typed object from `lib/schema/`. One per page. |
+| Component |     | Notes                                                       |
+| --------- | --- | ----------------------------------------------------------- |
+| `JsonLd`  | S   | Serialises a typed object from `lib/schema/`. One per page. |
 
 ---
 
@@ -454,12 +464,12 @@ ContactForm (C)
 
 ## 9. Deliberate non-goals
 
-| Not doing | Why |
-| --- | --- |
-| Database | Nothing to persist. The form emails and forgets. |
-| Auth | No account surface exists. |
-| i18n routing | Turkish only, by decision. |
-| Booking integration | No system exists. Revisit post-launch. |
-| Dark mode | Decided against; tokens keep it addable. |
-| Map embed | Third-party cookies, and there is no street address to pin. |
-| Client-side search | 50 posts do not need it. Revisit past ~150. |
+| Not doing           | Why                                                         |
+| ------------------- | ----------------------------------------------------------- |
+| Database            | Nothing to persist. The form emails and forgets.            |
+| Auth                | No account surface exists.                                  |
+| i18n routing        | Turkish only, by decision.                                  |
+| Booking integration | No system exists. Revisit post-launch.                      |
+| Dark mode           | Decided against; tokens keep it addable.                    |
+| Map embed           | Third-party cookies, and there is no street address to pin. |
+| Client-side search  | 50 posts do not need it. Revisit past ~150.                 |

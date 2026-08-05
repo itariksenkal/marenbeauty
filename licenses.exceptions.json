@@ -1,0 +1,159 @@
+{
+  "$comment": "Licence policy and its exceptions. See docs/LICENSES.md and CLAUDE.md §2. Every exception needs licence, scope, reason and status. status is 'approved' only when the owner has signed it off; anything else is reported as pending on every run. The 'licence' field pins what the exception was granted against — if the package changes licence, the audit fails even though an exception exists.",
+
+  "policy": [
+    "MIT",
+    "MIT-0",
+    "Apache-2.0",
+    "ISC",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "0BSD",
+    "CC0-1.0",
+    "Unlicense",
+    "OFL-1.1"
+  ],
+
+  "exceptions": [
+    {
+      "package": "@img/sharp-win32-x64",
+      "licence": "Apache-2.0 AND LGPL-3.0-or-later",
+      "scope": "runtime — SHIPS in the container",
+      "status": "awaiting-approval",
+      "reason": "Prebuilt libvips binary behind sharp, which Next.js uses for image optimisation. sharp itself is Apache-2.0; the LGPL-3.0 part is libvips, used unmodified and dynamically linked. LGPL permits this provided the library is not modified and relinking remains possible, which it does. This is the only copyleft component that reaches production. Platform-specific: other @img/sharp-* binaries appear on other build hosts and will need the same entry."
+    },
+    {
+      "package": "@img/sharp-wasm32",
+      "licence": "Apache-2.0 AND LGPL-3.0-or-later AND MIT",
+      "scope": "runtime — WASM fallback",
+      "status": "awaiting-approval",
+      "reason": "As @img/sharp-win32-x64. WASM fallback build of libvips, unmodified."
+    },
+    {
+      "package": "lightningcss",
+      "licence": "MPL-2.0",
+      "scope": "build-time only",
+      "status": "awaiting-approval",
+      "reason": "Tailwind CSS v4's stylesheet transformer, pulled by @tailwindcss/postcss. Runs at build time; no MPL-licensed file is modified or distributed. Same reasoning the owner approved for axe-core (docs/OPEN-QUESTIONS.md E1). Unavoidable if Tailwind v4 is the styling choice."
+    },
+    {
+      "package": "lightningcss-win32-x64-msvc",
+      "licence": "MPL-2.0",
+      "scope": "build-time only",
+      "status": "awaiting-approval",
+      "reason": "Platform binary for lightningcss. Same reasoning."
+    },
+    {
+      "package": "axe-core",
+      "licence": "MPL-2.0",
+      "scope": "dev only",
+      "status": "approved",
+      "reason": "Approved 2026-08-06 (docs/OPEN-QUESTIONS.md E1). MPL-2.0 is file-level copyleft; the tool is consumed unmodified, is a devDependency, and is never shipped. No obligation triggered. Arrives here transitively via eslint-plugin-jsx-a11y, and directly via @axe-core/playwright at M15."
+    },
+    {
+      "package": "caniuse-lite",
+      "licence": "CC-BY-4.0",
+      "scope": "build-time data",
+      "status": "awaiting-approval",
+      "reason": "Browser support data behind browserslist, required by both Next.js and Babel. Data, not code; attribution-only, no copyleft. Not distributed in the built site."
+    },
+    {
+      "package": "spdx-exceptions",
+      "licence": "CC-BY-3.0",
+      "scope": "dev only",
+      "status": "awaiting-approval",
+      "reason": "SPDX licence-identifier data used by the licence tooling itself. Data, attribution-only."
+    },
+    {
+      "package": "spdx-ranges",
+      "licence": "(MIT AND CC-BY-3.0)",
+      "scope": "dev only",
+      "status": "awaiting-approval",
+      "reason": "SPDX range data used by the licence tooling itself. Data, attribution-only."
+    },
+    {
+      "package": "argparse",
+      "licence": "Python-2.0",
+      "scope": "dev only",
+      "status": "awaiting-approval",
+      "reason": "Pulled by eslint -> @eslint/eslintrc -> js-yaml. Python-2.0 is an OSI-approved permissive licence with no copyleft; it is outside the policy list only because the list did not anticipate it."
+    },
+    {
+      "package": "chownr",
+      "licence": "BlueOak-1.0.0",
+      "scope": "dev only",
+      "status": "awaiting-approval",
+      "reason": "Blue Oak Model License 1.0.0 — a modern permissive licence with an explicit patent grant, no copyleft, no attribution burden. isaacs relicensed much of the npm core tooling to it. Functionally at least as permissive as MIT."
+    },
+    {
+      "package": "common-ancestor-path",
+      "licence": "BlueOak-1.0.0",
+      "scope": "dev only",
+      "status": "awaiting-approval",
+      "reason": "As chownr — Blue Oak Model License 1.0.0, permissive."
+    },
+    {
+      "package": "glob",
+      "licence": "BlueOak-1.0.0",
+      "scope": "dev only",
+      "status": "awaiting-approval",
+      "reason": "As chownr — Blue Oak Model License 1.0.0, permissive."
+    },
+    {
+      "package": "isexe",
+      "licence": "BlueOak-1.0.0",
+      "scope": "dev only",
+      "status": "awaiting-approval",
+      "reason": "As chownr — Blue Oak Model License 1.0.0, permissive."
+    },
+    {
+      "package": "lru-cache",
+      "licence": "BlueOak-1.0.0",
+      "scope": "dev only",
+      "status": "awaiting-approval",
+      "reason": "As chownr — Blue Oak Model License 1.0.0, permissive."
+    },
+    {
+      "package": "minimatch",
+      "licence": "BlueOak-1.0.0",
+      "scope": "dev only",
+      "status": "awaiting-approval",
+      "reason": "As chownr — Blue Oak Model License 1.0.0, permissive."
+    },
+    {
+      "package": "minipass",
+      "licence": "BlueOak-1.0.0",
+      "scope": "dev only",
+      "status": "awaiting-approval",
+      "reason": "As chownr — Blue Oak Model License 1.0.0, permissive."
+    },
+    {
+      "package": "minipass-flush",
+      "licence": "BlueOak-1.0.0",
+      "scope": "dev only",
+      "status": "awaiting-approval",
+      "reason": "As chownr — Blue Oak Model License 1.0.0, permissive."
+    },
+    {
+      "package": "path-scurry",
+      "licence": "BlueOak-1.0.0",
+      "scope": "dev only",
+      "status": "awaiting-approval",
+      "reason": "As chownr — Blue Oak Model License 1.0.0, permissive."
+    },
+    {
+      "package": "tar",
+      "licence": "BlueOak-1.0.0",
+      "scope": "dev only",
+      "status": "awaiting-approval",
+      "reason": "As chownr — Blue Oak Model License 1.0.0, permissive."
+    },
+    {
+      "package": "yallist",
+      "licence": "BlueOak-1.0.0",
+      "scope": "dev only",
+      "status": "awaiting-approval",
+      "reason": "As chownr — Blue Oak Model License 1.0.0, permissive."
+    }
+  ]
+}
