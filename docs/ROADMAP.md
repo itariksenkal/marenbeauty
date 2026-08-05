@@ -1,0 +1,687 @@
+# ROADMAP — Maren Beauty
+
+Ordered milestones. **One milestone per session** (`CLAUDE.md` §18.14). Do not
+start the next one because the current one finished early — stop, report, let
+the owner review.
+
+Each milestone states its goal, the files it touches, acceptance criteria that
+are all binary, and the exact verification command. A milestone is done only
+when every box is ticked and the command exits 0.
+
+**Status legend:** ☐ not started · ◐ in progress · ☑ done
+
+---
+
+## M0 — Repository foundation ☐
+
+**Goal.** A Next.js App Router project that builds, typechecks, lints and
+formats cleanly on Node 24, with the licence policy enforced. No design, no
+content, no components.
+
+**Files touched**
+
+```
+package.json  package-lock.json  .nvmrc  tsconfig.json
+next.config.ts  eslint.config.mjs  .prettierrc  .editorconfig
+.gitignore  .env.example  Dockerfile  .dockerignore
+src/app/layout.tsx  src/app/page.tsx  src/styles/globals.css
+```
+
+**Acceptance criteria**
+
+- [ ] `.nvmrc` contains `24`; `package.json#engines.node` is `>=24 <25`.
+- [ ] `tsconfig.json` has `strict: true` **and** `noUncheckedIndexedAccess: true`.
+- [ ] `next.config.ts` sets `output: 'standalone'`.
+- [ ] ESLint flat config; `prettier-plugin-tailwindcss` installed and ordering
+      classes.
+- [ ] ESLint `no-restricted-syntax` rule rejects numeric duration literals in
+      `src/components/` (`docs/MOTION.md` §7).
+- [ ] `<html lang="tr">` in the root layout.
+- [ ] `.env.example` lists every variable with a comment; no real secret in git.
+- [ ] Every npm script from `CLAUDE.md` §4 exists, even if some are stubs.
+- [ ] `npm run licenses` passes with the allow-list from `CLAUDE.md` §2 and the
+      results are written into `docs/LICENSES.md` §3 — **actual audit output,
+      replacing the provisional table**.
+- [ ] Initial commit on `main`, pushed.
+
+**Verify**
+
+```bash
+npm run typecheck && npm run lint && npm run format:check && npm run build && npm run licenses
+```
+
+---
+
+## M1 — Design tokens, fonts, layout shell ☐
+
+**Goal.** `docs/DESIGN-SYSTEM.md` expressed as code. Header, footer, container,
+section, skip link. Nothing else renders.
+
+**Files touched**
+
+```
+src/styles/theme.css  src/styles/globals.css
+src/app/layout.tsx  src/app/fonts.ts
+public/fonts/*.woff2
+src/components/layout/{SiteHeader,SiteFooter,SkipLink,Container,Section}.tsx
+src/lib/cn.ts
+```
+
+**Acceptance criteria**
+
+- [ ] Every token in `docs/DESIGN-SYSTEM.md` §1–§7 exists in the `@theme` block,
+      primitives and semantics both.
+- [ ] `color-scheme: light` set; no dark-mode media query anywhere.
+- [ ] Fraunces + Manrope self-hosted via `next/font/local`, `woff2`, subset
+      `latin` + `latin-ext`. **Zero network requests to any font host** —
+      verified in the Network panel.
+- [ ] **Turkish glyph check passed by eye:** `ı İ ş Ş ğ Ğ ü Ü ö Ö ç Ç` render
+      correctly in both families at display and body sizes. If either fails,
+      swap the family and record it in `docs/OPEN-QUESTIONS.md`.
+- [ ] Skip link is the first focusable element and moves focus to `#main`.
+- [ ] Focus ring uses `--color-focus-ring` and is visible on every surface.
+- [ ] Zero hex literals outside `theme.css` (grep clean).
+- [ ] A throwaway token-swatch route renders and is deleted before commit.
+
+**Verify**
+
+```bash
+npm run verify
+```
+
+---
+
+## M2 — Config layer ☐
+
+**Goal.** Every tunable value has a typed home. No component yet reads a literal.
+
+**Files touched**
+
+```
+src/config/{site,contact,navigation,images,legal,analytics,motion,env,testimonials}.ts
+src/lib/slug.ts
+```
+
+**Acceptance criteria**
+
+- [ ] `site.ts` matches `docs/ARCHITECTURE.md` §3.8, `isPreLaunch: true`, and
+      `address` has **no** `streetAddress` field at all.
+- [ ] `contact.ts` — all four channels `null`. `ContactChannel` type as
+      specified in `CLAUDE.md` §7.
+- [ ] `images.ts` exports a typed, empty-but-valid manifest with the
+      `ManagedImage` shape including `licence` and `replaceable`.
+- [ ] `testimonials.ts` exports `[]` with the full `Testimonial` type declared.
+- [ ] `env.ts` parses `process.env` with Zod **once** and throws at startup on a
+      missing required variable.
+- [ ] `motion.ts` re-exports the CSS motion tokens; no duration literal appears
+      anywhere else.
+- [ ] `slugify()` folds `ı İ ş ğ ü ö ç` correctly and is unit-tested against all
+      20 service names.
+
+**Verify**
+
+```bash
+npm run verify
+```
+
+---
+
+## M3 — Content guard script ☐
+
+**Goal.** The build refuses to ship banned language, unresolved tokens or dead
+links. Built before any content exists, so no bad copy can ever land.
+
+**Files touched**
+
+```
+scripts/guard.mjs  scripts/guard.allow.json
+package.json  .github/workflows/ci.yml
+docs/OPEN-QUESTIONS.md
+```
+
+**Acceptance criteria**
+
+- [ ] Scans `.next/server/app/**/*.{html,rsc}` and
+      `.next/static/chunks/**/*.js`. **Does not scan `docs/` or source** — this
+      repo discusses the banned words openly.
+- [ ] Rule 1 — banned lexicon with Turkish suffix matching: `tedavi`, `terapi`,
+      `kür`, `iyileştir`, `yok ed`, `garanti`, `kesin sonuç`. Verified to catch
+      `tedavisi`/`tedaviler` and verified **not** to flag `kürk`, `kürek`,
+      `şükür`, `küresel`.
+- [ ] Rule 2 — any `{{…}}` in output fails the build.
+- [ ] Rule 3 — empty-target links fail: `href="tel:"`, `href="mailto:"`,
+      `wa.me/` with no number, `href="#"` on a channel button.
+- [ ] Rule 4 — `lorem ipsum` / `dolor sit amet` fail.
+- [ ] Rule 5 — `%\d` warns (error tier pending owner approval, `docs/OPEN-QUESTIONS.md`).
+- [ ] Reports **every** violation with file, line and excerpt — not just the first.
+- [ ] `guard.allow.json` supports exact-phrase exceptions, each with a
+      `reason` field; an entry without a reason is rejected.
+- [ ] Fixture test: a deliberately bad page fails the guard; a clean page passes.
+- [ ] CI runs `npm run verify` on every push and pull request.
+
+**Verify**
+
+```bash
+npm run build && npm run guard && npm run test
+```
+
+---
+
+## M4 — Content layer ☐
+
+**Goal.** MDX + Zod + referential integrity. Two throwaway fixture files prove
+the pipeline; real content comes later.
+
+**Files touched**
+
+```
+src/content-layer/{schemas,services,posts,mdx,integrity}.ts
+src/lib/{date,reading-time}.ts
+content/services/_fixture.mdx  content/blog/_fixture.mdx   (deleted at M8/M10)
+```
+
+**Acceptance criteria**
+
+- [ ] Schemas match `docs/ARCHITECTURE.md` §3.1 and §3.3 exactly, including
+      `author: z.literal('PENDING')` and `durationLabel` nullable.
+- [ ] MDX compiles through `@mdx-js/mdx` `evaluate()` in a Server Component.
+      **`next-mdx-remote` is not installed** — MPL-2.0, outside policy.
+- [ ] Invalid frontmatter fails the **build**, with the offending file and field
+      named. Proven by a fixture.
+- [ ] All six integrity checks in `docs/ARCHITECTURE.md` §3.4 implemented and
+      each proven by a failing fixture test.
+- [ ] `readingMinutes` computed from body, never authored.
+- [ ] Content read once at module scope; the full query API from §4 exists.
+- [ ] Nothing outside `src/content-layer/` imports from `content/`.
+
+**Verify**
+
+```bash
+npm run verify
+```
+
+---
+
+## M5 — Motion foundation ☐
+
+**Goal.** Motion tier resolution, aurora, grain, and the reusable primitives —
+on a bare demo route. No page design yet.
+
+**Files touched**
+
+```
+src/components/motion/{MotionTierProvider,AuroraBackground,GrainOverlay,
+                       PinnedSequence,StickyPanelStack,StickyPanel,
+                       TextReveal,ImageReveal,ViewTransitionLink}.tsx
+src/hooks/{use-motion-tier,use-scroll-progress,use-reduced-motion}.ts
+src/app/layout.tsx  public/grain.png
+```
+
+**Acceptance criteria**
+
+- [ ] Tier resolved **before first paint** by an inline script writing
+      `data-motion-tier` on `<html>`. No flash of animated content.
+- [ ] `?motion=static|reduced|full` overrides in development, ignored in
+      production.
+- [ ] Aurora: 3 blobs, blur set once and never animated, `contain` applied,
+      `will-change` removed when out of view.
+- [ ] Grain: pre-rendered tile, 4%, `pointer-events: none`, `aria-hidden`,
+      **no `mix-blend-mode`**, no SVG filter.
+- [ ] `PinnedSequence` uses `position: sticky` + `100svh`. **No wheel or
+      touchmove listener exists anywhere in the codebase** (grep clean). No
+      smooth-scroll library installed.
+- [ ] `TextReveal` takes an **array of authored lines**; there is no runtime
+      text measurement or splitting.
+- [ ] `ViewTransitionLink` feature-detects `document.startViewTransition` and
+      falls back to a plain link.
+- [ ] DevTools Performance at 6× CPU throttle: **composite only** during scroll,
+      no layout, no paint.
+- [ ] Every primitive verified at all three tiers.
+- [ ] Demo route deleted before commit.
+
+**Verify**
+
+```bash
+npm run verify
+```
+Plus the manual checks in `docs/MOTION.md` §9.
+
+---
+
+## M6 — Home: pinned opening ☐
+
+**Goal.** The five-stage water sequence — the first thing anyone sees.
+
+**Files touched**
+
+```
+src/app/page.tsx
+src/components/sections/{HeroWater,BrandStory}.tsx
+src/components/motion/WaterForm.tsx
+src/config/navigation.ts  content/ (home copy)
+```
+
+**Acceptance criteria**
+
+- [ ] All five stages implemented at the progress ranges in `docs/MOTION.md` §4.
+- [ ] Wordmark handoff is a **cross-fade between two elements**, not a DOM move.
+      Correct after a mid-page refresh.
+- [ ] Pinned distance 300vh desktop, 180vh below 768px, stages 2–3 merged on
+      mobile.
+- [ ] Brand story lines are authored arrays; text is in the DOM from first paint
+      and findable by find-in-page before reveal.
+- [ ] Elements in stages not yet reached are `inert`; keyboard traversal is sane
+      throughout.
+- [ ] No horizontal scroll at 320px. No jump when the mobile address bar
+      collapses.
+- [ ] Real Turkish copy — positioning line and story lines. No placeholder.
+- [ ] Reviewed at `reduced` **as a composition**, not just for function.
+
+**Verify**
+
+```bash
+npm run verify
+```
+
+---
+
+## M7 — Home: remaining sections ☐
+
+**Goal.** Sticky service panels, the second and final pinned sequence, blog
+teaser, location, contact CTA.
+
+**Files touched**
+
+```
+src/components/sections/{ServicesPanels,ExperienceProcess,BlogTeaser,
+                         LocationCard,ContactCta,TestimonialsSection}.tsx
+src/components/layout/PreLaunchBand.tsx
+src/app/page.tsx
+```
+
+**Acceptance criteria**
+
+- [ ] Sticky stack matches `docs/MOTION.md` §3.2: 40px top radius, 0.96 scale,
+      0.55 dim via an overlay's `opacity` — **not** a `filter`.
+- [ ] `ExperienceProcess` is the **second and last** pinned section on the site.
+- [ ] `TestimonialsSection` returns `null`; no heading, no placeholder, nothing
+      in the DOM.
+- [ ] `PreLaunchBand` renders only while `isPreLaunch`, with an honest sentence
+      and no countdown or invented date.
+- [ ] `LocationCard` shows "Konya, Selçuklu" and no map embed.
+- [ ] CTA hierarchy is WhatsApp-first; with all channels `null` only the form
+      CTA renders — **no disabled buttons, no "yakında" tooltips**.
+- [ ] Aurora `--aurora-b`/`--aurora-c` overridden per section; `--aurora-a`
+      unchanged, so no hard boundaries.
+- [ ] Text over the aurora checked for contrast at its **worst-case** scroll
+      position.
+
+**Verify**
+
+```bash
+npm run verify
+```
+
+---
+
+## M8 — Services: 20 pages ☐
+
+**Goal.** The site's primary asset. Index, detail template, all 20 MDX files,
+and the View Transition.
+
+**Files touched**
+
+```
+src/app/hizmetler/page.tsx
+src/app/hizmetler/[slug]/page.tsx
+src/components/content/{ServiceCard,ServiceGrid,RelatedServices,Faq,
+                        ManagedImage,ImageCredit,Mdx,Prose}.tsx
+content/services/*.mdx        ← 20 files
+src/config/images.ts
+```
+
+**Acceptance criteria**
+
+- [ ] All 20 services from `docs/CONTENT-PLAN.md` §1 exist, correct slugs,
+      correct groups.
+- [ ] Every page follows the §2 skeleton; body prose 500–800 words of real
+      Turkish.
+- [ ] **No prices, no ranges, anywhere.** No before/after. No percentages. No
+      session-count promises.
+- [ ] `npm run guard` passes on all 20 — no banned lexicon.
+- [ ] `durationLabel` is `null` on every service and renders **nothing** — not
+      an em dash, not "TBD".
+- [ ] `relatedServices` resolves for all 20; reciprocity checked.
+- [ ] Every image goes through the manifest with `licence` and `sourceUrl`
+      recorded. One narrow visual family. No stock person presented as owner,
+      staff or client.
+- [ ] View Transition morphs card → detail hero, with
+      `view-transition-name` applied **only to the activated card** and cleared
+      afterwards.
+- [ ] Fixture MDX from M4 deleted.
+
+**Verify**
+
+```bash
+npm run verify
+```
+
+---
+
+## M9 — Blog system ☐
+
+**Goal.** Index, categories, pagination, post template. No posts yet.
+
+**Files touched**
+
+```
+src/app/blog/page.tsx
+src/app/blog/[slug]/page.tsx
+src/app/blog/kategori/[slug]/page.tsx
+src/app/blog/sayfa/[page]/page.tsx
+src/components/content/{PostCard,PostGrid,CategoryPills,RelatedPosts}.tsx
+```
+
+**Acceptance criteria**
+
+- [ ] Six categories from `docs/CONTENT-PLAN.md` §3, each with an archive route.
+- [ ] Pagination at 12 per page; **`/blog/sayfa/1` does not exist**; `/blog` is
+      page 1 and pages 2+ are self-canonical.
+- [ ] Post template implements the §6 structure.
+- [ ] No byline rendered while `author` is `'PENDING'` — no "Admin", no
+      "Editör", no empty avatar.
+- [ ] `draft: true` posts are absent from `generateStaticParams`, the sitemap
+      and every listing.
+- [ ] Related posts follow the linking rules; zero orphans.
+- [ ] Empty states are real sentences, not placeholders.
+
+**Verify**
+
+```bash
+npm run verify
+```
+
+---
+
+## M10 — Blog: 12 posts ☐
+
+**Goal.** Batch 1 written and published — one post per distinct service.
+
+**Files touched**
+
+```
+content/blog/*.mdx            ← 12 files
+src/config/images.ts
+```
+
+**Acceptance criteria**
+
+- [ ] Exactly the 12 posts in `docs/CONTENT-PLAN.md` §4 Batch 1, with the
+      planned slugs, keywords, categories and service mappings.
+- [ ] 900–1400 words each, real Turkish, lead paragraph answers the question
+      immediately.
+- [ ] `author: 'PENDING'` on all 12.
+- [ ] `npm run guard` clean — no banned lexicon, no percentages, no invented
+      statistics.
+- [ ] Every post links up to its service hub in context, plus 2–3 lateral links
+      and exactly one CTA to `/iletisim`.
+- [ ] Every service hub shows its related posts.
+- [ ] No before/after imagery. All images through the manifest.
+- [ ] Fixture MDX from M4 deleted.
+
+**Verify**
+
+```bash
+npm run verify
+```
+
+---
+
+## M11 — Contact form ☐
+
+**Goal.** The only live conversion path. Altcha + Nodemailer, nothing persisted.
+
+**Files touched**
+
+```
+src/app/api/contact/route.ts  src/app/api/altcha/route.ts
+src/app/iletisim/page.tsx
+src/components/forms/{ContactForm,AltchaField,FormField,FormStatus}.tsx
+src/lib/mail/{transport,templates}.ts  src/config/env.ts
+```
+
+**Acceptance criteria**
+
+- [ ] Both handlers `export const runtime = 'nodejs'`. Edge cannot open SMTP.
+- [ ] Altcha challenge is HMAC-signed, short-TTL, single-use; verified
+      server-side. Solving happens in a Web Worker and needs no user interaction.
+- [ ] Zod validation rejects unknown keys; honeypot must be empty; best-effort
+      per-IP rate limit.
+- [ ] Nodemailer over Google Workspace SMTP, port 587, STARTTLS, credentials
+      from `env.ts`.
+- [ ] **Nothing is persisted** — no database, no file, no log line containing
+      the message body or email address.
+- [ ] Consent checkbox is required, unchecked by default, links to `/kvkk`.
+- [ ] Works **without JavaScript** via a plain form POST.
+- [ ] Errors, success and pending states announced via `role="status"` /
+      `aria-live="polite"`. Not a toast.
+- [ ] Field errors wired with `aria-describedby`; never colour-only.
+- [ ] SMTP details never reach the client; generic Turkish error only.
+- [ ] Destination inbox comes from env — **blocked on the owner supplying it**
+      (`docs/OPEN-QUESTIONS.md`). Until then, verified against a test mailbox
+      and the blocker is reported, not worked around.
+
+**Verify**
+
+```bash
+npm run verify
+```
+Plus a real send to a test mailbox, and a no-JS submission.
+
+---
+
+## M12 — Legal pages ☐
+
+**Goal.** KVKK aydınlatma metni, cookie policy, terms — with the legal entity
+unresolved and the build enforcing that it cannot ship unresolved.
+
+**Files touched**
+
+```
+src/app/{kvkk,cerez-politikasi,kullanim-kosullari}/page.tsx
+src/config/legal.ts  content/legal/*.mdx  scripts/guard.mjs
+```
+
+**Acceptance criteria**
+
+- [ ] `{{LEGAL_ENTITY}}` used literally wherever the entity is named. **No
+      plausible-sounding name is invented anywhere.**
+- [ ] Guard rule 2 proven: a page containing `{{LEGAL_ENTITY}}` **fails the
+      production build**. Demonstrated, not assumed.
+- [ ] KVKK text states what the contact form collects, that it is emailed and
+      not stored, and the data-subject rights under KVKK Art. 11.
+- [ ] Cookie policy is accurate for a cookieless analytics setup — it does not
+      describe cookies the site does not set.
+- [ ] Footer links to all three; the form's consent checkbox links to `/kvkk`.
+- [ ] `docs/OPEN-QUESTIONS.md` records that the wording needs the owner's legal
+      review, and flags the disclaimer-wording question (an "…tıbbi tedavi
+      değildir" sentence would need a guard allow-list entry with a reason).
+
+**Verify**
+
+```bash
+npm run verify
+```
+
+---
+
+## M13 — SEO ☐
+
+**Goal.** `docs/SEO.md` implemented end to end.
+
+**Files touched**
+
+```
+src/lib/schema/*.ts  src/components/seo/JsonLd.tsx
+src/app/sitemap.ts  src/app/robots.ts  src/app/manifest.ts
+src/app/**/opengraph-image.tsx
+generateMetadata across every route
+```
+
+**Acceptance criteria**
+
+- [ ] Every route sets an explicit absolute canonical. Titles ≤ 60 chars,
+      descriptions 150–165.
+- [ ] One JSON-LD `@graph` per page with the stable `@id`s from §2.1; entities
+      referenced, never duplicated.
+- [ ] Types per route match §2.2. **No `MedicalBusiness`, `MedicalClinic`,
+      `MedicalProcedure`, `MedicalTherapy` or `Physician` anywhere** — asserted
+      by test.
+- [ ] `streetAddress` and `postalCode` absent from `PostalAddress`.
+- [ ] Pre-launch omissions in §2.5 each covered by a passing unit test.
+- [ ] `BlogPosting.author` references the Organization, never a fabricated
+      Person.
+- [ ] OG images render for site, service and post; text passes the guard.
+- [ ] Sitemap excludes drafts, carries real `lastModified`.
+- [ ] Rich Results Test clean on one URL per route type.
+
+**Verify**
+
+```bash
+npm run verify
+```
+Plus Rich Results Test and the Schema.org validator.
+
+---
+
+## M14 — Analytics and consent ☐
+
+**Goal.** Cookieless measurement, with advertising trackers implemented but
+provably absent.
+
+**Files touched**
+
+```
+src/config/analytics.ts  src/components/analytics/*.tsx
+src/app/cerez-politikasi/page.tsx
+```
+
+**Acceptance criteria**
+
+- [ ] Umami, self-hosted, cookieless, script self-served — **no third-party
+      origin in the network waterfall**.
+- [ ] GA4 and Meta Pixel code paths exist but are `false` by default, and are
+      **tree-shaken out of the production bundle** — verified by searching the
+      built chunks, not by inspecting source.
+- [ ] With flags off: zero cookies set, zero third-party requests, no consent
+      banner shown.
+- [ ] Consent gate implemented and tested behind a flag: opt-in only, Consent
+      Mode v2 default denied, rejecting exactly as easy as accepting.
+- [ ] Cookie policy matches actual behaviour.
+- [ ] Umami host decision recorded (`analytics.marenbeauty.com` needs DNS —
+      `docs/OPEN-QUESTIONS.md`).
+
+**Verify**
+
+```bash
+npm run verify
+```
+Plus a clean-profile network + storage inspection.
+
+---
+
+## M15 — Accessibility and performance pass ☐
+
+**Goal.** The whole site, audited by hand. This milestone fixes; it does not add.
+
+**Files touched** — wherever the audit finds problems.
+
+**Acceptance criteria**
+
+- [ ] `npm run test:a11y` — axe on every static route, **zero violations**.
+- [ ] Full keyboard traversal of every route, including both pinned sequences
+      and the mobile menu. No traps, no unreachable content, focus always visible.
+- [ ] Screen reader pass (NVDA or VoiceOver) on home, a service page, a post and
+      the contact form. Reading order matches visual order.
+- [ ] Every colour pairing in use appears in the permitted table in
+      `docs/DESIGN-SYSTEM.md` §1.4. Text over aurora and imagery checked at
+      worst case.
+- [ ] All three motion tiers reviewed on every route.
+- [ ] 320 / 768 / 1280 / 1920px — no horizontal scroll, nothing clipped.
+- [ ] 200% browser zoom and 320px reflow both usable.
+- [ ] Turkish glyphs render correctly everywhere, including OG images.
+- [ ] No CLS from image reveals or font swap.
+- [ ] Lighthouse recorded as a **number, not a gate** — regressions
+      investigated, never traded against accessibility.
+
+**Verify**
+
+```bash
+npm run verify && npm run test:a11y
+```
+
+---
+
+## M16 — Self-host verification ☐
+
+**Goal.** Prove the portability rule. The site must run with no Vercel.
+
+**Files touched**
+
+```
+Dockerfile  .dockerignore  docs/DEPLOY.md
+```
+
+**Acceptance criteria**
+
+- [ ] Multi-stage Dockerfile on a Node 24 base, non-root user, standalone output.
+- [ ] `docker build` then `docker run` serves the complete site on a clean
+      machine with only env vars supplied.
+- [ ] Every route renders; the contact form sends successfully from the
+      container.
+- [ ] Grep confirms **no `@vercel/*` import and no Vercel-only API** anywhere in
+      `src/`.
+- [ ] Image optimisation works in the container (`sharp` present).
+- [ ] `docs/DEPLOY.md` self-host section verified against the actual run and
+      corrected where it was wrong.
+
+**Verify**
+
+```bash
+npm run verify && docker build -t marenbeauty . && docker run --rm -p 3000:3000 --env-file .env.local marenbeauty
+```
+
+---
+
+## Launch — owner-executed ☐
+
+Not a build milestone. `docs/DEPLOY.md` is a checklist for a human.
+
+- [ ] Vercel project connected, env vars set, Node 24 runtime.
+- [ ] DNS cutover per `docs/DEPLOY.md`, **MX records untouched**.
+- [ ] SPF, DKIM and DMARC verified alongside Google Workspace.
+- [ ] Test send from production reaches the destination inbox.
+- [ ] Search Console verified, sitemap submitted.
+- [ ] Every `{{LEGAL_ENTITY}}` resolved; guard passes on the production build.
+
+**Nothing in `docs/DEPLOY.md` is executed by an agent.** DNS, Vercel settings
+and the Workspace console are the owner's (`CLAUDE.md` §17).
+
+---
+
+## Post-launch backlog — not scheduled
+
+Ordered by expected value, to be scheduled one at a time after launch.
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 1 | Google Business Profile | Needs the address decision (`docs/OPEN-QUESTIONS.md`). Biggest local lever. |
+| 2 | Flip `isPreLaunch: false` | Real hours → opening hours in schema. One config change. |
+| 3 | Real photography | Swap the manifest, set `replaceable: false`. No component changes. |
+| 4 | Contact channels | Phone / WhatsApp / Instagram appear the moment config has values. |
+| 5 | Blog Batch 2 | Posts 13–50, ~2 per week. |
+| 6 | Git-backed admin UI | So the owner publishes without a developer. Same MDX files. Licence-check the CMS first. |
+| 7 | Real author byline | Widen the schema; `BlogPosting.author` becomes a `Person`. |
+| 8 | Testimonials | Only from real clients, unincentivised. Then `aggregateRating` becomes truthful. |
+| 9 | Booking integration | Only if the owner adopts a booking system. |
+| 10 | District landing pages | Only if Search Console shows real demand, and only with distinct content. |
