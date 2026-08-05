@@ -1,21 +1,92 @@
 @import 'tailwindcss';
+@import './theme.css';
 
-/* Design tokens (@theme) arrive at M1 in src/styles/theme.css.
-   docs/DESIGN-SYSTEM.md is the source of truth for every value. */
+/**
+ * Base layer. Tokens live in theme.css; this file only wires them to elements.
+ * No colour, size or spacing literal may appear here — tokens only.
+ */
 
 :root {
   /* No dark mode — decided. Every colour is still a semantic token so a dark
-     theme stays addable without a refactor. docs/DESIGN-SYSTEM.md §1. */
+     theme stays addable without touching a component. */
   color-scheme: light;
+
+  /* next/font emits one family name per subset face. Turkish needs both, and
+     their unicode-ranges are disjoint, so both sit in the stack. */
+  --mb-font-display: var(--font-fraunces-latin), var(--font-fraunces-latin-ext);
+  --mb-font-sans: var(--font-manrope-latin), var(--font-manrope-latin-ext);
 }
 
-html {
-  -webkit-text-size-adjust: 100%;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-surface-page);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-body);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Fraunces ships wght 900 and WONK 1 (the quirky alternates) as its axis
+     defaults — both wrong for this brand. Correct them wherever the display
+     face is used, so the correction cannot be forgotten at a call site.
+     `opsz` is deliberately left out of font-variation-settings: naming it
+     there would disable font-optical-sizing. */
+  .font-display {
+    font-variation-settings:
+      'SOFT' var(--mb-fraunces-soft),
+      'WONK' var(--mb-fraunces-wonk);
+    font-optical-sizing: auto;
+    font-weight: 400;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* One visible focus style everywhere. `clay` is the only colour clearing
+     3:1 against every surface in the system (docs/DESIGN-SYSTEM.md §1.4). */
+  :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  /* Links in prose keep their underline; hover thickens it, never removes it. */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ::selection {
+    background-color: var(--color-surface-accent);
+    color: var(--color-text-primary);
+  }
 }
 
 /* Motion contract — docs/MOTION.md §2.4. Reduced motion means the final state
    immediately, not a faster animation. */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {

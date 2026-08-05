@@ -1,0 +1,293 @@
+/**
+ * Design tokens — the single implementation of docs/DESIGN-SYSTEM.md.
+ *
+ * Two layers, and the split is load-bearing:
+ *
+ *   PRIMITIVES  are `--mb-*`. They sit inside @theme so they are emitted as
+ *               CSS variables, but they are NOT in a Tailwind namespace, so
+ *               NO utility is generated for them. `bg-ivory` does not exist.
+ *               That makes CLAUDE.md §14 ("never use a primitive directly")
+ *               structurally impossible to break rather than a review note.
+ *
+ *   SEMANTICS   are `--color-*`, `--text-*`, `--spacing-*` … They generate the
+ *               utilities components actually use: `bg-surface-raised`,
+ *               `text-secondary`, `border-strong`.
+ *
+ * Tailwind's default palette, type scale, radii, shadows and easings are all
+ * cleared with `*: initial`. `bg-red-500` and `text-lg` from the stock theme
+ * would otherwise be one keystroke away from bypassing the system.
+ *
+ * Every contrast ratio referenced here was computed, not estimated. If you
+ * change a hex value, recompute docs/DESIGN-SYSTEM.md §1.4 in the same commit.
+ */
+
+@theme {
+  /* ── Clear Tailwind's defaults ─────────────────────────────────────────── */
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --leading-*: initial;
+  --tracking-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --ease-*: initial;
+  --container-*: initial;
+  --spacing: initial;
+
+  /* ── Primitives — no utilities generated ───────────────────────────────── */
+
+  /* warm neutrals */
+  --mb-ivory: #fefcf9;
+  --mb-cream: #faf4ec;
+  --mb-sand: #f3eadf;
+  --mb-nude: #ebdccd;
+
+  /* rose family */
+  --mb-rose-beige: #dfc9bb;
+  --mb-blush: #d2b3a5;
+  --mb-muted-rose: #b98d83;
+  --mb-rosewood: #8a5d55;
+
+  /* warm darks */
+  --mb-clay: #7c564c;
+  --mb-cocoa: #55372f;
+  --mb-espresso: #3a241e;
+  --mb-ink: #241511;
+
+  /* champagne accent */
+  --mb-champagne-light: #efe2c6;
+  --mb-champagne: #dec79c;
+  --mb-champagne-deep: #7e6334;
+
+  /* feedback */
+  --mb-error: #8f3527;
+  --mb-success: #3f5f45;
+  --mb-info: #4a5a6b;
+
+  /* espresso as an rgb triple, for warm-tinted shadows and scrims */
+  --mb-shadow-rgb: 58 36 30;
+
+  /* ── Semantic colour — what components use ─────────────────────────────── */
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-inherit: inherit;
+
+  /* surfaces */
+  --color-surface-page: var(--mb-cream);
+  --color-surface-raised: var(--mb-ivory);
+  --color-surface-sunken: var(--mb-sand);
+  --color-surface-accent: var(--mb-nude);
+  --color-surface-decor: var(--mb-rose-beige);
+  --color-surface-inverse: var(--mb-espresso);
+
+  /* text — see §1.4 for which surfaces each is permitted on */
+  --color-text-primary: var(--mb-ink);
+  --color-text-secondary: var(--mb-cocoa);
+  --color-text-muted: var(--mb-clay);
+  --color-text-accent: var(--mb-rosewood);
+  --color-text-gold: var(--mb-champagne-deep);
+  --color-text-on-inverse: var(--mb-ivory);
+  --color-text-on-accent: var(--mb-ivory);
+
+  /* borders — only border-strong clears 3:1 and may bound a control */
+  --color-border-subtle: var(--mb-nude);
+  --color-border-decor: var(--mb-rose-beige);
+  --color-border-strong: var(--mb-rosewood);
+
+  /* interaction */
+  --color-focus-ring: var(--mb-clay);
+  --color-accent-solid: var(--mb-rosewood);
+  --color-accent-solid-hover: var(--mb-clay);
+  --color-accent-decor: var(--mb-champagne);
+
+  /* feedback */
+  --color-feedback-error: var(--mb-error);
+  --color-feedback-success: var(--mb-success);
+  --color-feedback-info: var(--mb-info);
+
+  /* ── Typography ────────────────────────────────────────────────────────── */
+  --font-display: var(--mb-font-display), ui-serif, Georgia, serif;
+  --font-sans: var(--mb-font-sans), ui-sans-serif, system-ui, sans-serif;
+
+  /* Fraunces axis defaults are wrong for this brand — the font ships
+     WONK 1 (quirky alternates) and wght 900. Both are corrected in
+     globals.css; these tokens are the intended values. */
+  --mb-fraunces-soft: 60;
+  --mb-fraunces-wonk: 0;
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: var(--leading-ui);
+  --text-xs: 0.75rem;
+  --text-xs--line-height: var(--leading-ui);
+  --text-sm: 0.875rem;
+  --text-sm--line-height: var(--leading-ui);
+  --text-base: clamp(1rem, 0.97rem + 0.15vw, 1.0625rem);
+  --text-base--line-height: var(--leading-body);
+  --text-lg: clamp(1.125rem, 1.08rem + 0.22vw, 1.25rem);
+  --text-lg--line-height: var(--leading-body);
+  --text-xl: clamp(1.25rem, 1.16rem + 0.45vw, 1.5rem);
+  --text-xl--line-height: var(--leading-tight);
+  --text-2xl: clamp(1.5rem, 1.35rem + 0.75vw, 1.875rem);
+  --text-2xl--line-height: var(--leading-heading);
+  --text-3xl: clamp(1.875rem, 1.62rem + 1.25vw, 2.5rem);
+  --text-3xl--line-height: var(--leading-heading);
+  --text-4xl: clamp(2.25rem, 1.8rem + 2.25vw, 3.5rem);
+  --text-4xl--line-height: var(--leading-heading);
+  --text-5xl: clamp(2.75rem, 2rem + 3.75vw, 4.5rem);
+  --text-5xl--line-height: var(--leading-display);
+  --text-6xl: clamp(3.25rem, 2.1rem + 5.75vw, 6rem);
+  --text-6xl--line-height: var(--leading-display);
+  --text-hero: clamp(4rem, 16vw, 15rem);
+  --text-hero--line-height: var(--leading-hero);
+
+  --leading-hero: 0.86;
+  --leading-display: 1.02;
+  --leading-heading: 1.16;
+  --leading-body: 1.65;
+  --leading-tight: 1.35;
+  --leading-ui: 1.45;
+
+  --tracking-hero: -0.04em;
+  --tracking-display: -0.02em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.08em;
+  --tracking-eyebrow: 0.16em;
+
+  /* ── Spacing — the dynamic scale is off, so only these steps exist ─────── */
+  --spacing-0: 0px;
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  --spacing-24: 6rem;
+  --spacing-32: 8rem;
+  --spacing-40: 10rem;
+  --spacing-48: 12rem;
+
+  /* layout rhythm */
+  --spacing-gutter: clamp(1.25rem, 4vw, 3rem);
+  --spacing-section-y: clamp(4rem, 9vw, 10rem);
+  --spacing-section-y-tight: clamp(2.5rem, 5vw, 5rem);
+
+  /* ── Widths — docs/DESIGN-SYSTEM.md §2.4 measure tokens live here so they
+     generate max-w-* utilities ──────────────────────────────────────────── */
+  --container-page: 1200px;
+  --container-wide: 1440px;
+  /* NOT `--container-prose`: Tailwind ships a STATIC `max-w-prose` utility
+     (65ch) that `--container-*: initial` does not clear, so a token named
+     `prose` is silently shadowed and the measure comes out 65ch instead of
+     68ch. Verified in the built CSS. `reading` has no such collision. */
+  --container-reading: 68ch;
+  --container-lead: 52ch;
+  --container-display: 20ch;
+
+  /* ── Radii ─────────────────────────────────────────────────────────────── */
+  --radius-none: 0px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-xl: 22px;
+  --radius-2xl: 32px;
+  --radius-panel: 40px;
+  --radius-full: 9999px;
+
+  /* ── Shadows — warm, never neutral black ───────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgb(var(--mb-shadow-rgb) / 0.05);
+  --shadow-sm:
+    0 2px 6px -1px rgb(var(--mb-shadow-rgb) / 0.07),
+    0 1px 2px rgb(var(--mb-shadow-rgb) / 0.05);
+  --shadow-md:
+    0 6px 16px -4px rgb(var(--mb-shadow-rgb) / 0.09),
+    0 2px 6px -2px rgb(var(--mb-shadow-rgb) / 0.06);
+  --shadow-lg:
+    0 16px 36px -10px rgb(var(--mb-shadow-rgb) / 0.12),
+    0 4px 12px -4px rgb(var(--mb-shadow-rgb) / 0.07);
+  --shadow-xl:
+    0 32px 64px -20px rgb(var(--mb-shadow-rgb) / 0.16),
+    0 8px 20px -8px rgb(var(--mb-shadow-rgb) / 0.08);
+  --shadow-panel: 0 -18px 48px -24px rgb(var(--mb-shadow-rgb) / 0.18);
+
+  /* ── Scrims, overlays, grain ───────────────────────────────────────────── */
+  --scrim-soft: rgb(var(--mb-shadow-rgb) / 0.35);
+  --scrim-strong: rgb(var(--mb-shadow-rgb) / 0.6);
+  --grain-opacity: 0.04;
+
+  /* ── Elevation ─────────────────────────────────────────────────────────── */
+  --z-aurora: -1;
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 20;
+  --z-header: 40;
+  --z-overlay: 50;
+  --z-grain: 60;
+  --z-toast: 70;
+
+  /* ── Motion — 400ms is a hard ceiling. docs/MOTION.md §7 ───────────────── */
+  --duration-instant: 0ms;
+  --duration-fast: 140ms;
+  --duration-base: 220ms;
+  --duration-slow: 320ms;
+  --duration-slowest: 400ms;
+  --duration-settle: 200ms;
+
+  --ease-standard: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-water: cubic-bezier(0.33, 0.9, 0.28, 1);
+
+  --stagger-line: 60ms;
+  --stagger-item: 40ms;
+  --stagger-cap: 6;
+
+  --motion-lift: -4px;
+  --motion-image-scale: 1.12;
+  --motion-panel-scale: 0.96;
+  --motion-panel-dim: 0.55;
+
+  /* ── Aurora — docs/DESIGN-SYSTEM.md §1.6 ───────────────────────────────── */
+  --aurora-a: var(--mb-cream);
+  --aurora-b: var(--mb-nude);
+  --aurora-c: var(--mb-rose-beige);
+  --aurora-alpha: 0.55;
+  --aurora-blur: 90px;
+}
+
+/* ── Focus ring ─────────────────────────────────────────────────────────────
+   Two rings: a page-coloured gap so the ring reads on any surface, then the
+   ring itself. `clay` is the only colour clearing 3:1 against every surface in
+   the system — see docs/DESIGN-SYSTEM.md §1.4. */
+@utility focus-ring {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ── Elevation utilities — so z-index cannot be invented inline ─────────── */
+@utility z-aurora {
+  z-index: var(--z-aurora);
+}
+@utility z-raised {
+  z-index: var(--z-raised);
+}
+@utility z-sticky {
+  z-index: var(--z-sticky);
+}
+@utility z-header {
+  z-index: var(--z-header);
+}
+@utility z-overlay {
+  z-index: var(--z-overlay);
+}
+@utility z-grain {
+  z-index: var(--z-grain);
+}
+@utility z-toast {
+  z-index: var(--z-toast);
+}

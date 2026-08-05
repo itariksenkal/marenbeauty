@@ -51,19 +51,36 @@ entry in `docs/LICENSES.md` and owner sign-off.
 ### Licence policy
 
 Every runtime and dev dependency must be **MIT, MIT-0, Apache-2.0, ISC, BSD-2,
-BSD-3, 0BSD, CC0 or Unlicense**. Fonts may be OFL-1.1. Anything else (GPL, AGPL,
-MPL, SSPL, source-available, "free for non-commercial") requires explicit owner
-approval recorded in `docs/LICENSES.md`.
+BSD-3, 0BSD, CC0, Unlicense, BlueOak-1.0.0, Python-2.0, CC-BY-4.0 or
+CC-BY-3.0**. Fonts may be OFL-1.1. Anything else (GPL, LGPL, AGPL, MPL, SSPL,
+source-available, "free for non-commercial") requires explicit owner approval
+recorded in `docs/LICENSES.md` §5.
 
-`npm run licenses` enforces this via `licenses.exceptions.json`, which holds the
-policy list and every exception. Each exception must carry a licence, scope,
-reason and approval status — the audit fails if one is missing, and fails again
-if an excepted package later **changes** licence.
+**CC-BY is not a free pass — it obliges attribution.** Every CC-BY package is
+credited by author with a licence link in the generated `NOTICE` file.
 
-> **Open ruling needed.** The M0 audit found the policy as written is not
-> satisfiable by this stack: Tailwind v4 pulls MPL-2.0, Next.js pulls CC-BY-4.0
-> data, and `sharp`'s binaries carry LGPL-3.0 into production. 19 exceptions are
-> pending. **`docs/OPEN-QUESTIONS.md` E4.**
+`npm run licenses` enforces all of this via `licenses.exceptions.json`. Each
+exception must carry a licence, scope, reason and approval status — the audit
+fails if one is missing, fails if an excepted package later **changes** licence,
+and fails if `NOTICE` has drifted from the real dependency tree.
+
+Two named exceptions are approved and stay visible on every run. They are
+**not** folded into the allow-list:
+
+| Package                    | Licence                     | Scope                                                                                |
+| -------------------------- | --------------------------- | ------------------------------------------------------------------------------------ |
+| `sharp` / `@img/sharp-*`   | LGPL-3.0-or-later (libvips) | **Production.** Unmodified, dynamically linked. Losing it means losing `next/image`. |
+| `lightningcss`, `axe-core` | MPL-2.0                     | Build-time / dev only. File-level copyleft, never modified or shipped.               |
+
+### Pinned versions — do not "upgrade" these
+
+Both are deliberately behind `latest`. Raising either breaks tooling; clean peer
+resolution beats a higher version number.
+
+| Pin                            | Why                                                                                                                                                                                                        | Revisit when                               |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| **TypeScript 6.0.3** (not 7.x) | `typescript-eslint` declares `typescript: ">=4.8.4 <6.1.0"`. TS 7 breaks linting.                                                                                                                          | `typescript-eslint` widens its peer range. |
+| **ESLint 9.39.5** (not 10.x)   | `eslint-config-next` pulls `eslint-plugin-import`, `-jsx-a11y` and `-react`, all capped at `^9`. ESLint 10 installs only by overriding three peers, which hides the incompatibility rather than fixing it. | `eslint-config-next` updates its plugins.  |
 
 ---
 
@@ -89,12 +106,18 @@ npm run build          # production build (standalone output)
 npm run typecheck      # tsc --noEmit
 npm run lint           # eslint .
 npm run format:check   # prettier --check .
+npm run fonts          # F1 — Turkish glyph coverage, read from the woff2 cmap
 npm run guard          # repo guard rules — see §9, §12
 npm run test           # vitest run (unit)
 npm run test:a11y      # playwright + axe on every static route
-npm run licenses       # dependency licence audit
+npm run licenses       # licence audit + regenerates NOTICE
 npm run verify         # everything above, in order — THE gate
 ```
+
+`npm run dev` then **`/styleguide`** is the design-system review surface: every
+colour token with its computed contrast, the type scale set in Turkish, the
+glyph specimen, spacing, radii, shadows and every control state. Development
+only — it 404s in production and is `noindex` regardless.
 
 ### The verification command
 
@@ -107,7 +130,7 @@ npm run verify
 Defined as:
 
 ```
-typecheck && lint && format:check && build && guard && test && test:a11y && licenses
+typecheck && lint && format:check && fonts && build && guard && test && test:a11y && licenses
 ```
 
 `guard` runs **after** `build` because it inspects build output, not source.
@@ -129,8 +152,9 @@ the conflict.
 │  ├─ services/*.mdx         # 20 files, slug = filename
 │  └─ blog/*.mdx             # slug = filename
 ├─ public/
-│  ├─ fonts/                 # self-hosted woff2, subset
+│  ├─ fonts/                 # OFL licence texts only — publicly reachable
 │  └─ images/                # referenced ONLY via the image manifest
+├─ NOTICE                    # GENERATED by npm run licenses — never hand-edit
 ├─ scripts/
 │  └─ guard.mjs              # §12
 └─ src/
@@ -144,8 +168,9 @@ the conflict.
    ├─ config/                # THE only home for tunable values — §7
    ├─ content-layer/         # MDX loading + Zod schemas + typed queries
    ├─ lib/                   # framework-agnostic helpers, pure where possible
+   ├─ fonts/                 # self-hosted .woff2 — NOT public/, see below
    ├─ hooks/
-   └─ styles/                # globals.css, @theme token definitions
+   └─ styles/                # globals.css, theme.css (@theme tokens)
 ```
 
 Rules:
@@ -157,6 +182,11 @@ Rules:
 - Nothing outside `src/content-layer/` may read from `content/` directly.
 - Nothing outside `src/config/images.ts` may reference a path in
   `public/images/`.
+- **`.woff2` files live in `src/fonts/`, not `public/fonts/`.** `next/font/local`
+  fingerprints and serves them from `/_next/static/media`; a copy under
+  `public/` would be served raw as well, shipping every font twice. Only the
+  OFL licence texts belong in `public/fonts/`, where they are publicly
+  reachable — which is the point of a licence text.
 
 ---
 
@@ -441,8 +471,13 @@ Authoritative spec: `docs/MOTION.md`. The hard limits:
   components.** Every colour is a semantic token from `docs/DESIGN-SYSTEM.md`,
   used as a Tailwind utility or `var(--color-*)`.
 - Use **semantic** tokens (`text-secondary`, `surface-raised`), not primitives
-  (`cocoa`, `ivory`). Primitives exist only to define semantics in
-  `src/styles/theme.css`.
+  (`cocoa`, `ivory`). This is enforced structurally, not by review: primitives
+  are declared as `--mb-*`, outside every Tailwind namespace, so **no utility is
+  generated for them**. `bg-ivory` does not exist and never compiles.
+- Tailwind's default palette, type scale, spacing, radii, shadows and easings
+  are cleared with `*: initial` in `theme.css`. `bg-red-500` and the stock
+  `text-lg` do not exist either. If a utility you expect is missing, the value
+  is missing from the design system — add it there, deliberately.
 - No arbitrary values for spacing, radius, shadow or type — no
   `p-[13px]`, no `text-[17px]`. If the scale lacks it, the scale is wrong;
   change the scale deliberately.

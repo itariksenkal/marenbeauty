@@ -55,8 +55,11 @@ src/app/layout.tsx  src/app/page.tsx  src/styles/globals.css
       it cannot silently pass once it becomes load-bearing — verified both ways.
 - [x] `npm run licenses` passes, and `docs/LICENSES.md` §3.0 now holds **actual
       audit output**: 474 packages, 454 conforming, 20 exceptions.
-      **⚠ 19 await owner approval — see `docs/OPEN-QUESTIONS.md` E4.** The policy
-      as written is not satisfiable by this stack; nothing was widened silently.
+      The policy as written was not satisfiable by this stack; nothing was
+      widened silently. **Ruled at M1 — see `docs/OPEN-QUESTIONS.md` E4:** four
+      permissive licences added to the allow-list, `sharp` and `lightningcss`
+      approved as named exceptions, CC-BY admitted on condition that a generated
+      `NOTICE` ships. Now 476 packages, **0 violations**.
 - [x] Initial commit on `main`, pushed.
 
 **Deviations, all recorded in `docs/OPEN-QUESTIONS.md`**
@@ -75,38 +78,88 @@ npm run typecheck && npm run lint && npm run format:check && npm run build && np
 
 ---
 
-## M1 — Design tokens, fonts, layout shell ☐
+## M1 — Design tokens, fonts, layout shell ☑ **DONE 2026-08-06**
 
 **Goal.** `docs/DESIGN-SYSTEM.md` expressed as code. Header, footer, container,
 section, skip link. Nothing else renders.
 
-**Files touched**
+**Files touched** — as planned, plus the additions noted below.
 
 ```
 src/styles/theme.css  src/styles/globals.css
 src/app/layout.tsx  src/app/fonts.ts
-public/fonts/*.woff2
+src/fonts/*.woff2                        ← NOT public/fonts, see deviations
+public/fonts/OFL-fraunces.txt  public/fonts/OFL-manrope.txt
 src/components/layout/{SiteHeader,SiteFooter,SkipLink,Container,Section}.tsx
 src/lib/cn.ts
+src/lib/contrast.ts                      ← added: styleguide computes ratios
+src/config/ui.ts                         ← added: shell strings, see deviations
+src/app/styleguide/{page.tsx,tokens.ts}  ← added: the review surface
+scripts/verify-fonts.mjs                 ← added: F1 as a hard gate
+NOTICE  licenses.exceptions.json  scripts/licenses.mjs   ← E4 rulings
 ```
 
 **Acceptance criteria**
 
-- [ ] Every token in `docs/DESIGN-SYSTEM.md` §1–§7 exists in the `@theme` block,
-      primitives and semantics both.
-- [ ] `color-scheme: light` set; no dark-mode media query anywhere.
-- [ ] Fraunces + Manrope self-hosted via `next/font/local`, `woff2`, subset
+- [x] Every token in `docs/DESIGN-SYSTEM.md` §1–§7 exists in the `@theme` block,
+      primitives and semantics both. Presence verified in the **built CSS**, not
+      the source.
+- [x] `color-scheme: light` set; no dark-mode media query anywhere.
+- [x] Fraunces + Manrope self-hosted via `next/font/local`, `woff2`, subset
       `latin` + `latin-ext`. **Zero network requests to any font host** —
-      verified in the Network panel.
-- [ ] **Turkish glyph check passed by eye:** `ı İ ş Ş ğ Ğ ü Ü ö Ö ç Ç` render
-      correctly in both families at display and body sizes. If either fails,
-      swap the family and record it in `docs/OPEN-QUESTIONS.md`.
-- [ ] Skip link is the first focusable element and moves focus to `#main`.
-- [ ] Focus ring uses `--color-focus-ring` and is visible on every surface.
-- [ ] Zero hex literals outside `theme.css` (grep clean).
-- [ ] A throwaway token-swatch route renders and is deleted before commit.
+      verified by grepping the entire build output for `gstatic`/`googleapis`:
+      0 hits, and all four faces resolve to `/_next/static/media/*.woff2`.
+- [x] **F1 — Turkish glyphs. HARD GATE, PASSED.** `npm run fonts` decodes each
+      shipped `.woff2`, reads the real `cmap` and asserts all 20 required
+      codepoints. Both families pass. Wired into `npm run verify`, so a future
+      font change that drops `ğ` fails the build.
+- [x] Skip link is the first focusable element and moves focus to `#main`.
+- [x] Focus ring uses `--color-focus-ring` and is visible on every surface —
+      `clay` clears 3:1 against all six, shown computed in `/styleguide` §4.
+- [x] Zero hex literals outside `theme.css` — grep clean across `src/**`
+      (`.ts`, `.tsx`, `.css`). All 18 colour primitives live in `theme.css`.
+- [x] Review surface exists: **`/styleguide`**, dev-only, `noindex`, and it
+      **404s in production** — verified in the production build output.
 
-**Verify**
+**Additional scope, as instructed**
+
+- [x] F1 promoted from a note to a hard gate (above).
+- [x] `/styleguide` renders the full system on one page: primitives, every
+      colour token with **computed** contrast against each surface, the type
+      scale set in Turkish, the glyph specimen at display and body sizes,
+      spacing, radii, shadows, and every button/input state. It reads
+      `theme.css` at build time, so it cannot drift from what ships.
+
+**Deviations, all recorded in `docs/OPEN-QUESTIONS.md`**
+
+- **`.woff2` in `src/fonts/`, not `public/fonts/`** — `next/font/local`
+  fingerprints and serves them from `/_next/static/media`; a copy under
+  `public/` ships every font twice. Only the OFL texts stay in `public/fonts/`,
+  where a licence text belongs. `CLAUDE.md` §5 updated.
+- **`src/config/ui.ts` added** — the shell needs a skip-link label, and
+  components may not contain Turkish (`CLAUDE.md` §7). Ten lines; M2 folds it
+  into `site.ts` / `navigation.ts` and deletes it.
+- **The throwaway swatch route was replaced, not deleted** — the original
+  criterion said to delete it; the owner asked for a permanent `/styleguide`
+  review surface instead.
+- **Buttons and inputs in `/styleguide` are specimens, not primitives** — the
+  real `components/ui/` primitives arrive with shadcn later and must match
+  them. Building them now would pre-empt that milestone.
+- **G5 / G6** — two silent failures found and fixed: `max-w-prose` resolving to
+  Tailwind's 65ch instead of our 68ch, and `next/font` dropping a
+  `unicode-range` passed via a constant.
+
+**Two findings worth carrying forward**
+
+- Fraunces ships `wght` default **900** and `WONK` default **1**. Using the
+  family without correcting both gives a black, quirky display face. Corrected
+  in `globals.css`; `opsz` deliberately left out of `font-variation-settings`
+  so `font-optical-sizing: auto` keeps working.
+- Fraunces is **226 KB** across both subsets because it keeps all four axes.
+  Pinning `opsz` measures at 122 KB but costs optical sizing over a 30–240px
+  range. Not taken silently — recorded as an M15 performance decision.
+
+**Verify** — `npm run verify` exits **0**.
 
 ```bash
 npm run verify
@@ -541,6 +594,9 @@ src/config/legal.ts  content/legal/*.mdx  scripts/guard.mjs
 - [ ] Cookie policy is accurate for a cookieless analytics setup — it does not
       describe cookies the site does not set.
 - [ ] Footer links to all three; the form's consent checkbox links to `/kvkk`.
+- [ ] **`/lisanslar`** renders the generated `NOTICE` — third-party attribution,
+      `noindex`. Satisfies the CC-BY condition from `docs/OPEN-QUESTIONS.md` E4
+      as a public surface; the generated file already satisfies it on disk.
 - [ ] `docs/OPEN-QUESTIONS.md` records that the wording needs the owner's legal
       review, and flags the disclaimer-wording question (an "…tıbbi tedavi
       değildir" sentence would need a guard allow-list entry with a reason).

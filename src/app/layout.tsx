@@ -1,24 +1,34 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
+import { SiteFooter } from '@/components/layout/SiteFooter';
+import { SiteHeader } from '@/components/layout/SiteHeader';
+import { SkipLink } from '@/components/layout/SkipLink';
+import { ui } from '@/config/ui';
+
+import { fontVariables } from './fonts';
 import '@/styles/globals.css';
 
 /**
- * Root layout — M0 foundation only.
- *
- * Fonts (M1), the header/footer shell (M1), site config (M2), the aurora and
- * grain layers (M5) and the full metadata strategy (M13) all land later.
- * Brand name is inlined here only until src/config/site.ts exists at M2;
- * no Turkish copy appears in a component (CLAUDE.md §7).
+ * Root layout — M1. Fonts, tokens and the layout shell.
+ * Site config (M2), aurora and grain (M5) and the full metadata strategy
+ * (M13) land later.
  */
 export const metadata: Metadata = {
-  title: 'Maren Beauty',
+  title: ui.brand,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="tr">
-      <body>{children}</body>
+    <html lang="tr" className={fontVariables}>
+      <body className="min-h-dvh">
+        <SkipLink />
+        <SiteHeader />
+        <main id="main" tabIndex={-1}>
+          {children}
+        </main>
+        <SiteFooter />
+      </body>
     </html>
   );
 }

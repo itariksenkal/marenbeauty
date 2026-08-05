@@ -222,11 +222,35 @@ playful, which is wrong here).
 **Self-hosted only**, `next/font/local`, `woff2`, `font-display: swap`,
 subset `latin` + `latin-ext`. No runtime call to any font CDN, ever.
 
-> **Verification required in milestone M1:** confirm both families render
-> `ı İ ş Ş ğ Ğ ü Ü ö Ö ç Ç` correctly in the subset build. Turkish dotted/
-> dotless `i` is the usual failure. If either family drops a glyph, swap it —
-> a missing `ğ` is not negotiable for a Turkish site. Logged in
-> `docs/OPEN-QUESTIONS.md`.
+> **F1 verified at M1 — both families pass.** `npm run fonts` decodes the
+> shipped `.woff2`, reads the real `cmap`, and asserts all 20 required
+> codepoints. It runs inside `npm run verify`, so a font change that drops a
+> Turkish glyph fails the build rather than being noticed in production.
+
+**Two things the `fvar` read caught — do not remove the corrections:**
+
+Fraunces ships axis defaults that are wrong for this brand: **`wght` defaults to
+900** and **`WONK` defaults to 1** (the quirky alternates). Using the family
+without setting them gives a black, quirky display face. `globals.css` corrects
+both on `.font-display`, and `opsz` is deliberately _omitted_ from
+`font-variation-settings` because naming it there would disable
+`font-optical-sizing: auto`. Manrope defaults to `wght` 200; base weight is set
+explicitly.
+
+**Subsets.** Turkish needs both Google subsets and they are disjoint — `latin`
+carries `ı` (U+0131) plus `ç ö ü`; `latin-ext` carries `ğ ş İ`. Each is its own
+`@font-face` with its own `unicode-range`.
+
+| File                       | Bytes   |
+| -------------------------- | ------- |
+| `fraunces-latin.woff2`     | 121,016 |
+| `fraunces-latin-ext.woff2` | 105,244 |
+| `manrope-latin.woff2`      | 24,836  |
+| `manrope-latin-ext.woff2`  | 15,120  |
+
+Fraunces is 226 KB because it keeps all four axes. Pinning `opsz` would cut it
+to 122 KB but costs optical sizing across a 30–240px range, which this design
+uses. Recorded as an M15 performance decision, not taken silently.
 
 ### 2.2 Scale
 
@@ -278,11 +302,22 @@ authored uppercase strings in config where it matters.
 
 ### 2.4 Measure
 
-| Token               | Value  | Use                                    |
-| ------------------- | ------ | -------------------------------------- |
-| `--measure-prose`   | `68ch` | Blog and service body copy             |
-| `--measure-lead`    | `52ch` | Lead paragraphs, section intros        |
-| `--measure-display` | `20ch` | Large headings — forces early wrapping |
+Implemented in the `--container-*` namespace so they generate `max-w-*`
+utilities.
+
+| Token                 | Utility         | Value    | Use                                    |
+| --------------------- | --------------- | -------- | -------------------------------------- |
+| `--container-reading` | `max-w-reading` | `68ch`   | Blog and service body copy             |
+| `--container-lead`    | `max-w-lead`    | `52ch`   | Lead paragraphs, section intros        |
+| `--container-display` | `max-w-display` | `20ch`   | Large headings — forces early wrapping |
+| `--container-page`    | `max-w-page`    | `1200px` | Standard content column                |
+| `--container-wide`    | `max-w-wide`    | `1440px` | Full-bleed media, panel stack          |
+
+> **Why `reading` and not `prose`.** Tailwind ships a **static** `max-w-prose`
+> utility (65ch) that `--container-*: initial` does not clear, so a token named
+> `prose` is silently shadowed and the measure comes out 65ch instead of 68ch.
+> Caught by reading the built CSS at M1. Renaming was the fix; do not rename it
+> back.
 
 Body prose never exceeds 68ch. Display headings wrap early on purpose; the
 line-by-line reveal (`docs/MOTION.md` §3.3) depends on there being lines.
@@ -456,41 +491,40 @@ A 10-item stagger at 60ms takes 600ms to finish — over budget. Cap at 6.
 
 ## 8. Implementation
 
-`src/styles/theme.css`, Tailwind v4 CSS-first:
+`src/styles/theme.css`, Tailwind v4 CSS-first. **As built at M1.**
+
+The two-layer split is load-bearing, not cosmetic:
 
 ```css
-@import 'tailwindcss';
-
 @theme {
-  /* primitives */
-  --color-ivory: #fefcf9;
-  --color-cream: #faf4ec;
-  --color-sand: #f3eadf;
-  --color-nude: #ebdccd;
-  --color-rose-beige: #dfc9bb;
-  --color-blush: #d2b3a5;
-  --color-muted-rose: #b98d83;
-  --color-rosewood: #8a5d55;
-  --color-clay: #7c564c;
-  --color-cocoa: #55372f;
-  --color-espresso: #3a241e;
-  --color-ink: #241511;
-  --color-champagne-light: #efe2c6;
-  --color-champagne: #dec79c;
-  --color-champagne-deep: #7e6334;
-  --color-feedback-error: #8f3527;
-  --color-feedback-success: #3f5f45;
-  --color-feedback-info: #4a5a6b;
+  /* 1 — clear Tailwind's defaults, so bg-red-500 and the stock
+         text-lg cannot bypass the system */
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --ease-*: initial;
+  --container-*: initial;
+  --spacing: initial;
 
-  /* semantics — components use ONLY these */
-  --color-surface-page: var(--color-cream);
-  --color-surface-raised: var(--color-ivory);
-  /* …full set as listed in §1.3… */
+  /* 2 — PRIMITIVES as --mb-*. Inside @theme, so they are emitted as CSS
+         variables, but OUTSIDE every Tailwind namespace, so NO utility is
+         generated. `bg-ivory` does not exist and never compiles. */
+  --mb-ivory: #fefcf9;
+  --mb-cream: #faf4ec;
+  /* …18 colour primitives, §1.2… */
 
-  --font-display: 'Fraunces', ui-serif, Georgia, serif;
-  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  /* 3 — SEMANTICS. These generate the utilities components use. */
+  --color-surface-page: var(--mb-cream);
+  --color-surface-raised: var(--mb-ivory);
+  --color-text-primary: var(--mb-ink);
+  /* …full set, §1.3… */
 
-  /* …type, space, radius, shadow, motion tokens per §2–§7… */
+  --font-display: var(--mb-font-display), ui-serif, Georgia, serif;
+  --font-sans: var(--mb-font-sans), ui-sans-serif, system-ui, sans-serif;
+
+  /* …type, spacing, radius, shadow, motion tokens per §2–§7… */
 }
 
 :root {
@@ -498,9 +532,30 @@ A 10-item stagger at 60ms takes 600ms to finish — over budget. Cap at 6.
 }
 ```
 
-Semantic tokens are the public API of this system. When adding a component,
-if you cannot express it with an existing semantic token, **add a semantic
-token here first** — do not reach for a primitive or a literal.
+**Why primitives are `--mb-*` rather than `--color-*`:** CLAUDE.md §14 forbids
+using a primitive directly in a component. Declaring them under `--color-*`
+would generate `bg-ivory`, `text-cocoa` and so on, making that rule a review
+note that someone eventually forgets. Keeping them outside the namespace makes
+it a compile-time impossibility instead. Verified in the built CSS at M1:
+`bg-ivory`, `bg-cream`, `text-ink` and `bg-red-500` all produce zero rules.
+
+**Spacing:** Tailwind's dynamic `--spacing` base is cleared and the steps in §3
+are declared explicitly, so `p-7` and `p-13` do not compile either.
+
+**Z-index and the focus ring** are exposed as `@utility` rules (`z-header`,
+`focus-ring`) so the elevation scale cannot be invented inline.
+
+Semantic tokens are the public API of this system. When adding a component, if
+you cannot express it with an existing semantic token, **add a semantic token
+here first** — do not reach for a primitive or a literal.
+
+### Reviewing this system
+
+`npm run dev` → **`/styleguide`**. Every colour token with its contrast against
+each surface computed live from `theme.css`, the type scale set in Turkish, the
+glyph specimen, spacing, radii, shadows and every control state. It reads the
+token file at build time, so it cannot drift from what ships. Development only:
+it 404s in production and is `noindex`.
 
 ---
 
