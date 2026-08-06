@@ -100,6 +100,14 @@ describe('F7 — ordinary Turkish words are not flagged', () => {
   it('does not flag "en iyimser" as "en iyi"', () => {
     expect(errors('En iyimser tahminle.')).toHaveLength(0);
   });
+
+  it('does not flag fizyoterapi — ruled 2026-08-06, do not widen the stem', () => {
+    // A real profession, not a claim. The left word boundary is what keeps it
+    // clean, and that behaviour was reviewed and kept deliberately.
+    expect(errors('Fizyoterapi bir sağlık mesleğidir.')).toHaveLength(0);
+    // The bare term still blocks.
+    expect(errors('Cilt terapi seansı.').length).toBeGreaterThan(0);
+  });
 });
 
 /* ── F8 — the C9 disclaimer must pass unmodified ───────────────────────────── */
@@ -193,14 +201,31 @@ describe('rule 4 — lorem ipsum', () => {
 /* ── Rules 5 & 6 — warning tier ────────────────────────────────────────────── */
 
 describe('rules 5 and 6 — warnings do not block', () => {
-  it.each(['klinik', 'tıbbi', 'doktor kontrolünde'])(
+  it.each(['klinik', 'tıbbi', 'doktor kontrolünde', 'bir numaralı'])(
     '%s warns but does not block',
     (term) => {
-      const text = `Bu bir ${term} ifadesidir.`;
+      const text = `Bu ${term} ifadesidir.`;
       expect(errors(text)).toHaveLength(0);
       expect(warnings(text).length).toBeGreaterThan(0);
     },
   );
+
+  it('"bir numaralı" is advisory while "1 numaralı" blocks', () => {
+    // Ruled 2026-08-06: same claim, spelled out — but the blocking tier stays
+    // the sixteen terms as specified.
+    const spelled = 'Konya’nın bir numaralı merkezi.';
+    expect(errors(spelled)).toHaveLength(0);
+    expect(warnings(spelled).map((v) => v.rule)).toContain(
+      'advisory:bir numaralı',
+    );
+
+    const numeric = 'Konya’nın 1 numaralı merkezi.';
+    expect(errors(numeric).map((v) => v.rule)).toContain('blocking:1 numaralı');
+  });
+
+  it('does not flag "birinci" or an ordinary "bir"', () => {
+    expect(scan('Bir bakım seansı yaklaşık bir saat sürer.')).toHaveLength(0);
+  });
 
   it('percentages warn but do not block', () => {
     expect(errors('Nemlilik %40 arttı.')).toHaveLength(0);

@@ -29,7 +29,26 @@ export type ManagedImage = {
  * no before/after imagery, and no stock photograph of a person presented as
  * the owner, a staff member or a client.
  */
-export const images: readonly ManagedImage[] = [];
+export const images: readonly ManagedImage[] = [
+  /**
+   * FIXTURE — deleted at M8 along with content/*\/ornek-*.mdx.
+   *
+   * Exists only so the content fixtures have a heroImageId that resolves, which
+   * is what exercises the image-manifest integrity check end to end. Nothing
+   * renders it: there are no content routes until M8.
+   */
+  {
+    id: 'fixture-placeholder',
+    src: '/images/fixture-placeholder.svg',
+    alt: 'İçerik hattı doğrulaması için geçici görsel.',
+    width: 1600,
+    height: 1200,
+    credit: null,
+    licence: 'CC0-1.0',
+    sourceUrl: null,
+    replaceable: true,
+  },
+];
 
 const byId = new Map(images.map((image) => [image.id, image]));
 

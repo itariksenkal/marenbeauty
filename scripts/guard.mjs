@@ -85,6 +85,10 @@ const WARNING = [
   { id: 'klinik', pattern: `klinik${W}` },
   { id: 'tıbbi', pattern: `tıbbi${W}` },
   { id: 'doktor kontrolünde', pattern: `doktor\\s+kontrol${W}` },
+  // Ruled 2026-08-06: the same claim as `1 numaralı`, spelled out. Advisory
+  // only — the blocking tier stays the sixteen terms as specified, and this is
+  // a spelling variant of one of them rather than a seventeenth term.
+  { id: 'bir numaralı', pattern: `bir\\s+numaralı${W}` },
 ];
 
 /**

@@ -322,7 +322,7 @@ npm run build && npm run guard && npm run test
 
 ---
 
-## M4 — Content layer ☐
+## M4 — Content layer ☑ **DONE 2026-08-06**
 
 **Goal.** MDX + Zod + referential integrity. Two throwaway fixture files prove
 the pipeline; real content comes later.
@@ -330,26 +330,72 @@ the pipeline; real content comes later.
 **Files touched**
 
 ```
-src/content-layer/{schemas,services,posts,mdx,integrity}.ts
+src/content-layer/{schemas,load,mdx,integrity,services,posts,index}.ts
 src/lib/{date,reading-time}.ts
-content/services/_fixture.mdx  content/blog/_fixture.mdx   (deleted at M8/M10)
+content/services/ornek-hizmet.mdx   ← renamed from _fixture, see deviations
+content/blog/ornek-yazi.mdx         ← deleted at M8/M10
+src/config/images.ts                ← one fixture entry, deleted at M8
+tests/unit/content-layer.test.ts    ← added: 42 tests
 ```
 
 **Acceptance criteria**
 
-- [ ] Schemas match `docs/ARCHITECTURE.md` §3.1 and §3.3 exactly, including
-      `author: z.literal('PENDING')` and `durationLabel` nullable.
-- [ ] MDX compiles through `@mdx-js/mdx` `evaluate()` in a Server Component.
-      **`next-mdx-remote` is not installed** — MPL-2.0, outside policy.
-- [ ] Invalid frontmatter fails the **build**, with the offending file and field
-      named. Proven by a fixture.
-- [ ] All six integrity checks in `docs/ARCHITECTURE.md` §3.4 implemented and
-      each proven by a failing fixture test.
-- [ ] `readingMinutes` computed from body, never authored.
-- [ ] Content read once at module scope; the full query API from §4 exists.
-- [ ] Nothing outside `src/content-layer/` imports from `content/`.
+- [x] Schemas match `docs/ARCHITECTURE.md` §3.1 and §3.3, including
+      `author: z.literal('PENDING')` and `durationLabel` nullable. Both are
+      `.strict()`, so an authored `readingMinutes` or a typo'd key is an error.
+- [x] MDX compiles through `@mdx-js/mdx` `evaluate()` in a Server Component.
+      **`next-mdx-remote` is not installed** — asserted by a test that reads
+      `package.json`, not just by intention.
+- [x] Invalid frontmatter fails the **build**, naming the file and every
+      offending field. **Proven end to end:** a deliberately broken fixture
+      produced
+      `Invalid frontmatter in content/services/ornek-hizmet.mdx: group … order …`
+      and `next build` exited 1.
+- [x] **All seven** integrity checks implemented, each proven by a failing
+      fixture test. Integrity failure also proven against `next build`: two
+      dangling references reported together, exit 1.
+- [x] `readingMinutes` computed from the body, never authored.
+- [x] Content read once at module scope; the full query API from §4 exists.
+- [x] Nothing outside `src/content-layer/` reads from `content/` — enforced by
+      a test that walks `src/**` and greps, not by convention.
 
-**Verify**
+**Corrections made to the docs**
+
+- **Seven integrity checks, not six.** `docs/ARCHITECTURE.md` §3.4 always
+  listed seven bullets; this milestone's criterion said "six". The doc is now
+  an explicit numbered table with stable check ids.
+- **Check 5 is services-only.** Applying "filename equals `slugify(title)`" to
+  posts would reject every post in `docs/CONTENT-PLAN.md` §4, whose slugs are
+  deliberately shorter than their titles. Posts are still covered by check 4.
+- **Check 7 scans MDX bodies** for `/blog/<slug>` links, since there is no
+  explicit post-to-post reference field. Without that it would have been a
+  vacuous check that could never fire.
+
+**Deviations**
+
+- **Fixtures renamed** `_fixture.mdx` → `ornek-hizmet.mdx` / `ornek-yazi.mdx`.
+  A leading underscore is not a valid slug, so the original name would have
+  forced either weakening slug validation or special-casing the loader — both
+  worse than renaming a file that is deleted at M8 anyway.
+- **One fixture entry added to `src/config/images.ts`**, so the fixtures'
+  `heroImageId` resolves and integrity check 3 is exercised end to end rather
+  than only in a unit test. Marked in the file and deleted with the fixtures.
+- **`z.iso.date()`** rather than `z.string().date()` — the Zod 4 form. The
+  loader also normalises YAML's automatic `Date` conversion back to an ISO
+  string, so frontmatter dates never need quoting. That matters because the
+  owner will eventually write this frontmatter herself.
+
+**One thing to be precise about**
+
+Invalid content fails `next build` **only once a route imports the content
+layer**, which happens at M8. That was verified by temporarily adding the
+import — both failure modes above were reproduced against a real build.
+
+Today the guarantee still holds, via a different gate: `npm run test` imports
+the content layer at module scope, so invalid content fails `npm run verify`
+and therefore CI. From M8 it fails `next build` directly as well.
+
+**Verify** — `npm run verify` exits **0**. 179 unit tests, 4 browser tests.
 
 ```bash
 npm run verify

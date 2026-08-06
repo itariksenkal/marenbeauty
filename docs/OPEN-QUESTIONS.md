@@ -539,6 +539,43 @@ link is built.
 
 ---
 
+### G11 — Content layer clarifications 🟢 → resolved at M4
+
+Three things `docs/ARCHITECTURE.md` §3.4 left ambiguous, settled while
+implementing and written back into the doc.
+
+**Seven integrity checks, not six.** §3.4 always listed seven bullets; the M4
+criterion said "six". The doc is now a numbered table with stable check ids so
+the count cannot drift again.
+
+**Check 5 applies to services only.** "Filename equals `slugify(title)`" is
+right for services — every one of the twenty planned names folds cleanly. It is
+wrong for posts: `docs/CONTENT-PLAN.md` §4 plans _"Lazer Epilasyon Nedir?
+Uygulama Nasıl İlerler"_ at `/blog/lazer-epilasyon-nedir`, so the same rule
+would have rejected all fifty planned posts at M10. Posts remain covered by
+check 4 (valid ASCII slug).
+
+**Check 7 needed an implementation, not just a rule.** "A draft post is
+referenced from a published one" has no explicit reference field to check —
+related posts are derived, not authored. It is implemented by scanning MDX
+bodies for `/blog/<slug>` links, which makes it a genuine broken-link check
+rather than one that could never fire.
+
+### G12 — When invalid content fails 🟢 → M4, closes at M8
+
+M4's criterion says invalid frontmatter must fail **the build**. It does — but
+only once a route imports the content layer, which happens at M8. Verified by
+temporarily adding the import: both a schema failure and an integrity failure
+were reproduced against a real `next build`, each naming the file and every
+offending field.
+
+Until M8 the guarantee holds through a different gate: `npm run test` imports
+the content layer at module scope, so invalid content fails `npm run verify`
+and therefore CI. Recorded so nobody later reads "it doesn't fail the build" as
+a hole rather than a sequencing detail.
+
+---
+
 ## H. Content posture — standing rule
 
 **Recorded 2026-08-06. This is a working rule, not a question.** Also written

@@ -86,6 +86,13 @@ fails the build — it never degrades silently at runtime.
 
 20 files. Filename is the slug.
 
+Both schemas are **`.strict()`**: unknown keys are rejected. That catches typos
+(`sumary:` silently becoming an empty field) and enforces that computed values
+are never authored — `readingMinutes` in frontmatter is an error, not an
+override. Dates use `z.iso.date()` (the Zod 4 form of `z.string().date()`), and
+the loader normalises YAML's automatic `Date` conversion back to an ISO string
+so authors never need to quote a date.
+
 ```ts
 const serviceSchema = z.object({
   title: z.string().min(2), // "Hydrafacial"
@@ -174,15 +181,32 @@ schema widens in one place and `BlogPosting.author` switches from
 
 ### 3.4 Referential integrity — enforced at build
 
-The content layer fails the build if:
+**Seven checks** (`src/content-layer/integrity.ts`). Implemented at M4; each has
+a failing fixture test, and the check id is stable so tests assert on the
+specific rule.
 
-- a `relatedServices` slug has no matching file;
-- a `service` on a post has no matching service;
-- a `heroImageId` is absent from the image manifest;
-- a slug contains a non-ASCII character;
-- a filename and its `title`-derived slug disagree;
-- two posts share a slug;
-- a `draft: true` post is referenced from a published one.
+| #   | id                        | Fails when                                                                         |
+| --- | ------------------------- | ---------------------------------------------------------------------------------- |
+| 1   | `related-service-missing` | A `relatedServices` slug has no matching file, or a service references itself.     |
+| 2   | `post-service-missing`    | A post's `service` has no matching service.                                        |
+| 3   | `image-missing`           | A `heroImageId` is absent from the image manifest.                                 |
+| 4   | `invalid-slug`            | A slug is not ASCII kebab-case — Turkish characters are folded, not dropped.       |
+| 5   | `slug-title-mismatch`     | **A service** filename does not equal `slugify(title)`.                            |
+| 6   | `duplicate-slug`          | Two documents in a collection share a slug.                                        |
+| 7   | `draft-referenced`        | Anything published links to a `draft: true` post, which would be a guaranteed 404. |
+
+Two clarifications made when this was built:
+
+- **Check 5 applies to services only.** Post slugs are deliberately shorter
+  than their titles — `docs/CONTENT-PLAN.md` §4 plans _"Lazer Epilasyon Nedir?
+  Uygulama Nasıl İlerler"_ at `/blog/lazer-epilasyon-nedir` — so applying the
+  same rule to posts would reject every planned post. Check 4 still requires a
+  post filename to be a valid slug.
+- **Check 7 is implemented by scanning MDX bodies** for `/blog/<slug>` links,
+  since there is no explicit post-to-post reference field. That makes it a real
+  broken-link check rather than a vacuous one.
+
+`assertIntegrity()` reports **every** problem in one error, not just the first.
 
 Dangling references are build failures, not 404s in production.
 
