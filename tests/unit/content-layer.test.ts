@@ -282,11 +282,20 @@ describe('integrity check 8 — a /hizmetler link in a body must resolve', () =>
     expect(checks(issues)).not.toContain('internal-link-missing');
   });
 
-  it('does not confuse a /blog link for a /hizmetler one', () => {
-    const issues = run({
-      services: [service({ body: '[yazı](/blog/bir-yazi)' })],
+  it('also covers /blog links, widened at M10', () => {
+    // Rule 7 catches a link to a DRAFT post. A link to a slug that does not
+    // exist at all was, until the twelve posts started cross-linking each
+    // other, nobody's job.
+    const dangling = run({
+      services: [service({ body: '[yazı](/blog/boyle-bir-yazi-yok)' })],
     });
-    expect(checks(issues)).not.toContain('internal-link-missing');
+    expect(checks(dangling)).toContain('internal-link-missing');
+
+    const resolves = run({
+      services: [service({ body: '[yazı](/blog/ornek-yazi)' })],
+      posts: [post({ slug: 'ornek-yazi', service: 'ornek' })],
+    });
+    expect(checks(resolves)).not.toContain('internal-link-missing');
   });
 });
 
@@ -531,22 +540,27 @@ describe('query API', () => {
     expect(getServicesByGroup('ozel-paket')).toHaveLength(1);
   });
 
-  it('the blog collection is empty until M10, and every query survives that', () => {
-    // Not a placeholder: there are no posts, so every post query returns an
-    // empty list rather than throwing. `RelatedPosts` renders nothing on the
-    // strength of exactly this.
-    expect(getAllPosts()).toEqual([]);
+  it('loads Batch 1 — twelve published posts', () => {
+    expect(getAllPosts()).toHaveLength(12);
+    expect(getPostBySlug('lazer-epilasyon-nedir')).not.toBeNull();
     expect(getPostBySlug('herhangi-bir-yazi')).toBeNull();
-    expect(getPostsByService('cilt-bakimi')).toEqual([]);
-    expect(getPostsByCategory('cilt-bakimi-rehberi')).toEqual([]);
-    expect(getAllSlugs('blog')).toEqual([]);
+    expect(getAllSlugs('blog')).toHaveLength(12);
   });
 
-  it('related posts still exclude the post itself, given posts', () => {
-    // Behaviour of the function, proven with factories, since the collection is
-    // empty. Re-pointed at real content at M10.
-    const self = post({ slug: 'bir' });
-    expect(getRelatedPosts(self).map((p) => p.slug)).not.toContain('bir');
+  it('filters by service and category', () => {
+    expect(getPostsByService('cilt-bakimi')).toHaveLength(1);
+    expect(getPostsByService('bb-glow')).toEqual([]); // Batch 2
+    expect(getPostsByCategory('kas-kirpik-rehberi')).toHaveLength(4);
+    expect(getPostsByCategory('epilasyon-rehberi')).toHaveLength(1);
+  });
+
+  it('related posts exclude the post itself and prefer the same category', () => {
+    const found = getPostBySlug('microblading-nedir')!;
+    const related = getRelatedPosts(found, 3);
+    expect(related.map((p) => p.slug)).not.toContain(found.slug);
+    expect(related.length).toBeGreaterThan(0);
+    // Same category ranks above the rest — kaş & kirpik has four posts.
+    expect(related[0]!.category).toBe('kas-kirpik-rehberi');
   });
 
   it('exposes slugs for generateStaticParams', () => {
@@ -564,9 +578,10 @@ describe('query API', () => {
     for (const p of getAllPosts()) expect(ids).toContain(p.heroImageId);
   });
 
-  it('no fixture from M4 survives', () => {
+  it('no fixture survives — neither the M4 pair nor the M9 preview', () => {
     expect(getServiceBySlug('ornek-hizmet')).toBeNull();
     expect(getPostBySlug('ornek-yazi')).toBeNull();
+    expect(getPostBySlug('sablon-onizleme')).toBeNull();
     expect(images.some((i) => i.id === 'fixture-placeholder')).toBe(false);
   });
 });

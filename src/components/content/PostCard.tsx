@@ -39,9 +39,15 @@ export function PostCard({ post }: { post: Post }) {
         <p className="text-2xs tracking-eyebrow text-text-accent uppercase">
           {category.label}
         </p>
-        <h3 className="mt-3 font-display text-2xl tracking-display text-text-primary">
+        {/*
+          h2, not h3. A listing's only h1 is its page title, so a card heading
+          is the next level down — an h3 here skips a level on every blog
+          listing at once, which a browser test caught the moment posts existed.
+          The service index differs: it has a real h2 per group above its cards.
+        */}
+        <h2 className="mt-3 font-display text-2xl tracking-display text-text-primary">
           {post.title}
-        </h3>
+        </h2>
         <p className="mt-3 text-sm text-text-secondary">{post.summary}</p>
         <p className="mt-5 text-2xs text-text-muted">
           <time dateTime={post.publishedAt}>

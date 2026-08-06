@@ -1,3 +1,4 @@
+import { COSMETIC_DISCLAIMER } from '@/config/legal';
 import type { BlogCategory } from '@/content-layer/schemas';
 
 /**
@@ -137,5 +138,15 @@ export const blog = {
     ctaBody:
       'Merak ettiklerinizi yazabilirsiniz; açılışla birlikte size dönüş yapacağız.',
     ctaLabel: 'Mesaj gönderin',
+
+    /**
+     * Rendered on **every** post, not only the ones that name a service.
+     *
+     * Every post maps to a service by schema, so every post's topic touches one
+     * — and a disclaimer that appears on some posts and not others invites the
+     * reader to wonder what the difference is. Rendered from config rather than
+     * written into twelve MDX files, so it cannot drift.
+     */
+    disclaimer: COSMETIC_DISCLAIMER,
   },
 } as const;

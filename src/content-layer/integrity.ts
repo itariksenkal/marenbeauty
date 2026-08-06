@@ -179,12 +179,18 @@ export function checkIntegrity(input: IntegrityInput): IntegrityIssue[] {
     }
   }
 
-  // 8 — a `/hizmetler/<slug>` link written in a body must resolve.
+  // 8 — an internal link written in a body must resolve, both kinds.
   //     `relatedServices` is checked by rule 1, but from M8 the prose itself
   //     carries contextual links (docs/CONTENT-PLAN.md §5, "Anchor text"), and
   //     those are exactly as easy to break by renaming a file. A dangling one
   //     is a guaranteed 404, so it fails the build like every other dangling
   //     reference rather than waiting to be noticed in production.
+  //
+  //     Widened at M10 to cover `/blog/<slug>` as well: with twelve posts
+  //     cross-linking each other, a post-to-post link is now the most likely
+  //     one to break. Rule 7 only catches links to a DRAFT; a link to a slug
+  //     that does not exist at all was, until now, nobody's job.
+  const postSlugs = new Set(posts.map((p) => p.slug));
   const allDocs = [
     ...services.map((s) => ({
       file: `content/services/${s.slug}.mdx`,
@@ -199,6 +205,15 @@ export function checkIntegrity(input: IntegrityInput): IntegrityIssue[] {
           'internal-link-missing',
           doc.file,
           `links to /hizmetler/${linked}, which has no matching service file.`,
+        );
+      }
+    }
+    for (const linked of linksIn(doc.body, 'blog')) {
+      if (!postSlugs.has(linked)) {
+        push(
+          'internal-link-missing',
+          doc.file,
+          `links to /blog/${linked}, which has no matching post file.`,
         );
       }
     }

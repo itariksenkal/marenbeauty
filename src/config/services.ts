@@ -1,3 +1,4 @@
+import { COSMETIC_DISCLAIMER } from '@/config/legal';
 import type { ServiceGroup } from '@/content-layer/schemas';
 
 /**
@@ -123,12 +124,9 @@ export const servicePage = {
   },
 
   /**
-   * The required disclaimer, verbatim (CLAUDE.md §9).
-   *
-   * It contains `tıbbi`, which is why that term is ADVISORY and not blocking in
-   * the guard. A fixture test asserts this exact sentence passes; promoting the
-   * term to the blocking tier breaks the disclaimer and fails that test first.
+   * The required disclaimer. Re-exported, not restated — the one copy lives in
+   * `src/config/legal.ts`, because blog posts carry the same sentence and two
+   * copies of a compliance sentence is one too many.
    */
-  disclaimer:
-    'Bu uygulamalar kozmetik bakım amaçlıdır ve tıbbi bir hizmetin yerine geçmez.',
+  disclaimer: COSMETIC_DISCLAIMER,
 } as const;

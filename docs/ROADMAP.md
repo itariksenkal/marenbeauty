@@ -934,33 +934,86 @@ npm run verify
 
 ---
 
-## M10 — Blog: 12 posts ☐
+## M10 — Blog: 12 posts ☑ **DONE 2026-08-06**
 
 **Goal.** Batch 1 written and published — one post per distinct service.
 
-**Files touched**
+**Files touched** — as planned, plus the additions noted below.
 
 ```
-content/blog/*.mdx            ← 12 files
-src/config/images.ts
+content/blog/*.mdx                        ← 12 files
+content/blog/sablon-onizleme.mdx          ← DELETED, as scheduled at M9
+tests/e2e/development/blog-preview.spec.ts ← deleted with it
+src/config/legal.ts                       ← the disclaimer's one home
+src/config/blog.ts  src/app/blog/[slug]/page.tsx
+src/config/services.ts  src/content-layer/integrity.ts
+src/components/content/PostCard.tsx
 ```
+
+`src/config/images.ts` was **not** touched: blog heroes are one per category
+(M9), so twelve posts needed no new artwork and no new manifest entry. That was
+the point of doing it that way.
 
 **Acceptance criteria**
 
-- [ ] Exactly the 12 posts in `docs/CONTENT-PLAN.md` §4 Batch 1, with the
-      planned slugs, keywords, categories and service mappings.
-- [ ] 900–1400 words each, real Turkish, lead paragraph answers the question
-      immediately.
-- [ ] `author: 'PENDING'` on all 12.
-- [ ] `npm run guard` clean — no banned lexicon, no percentages, no invented
-      statistics.
-- [ ] Every post links up to its service hub in context, plus 2–3 lateral links
-      and exactly one CTA to `/iletisim`.
-- [ ] Every service hub shows its related posts.
-- [ ] No before/after imagery. All images through the manifest.
-- [ ] Fixture MDX from M4 deleted.
+- [x] Exactly the 12 posts in `docs/CONTENT-PLAN.md` §4 Batch 1, with the
+      planned slugs, keywords, categories and service mappings — asserted
+      against a literal copy of the plan, not derived from the content.
+- [x] 900–1400 words each, real Turkish, lead paragraph answers the question
+      immediately. Measured **909–1119**; see the note on variety below.
+- [x] `author: 'PENDING'` on all 12, and the template still never reads the
+      field.
+- [x] `npm run guard` clean — **0 blocking, 0 percentage claims** across
+      `/blog`. Full output reported below.
+- [x] Every post links up to its service hub in context, plus 2–3 lateral links
+      and exactly one CTA to `/iletisim` (asserted inside `<main>`, so the
+      footer's nav link is not miscounted). **Zero orphans**: every post has an
+      inbound link from another post.
+- [x] Every service hub shows its related posts — the twelve with a Batch 1
+      post do; the eight Batch 2 services correctly show nothing.
+- [x] No before/after imagery. All images through the manifest.
+- [x] Fixture MDX from M4 deleted (already done at M8), and the M9 preview post
+      deleted here as scheduled. A test asserts neither comes back.
 
-**Verify**
+**Notes and additions**
+
+**Sameness was the real risk, and the first draft had it.** Twelve posts written
+in one pass came out 909–972 words — a 52-word spread across the whole batch,
+which is the clearest signal there is that a machine wrote them. Rewritten so
+length follows the topic: the broad ones (`lazer-epilasyon`, `kalıcı makyaj`,
+`leke`, `gelin`) run 1014–1119; the narrow ones answering a single question stay
+near 910. A unit test now asserts the spread, the section-count variety and that
+no two posts open with the same sentence — blunt proxies, but they fail on the
+failure mode that matters.
+
+**No numeric claims at all.** Not "3 seans", not "2 hafta", not a percentage,
+not a study reference or an "uzmanlar diyor ki". Several posts say explicitly
+why the number is absent, which turned out to be the most distinctive material
+in the batch. Asserted per post over frontmatter and body together. The one
+number a reader sees is the computed reading time.
+
+**The disclaimer moved to one home** (`src/config/legal.ts`) and is rendered by
+the post template on every post, rather than written into twelve MDX files.
+Twelve copies of a compliance sentence is twelve chances to drift. A test
+asserts it is NOT in any body.
+
+**Integrity check 8 widened to `/blog` links.** Rule 7 catches a link to a
+draft; a link to a slug that does not exist at all was nobody's job until twelve
+posts started cross-linking each other.
+
+**`PostCard` heading fixed from h3 to h2.** A listing's only h1 is its page
+title, so an h3 card heading skipped a level on every blog listing at once. It
+was invisible while there were no cards to render, and a browser test caught it
+the moment there were.
+
+**A note on the twelfth title.** `docs/CONTENT-PLAN.md` §4 plans "Gelin Bakım
+Takvimi: Düğüne Kaç Ay Kala Ne Planlanır", and the content posture forbids
+publishing month counts. The title is kept as planned and the lead answers the
+question honestly in its first sentence: the sequence is what matters, not the
+count, and the post says why no table appears. Flag it if that reads as a
+bait-and-switch — the alternative is a title change and a plan deviation.
+
+**Verify** — `npm run verify` exits **0**. 552 unit tests, 88 browser tests.
 
 ```bash
 npm run verify

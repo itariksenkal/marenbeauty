@@ -188,6 +188,19 @@ Intent key: **I** = informational · **C** = commercial · **S** = seasonal.
 | 11  | Kaş Tasarımı Nedir? Yüz Hatlarına Göre Kaş             | `kas-tasarimi-nedir`              | kaş tasarımı           | I      | `kas-tasarimi`       | `kas-kirpik-rehberi`    |
 | 12  | Gelin Bakım Takvimi: Düğüne Kaç Ay Kala Ne Planlanır   | `gelin-bakim-takvimi`             | gelin bakım takvimi    | C      | `gelin-bakim-paketi` | `ozel-gun-ve-mevsim`    |
 
+**Batch 1 was written at M10.** All twelve landed at 909–1119 words. The spread
+is deliberate: the broad topics run long, the ones answering a single narrow
+question stay near the floor. The first draft came out 909–972 across the whole
+batch, and that uniformity — not any individual sentence — was the clearest
+signal that they had been written in one pass, so they were reshaped rather than
+merely lengthened.
+
+Two things every post does **not** contain, asserted per post: any number a
+reader could take as a promise (session counts, intervals, durations,
+percentages), and any borrowed authority (studies, statistics, "uzmanlar diyor
+ki"). Several posts say plainly why the number is missing, which turned out to
+be the most distinctive material in the batch.
+
 ### Batch 2 — planned
 
 | #   | Title (TR)                                                 | Slug                                   | Target keyword                      | Intent | Service                  | Category                |

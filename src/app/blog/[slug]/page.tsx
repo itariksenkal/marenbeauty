@@ -204,6 +204,15 @@ export default async function BlogPostPage({
             <RelatedPosts posts={related} title={blog.post.relatedPosts} />
           </div>
 
+          {/*
+            Rendered from config on every post (CLAUDE.md §9). Not written into
+            the MDX bodies: twelve copies of a compliance sentence is twelve
+            chances for it to drift.
+          */}
+          <p className="mt-16 max-w-reading text-sm text-text-muted">
+            {blog.post.disclaimer}
+          </p>
+
           {/* The single conversion point. Exactly one link to /iletisim. */}
           <div className="mt-20 max-w-reading rounded-xl border border-border-decor bg-surface-raised p-8">
             <h2 className="font-display text-2xl tracking-display text-text-primary">

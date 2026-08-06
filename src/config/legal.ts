@@ -11,6 +11,22 @@
  */
 export const LEGAL_ENTITY_TOKEN = '{{LEGAL_ENTITY}}';
 
+/**
+ * The cosmetic-scope disclaimer, verbatim (CLAUDE.md §9).
+ *
+ * ONE canonical copy, because it appears on every service page and every blog
+ * post. Written into each MDX file instead, it would be twelve copies free to
+ * drift, and drift in this particular sentence is a compliance problem rather
+ * than a typo.
+ *
+ * It contains `tıbbi`, which is precisely why that term is ADVISORY and not
+ * blocking in the guard. A fixture test asserts this exact sentence passes;
+ * promoting the term to the blocking tier breaks the disclaimer and fails that
+ * test first (docs/OPEN-QUESTIONS.md F8).
+ */
+export const COSMETIC_DISCLAIMER =
+  'Bu uygulamalar kozmetik bakım amaçlıdır ve tıbbi bir hizmetin yerine geçmez.';
+
 export const legal = {
   /** Replaced with the registered ünvan when the owner supplies it (B2). */
   entity: LEGAL_ENTITY_TOKEN,

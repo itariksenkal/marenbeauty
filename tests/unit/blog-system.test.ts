@@ -16,7 +16,6 @@ import {
   getAllPosts,
   getAllPostSlugs,
   getPostBySlug,
-  getPostsByCategory,
 } from '@/content-layer';
 import {
   hrefForPage,
@@ -174,9 +173,12 @@ describe('blog copy', () => {
     ...blogCategories.flatMap((c) => [c.label, c.description]),
   ].join('\n');
 
-  it('passes the guard, blocking and advisory tiers both', () => {
+  it('has no blocking hit, and one advisory: the disclaimer', () => {
     const found = scanText(allCopy, { file: 'src/config/blog.ts' });
-    expect(found.map((v) => `${v.rule}: ${v.matched}`)).toEqual([]);
+    expect(found.filter((v) => v.tier === 'error')).toEqual([]);
+    // `tıbbi` is advisory precisely so the required disclaimer can ship
+    // (docs/OPEN-QUESTIONS.md F8). Nothing else may be advisory here.
+    expect([...new Set(found.map((v) => v.rule))]).toEqual(['advisory:tıbbi']);
   });
 
   it('promises no date and no schedule', () => {
@@ -214,37 +216,27 @@ describe('blog copy', () => {
   });
 });
 
-/* ── Drafts — the M9 acceptance criterion, with something to prove it on ──── */
+/* ── Drafts ───────────────────────────────────────────────────────────────── */
 
 describe('drafts', () => {
-  const PREVIEW = 'sablon-onizleme';
-
-  it('the preview post exists and is a draft', () => {
-    const preview = getPostBySlug(PREVIEW, { includeDrafts: true });
-    expect(preview).not.toBeNull();
-    expect(preview!.draft).toBe(true);
-  });
-
-  it('is absent from every published listing', () => {
-    expect(getAllPosts().map((p) => p.slug)).not.toContain(PREVIEW);
+  // The M9 preview post was deleted at M10 as scheduled, so there is no draft
+  // left to prove this against. The mechanism is asserted at the source
+  // instead — and the moment a real draft exists again, `getAllPosts()`
+  // excluding it is what keeps it out of every listing.
+  it('the M9 preview fixture is gone', () => {
     expect(
-      getPostsByCategory('cilt-bakimi-rehberi').map((p) => p.slug),
-    ).not.toContain(PREVIEW);
-    expect(getAllPostSlugs()).not.toContain(PREVIEW);
-    expect(getPostBySlug(PREVIEW)).toBeNull();
+      getPostBySlug('sablon-onizleme', { includeDrafts: true }),
+    ).toBeNull();
   });
 
-  it('is reachable only when drafts are explicitly requested', () => {
-    expect(getAllPostSlugs({ includeDrafts: true })).toContain(PREVIEW);
+  it('nothing published is a draft', () => {
+    expect(getAllPosts().every((post) => !post.draft)).toBe(true);
   });
 
-  it('carries no byline of its own', () => {
-    const preview = getPostBySlug(PREVIEW, { includeDrafts: true })!;
-    expect(preview.author).toBe('PENDING');
-  });
-
-  it('there are no published posts yet — the blog arrives at M10', () => {
-    expect(getAllPosts()).toEqual([]);
+  it('drafts are still excluded unless explicitly requested, in dev only', () => {
+    expect(read('content-layer/posts.ts')).toMatch(
+      /includeDrafts === true && process\.env\.NODE_ENV !== 'production'/,
+    );
   });
 });
 

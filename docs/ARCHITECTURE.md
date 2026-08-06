@@ -237,13 +237,15 @@ stable so tests assert on the specific rule.
 | 5   | `slug-title-mismatch`     | **A service** filename does not equal `slugify(title)`.                            |
 | 6   | `duplicate-slug`          | Two documents in a collection share a slug.                                        |
 | 7   | `draft-referenced`        | Anything published links to a `draft: true` post, which would be a guaranteed 404. |
-| 8   | `internal-link-missing`   | A `/hizmetler/<slug>` link written in a body has no matching service file.         |
+| 8   | `internal-link-missing`   | A `/hizmetler/<slug>` **or `/blog/<slug>`** link in a body has no matching file.   |
 
 **Check 8 was added at M8**, the first milestone where prose carries contextual
 links (`docs/CONTENT-PLAN.md` §5, "Anchor text"). Those are exactly as easy to
 break by renaming a file as `relatedServices` is, and just as certain a 404, so
 they fail the build the same way rather than waiting to be noticed in
-production.
+production. **Widened at M10 to cover `/blog/<slug>`**: check 7 catches a link
+to a post that is a DRAFT, but a link to a slug that does not exist at all was
+nobody's job until the twelve posts started cross-linking each other.
 
 Two clarifications made when this was built:
 

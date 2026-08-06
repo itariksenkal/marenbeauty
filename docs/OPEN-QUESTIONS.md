@@ -798,7 +798,35 @@ than a convention someone has to remember.
 
 **Open for M13:** empty listings currently declare `noindex, follow`, flipping
 by themselves once a post publishes. Confirm that is the wanted behaviour when
-the full robots/canonical pass happens.
+the full robots/canonical pass happens. **Note after M10:** with Batch 1
+published, `/blog` and all six archives are non-empty and therefore indexable
+already — the flag has done its job and flipped itself.
+
+### G19 — Twelve posts in one pass read like twelve posts in one pass 🟢 → M10
+
+**What happened.** The first draft of Batch 1 came out **909–972 words** — a
+52-word spread across twelve articles. Every post had ten or eleven `h2`
+sections of two to three paragraphs, opened with a definition and closed with
+the same "hangi başlıklarla birlikte anılır" move.
+
+Nothing in it was factually wrong and nothing tripped the guard. It was still
+the most obviously machine-written thing this project has produced, because
+uniformity at that scale is not something a person does.
+
+**Fixed by reshaping rather than lengthening.** Length now follows the topic:
+broad subjects (`lazer-epilasyon`, `kalıcı makyaj`, `leke görünümü`, `gelin
+takvimi`) run 1014–1119; posts answering one narrow question
+(`microblading`, `kirpik lifting`, `hydrafacial`) stay near 910. Openings vary —
+a definition, a misconception, a distinction between two things, a question
+answered flatly in the first sentence.
+
+**Three blunt tests now guard it**: the word-count spread, the number of
+distinct section counts, and that no two posts share an opening sentence. None
+of them can detect good writing. All three fail on the specific failure mode
+that occurred, which is what a regression test is for.
+
+**Applies to Batch 2** (posts 13–50), which will be written in several passes
+rather than one — partly for this reason.
 
 ---
 

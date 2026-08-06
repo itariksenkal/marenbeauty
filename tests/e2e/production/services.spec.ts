@@ -220,14 +220,30 @@ test.describe('service detail', () => {
     await expect(first).toHaveAttribute('open', '');
   });
 
-  test('the related-services block renders and the posts block does not', async ({
+  test('both related blocks render now that Batch 1 exists', async ({
     page,
   }) => {
+    // Until M10 the posts block was absent, and that absence was the
+    // assertion. Twelve posts later it renders — for the twelve services a
+    // Batch 1 post maps to.
     await page.goto('/hizmetler/cilt-bakimi');
     await expect(
       page.getByRole('heading', { name: 'İlgili hizmetler' }),
     ).toBeVisible();
-    // No posts exist until M10, so the block is absent rather than empty.
+    await expect(
+      page.getByRole('heading', { name: 'İlgili yazılar' }),
+    ).toBeVisible();
+    await expect(
+      page.locator('a[href="/blog/cilt-bakimi-nedir"]'),
+    ).toBeVisible();
+  });
+
+  test('a service with no Batch 1 post shows no posts block', async ({
+    page,
+  }) => {
+    // `bb-glow` is Batch 2. Absence, not an empty heading — the same rule the
+    // block followed when nothing at all was published.
+    await page.goto('/hizmetler/bb-glow');
     expect(
       await page.getByRole('heading', { name: 'İlgili yazılar' }).count(),
     ).toBe(0);
