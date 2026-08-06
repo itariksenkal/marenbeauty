@@ -605,7 +605,7 @@ npm run verify
 
 ---
 
-## M7 — Home: remaining sections ☐
+## M7 — Home: remaining sections ☑ **DONE 2026-08-06**
 
 **Goal.** Sticky service panels, the second and final pinned sequence, blog
 teaser, location, contact CTA.
@@ -615,34 +615,96 @@ teaser, location, contact CTA.
 ```
 src/components/sections/{ServicesPanels,ExperienceProcess,BlogTeaser,
                          LocationCard,ContactCta,TestimonialsSection}.tsx
-src/components/layout/PreLaunchBand.tsx
-src/app/page.tsx
+src/components/layout/{PreLaunchBand,Section}.tsx
+src/components/motion/StickyPanelStack.tsx   ← rewritten, see below
+src/config/{services,experience,home}.ts
+src/app/{page,layout}.tsx
+tests/unit/home-sections.test.ts             ← 29 tests
+tests/e2e/production/home-sections.spec.ts   ← 10 tests
 ```
 
 **Acceptance criteria**
 
-- [ ] Sticky stack matches `docs/MOTION.md` §3.2: 40px top radius, 0.96 scale,
-      0.55 dim via an overlay's `opacity` — **not** a `filter`.
-- [ ] `ExperienceProcess` is the **second and last** pinned section on the site.
-- [ ] `TestimonialsSection` returns `null`; no heading, no placeholder, nothing
-      in the DOM.
-- [ ] `PreLaunchBand` renders only while `isPreLaunch`, with an honest sentence
-      and no countdown or invented date.
-- [ ] `LocationCard` shows "Konya, Selçuklu" and no map embed.
-- [ ] CTA hierarchy is WhatsApp-first; with all channels `null` only the form
-      CTA renders — **no disabled buttons, no "yakında" tooltips**.
-- [ ] Aurora `--aurora-b`/`--aurora-c` overridden per section; `--aurora-a`
-      unchanged, so no hard boundaries.
-- [ ] Text over the aurora checked for contrast at its **worst-case** scroll
-      position.
-- [ ] **Palette review — carried from M1** (`docs/DESIGN-SYSTEM.md` §1.7). These
-      are the first sections with enough area to carry rose. Judge the palette
-      with real sections on screen and adjust **usage, not token values**. If
-      the page still reads neutral, the answer is more rose _area_ — large
-      fills, aurora stops, tinted surfaces, image overlays — never rose text or
-      rose control borders, which fail contrast.
+- [x] Sticky stack matches `docs/MOTION.md` §3.2: **40px top radius measured in
+      computed style**, scale toward 0.96, dim via an overlay's `opacity` —
+      asserted to contain no `filter` or `brightness`.
+- [x] `ExperienceProcess` is the second and last pinned section. A test asserts
+      **exactly two** files under `src/components/sections/` use
+      `PinnedSequence`, by name.
+- [x] `TestimonialsSection` returns `null`; nothing in the DOM. Verified in the
+      browser by searching the rendered text.
+- [x] `PreLaunchBand` renders only while `isPreLaunch`, with one honest
+      sentence — asserted to contain no year and no countdown timer.
+- [x] `LocationCard` shows "Konya, Selçuklu" from `site.address` and embeds no
+      map: zero `iframe` elements on the page.
+- [x] CTA is WhatsApp-first and, with every channel `null`, renders **zero**
+      `[data-channel]` elements, zero `href="tel:"`/`"mailto:"`, zero
+      `href="#"`, and zero disabled controls. The form CTA becomes the primary.
+- [x] Aurora `--aurora-b`/`--aurora-c` set per panel; **`--aurora-a` never
+      overridden anywhere** — asserted across all of `src/`, and confirmed in
+      the browser to be identical at the top and at 60% scroll.
+- [x] Text over the aurora checked at **worst case**, computed: `text-primary`
+      and `text-secondary` clear AA against every stop in use, including the
+      raw colour for overlapping blobs. `text-muted` does **not** (3.26:1 on
+      blush), which is why `tone="transparent"` permits only the first two —
+      and a test asserts it keeps failing, so the bar cannot quietly move.
+- [x] Palette review — see below.
 
-**Verify**
+**Palette: the page no longer reads beige**
+
+Sampled the rendered page before and after. The five full-viewport panels were
+the problem: left at ivory they measured **cooler than the page itself**
+(`#faf7f3` against cream's `#faf4ec`), and they are the largest area on the
+site.
+
+They now run a warming ramp, verified in computed style:
+
+| Panel         | Surface    | Warmth (r−b) |
+| ------------- | ---------- | ------------ |
+| Cilt Bakımı   | ivory      | 5            |
+| Epilasyon     | sand       | 20           |
+| Cilt Yenileme | nude       | 30           |
+| Kaş & Kirpik  | rose-beige | 36           |
+| Özel Paketler | nude       | 30           |
+
+Only `ink`/`espresso`/`cocoa` sit on the warmer surfaces, per §1.5 rule 4.
+**The ramp is a config value** in `src/config/services.ts`, so the balance is
+tuned there rather than in a component — and per §1.7 the lever is always
+_area_, never rose text or rose borders, which fail contrast.
+
+**A real bug the browser tests caught: the panels never scaled**
+
+`StickyPanel` derived its progress from `useScroll({ target: panelRef })`. A
+sticky element's own bounding rect **stops moving the moment it pins**, so the
+progress was always 0 and the scale sat at exactly 1 — the signature
+interaction did nothing at all, in `/motion` as well as here, and had been
+"working" since M5 purely because nothing measured it.
+
+Progress now comes from the **stack**, with each panel taking its slice by
+index. The unit test pins the cause, not just the symptom.
+
+**Two more bugs fixed**
+
+- **`inert` was never cleared at reduced motion.** The effect returned early
+  before the sync, so a brief full-tier render before the tier resolved could
+  leave content inert — for exactly the visitor who must not get it.
+- **A skip-link assertion was measuring the wrong thing.** It asserted the
+  header starts at y=0, which the new pre-launch band legitimately broke. Re-aimed
+  at the actual intent: the skip link must add no layout height.
+
+**Facts we do not have render as absence, not placeholder**
+
+`ExperienceProcess` ships with **no steps** and therefore renders nothing —
+every step would be a claim about how the centre operates
+(`docs/OPEN-QUESTIONS.md` C11). Adding two steps makes the pinned section
+appear with no other change. The same pattern as `testimonials` and
+`channelHref`.
+
+**G12 closed:** the home page now reads the content layer, so invalid
+frontmatter or a dangling reference fails `next build` directly.
+
+**Verify** — `npm run verify` exits **0**, twice in a row. 236 unit tests,
+42 browser tests.
 
 ```bash
 npm run verify

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
+import { PreLaunchBand } from '@/components/layout/PreLaunchBand';
 import { SkipLink } from '@/components/layout/SkipLink';
 import { AuroraBackground } from '@/components/motion/AuroraBackground';
 import { GrainOverlay } from '@/components/motion/GrainOverlay';
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SkipLink />
         <MotionTierProvider>
           <AuroraBackground />
+          <PreLaunchBand />
           <SiteHeader />
           <main id={mainContentId} tabIndex={-1}>
             {children}

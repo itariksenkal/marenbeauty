@@ -1,7 +1,13 @@
 'use client';
 
-import { motion, useScroll, useTransform } from 'motion/react';
-import { useRef, type ReactNode } from 'react';
+import {
+  motion,
+  useMotionValue,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from 'motion/react';
+import { createContext, useContext, useRef, type ReactNode } from 'react';
 
 import { transforms } from '@/config/motion';
 import { useMotionTier } from '@/hooks/use-motion-tier';
@@ -14,11 +20,19 @@ import { cn } from '@/lib/cn';
  * 0.96 and dims.
  *
  * `position: sticky` is computed BEFORE transforms, so scaling a sticky panel
- * does not break stickiness — which is why this needs no JS layout work at all.
+ * does not break stickiness — which is why this needs no JS layout work.
  *
  * The dim is a child overlay animated via `opacity`, NOT `filter: brightness()`
  * on the panel: a filter would push the whole subtree onto its own layer.
+ *
+ * PROGRESS COMES FROM THE STACK, NOT THE PANEL. A sticky panel's own bounding
+ * rect stops moving the moment it pins, so `useScroll({ target: panelRef })`
+ * yields no progress and the panels never scale at all — which is exactly what
+ * happened until a browser test measured the computed transform and found it
+ * stuck at 1. The container scrolls; each panel takes its slice of that.
  */
+const StackProgressContext = createContext<MotionValue<number> | null>(null);
+
 export function StickyPanelStack({
   children,
   className,
@@ -26,7 +40,19 @@ export function StickyPanelStack({
   children: ReactNode;
   className?: string;
 }) {
-  return <section className={cn('relative', className)}>{children}</section>;
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start start', 'end end'],
+  });
+
+  return (
+    <StackProgressContext.Provider value={scrollYProgress}>
+      <section ref={ref} className={cn('relative', className)}>
+        {children}
+      </section>
+    </StackProgressContext.Provider>
+  );
 }
 
 export function StickyPanel({
@@ -41,23 +67,26 @@ export function StickyPanel({
   className?: string;
 }) {
   const tier = useMotionTier();
-  const ref = useRef<HTMLElement>(null);
+  const stackProgress = useContext(StackProgressContext);
+  const fallback = useMotionValue(0);
+  const progress = stackProgress ?? fallback;
+  const isLast = index === total - 1;
 
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start start', 'end start'],
+  // The slice of the stack's scroll during which THIS panel is being covered.
+  const span = 1 / total;
+  const from = index * span;
+  const to = (index + 1) * span;
+
+  const scale = useTransform(progress, [from, to], [1, transforms.panelScale], {
+    clamp: true,
   });
-
-  const scale = useTransform(
-    scrollYProgress,
-    [0, 1],
-    [1, transforms.panelScale],
-  );
-  const dim = useTransform(scrollYProgress, [0, 1], [0, transforms.panelDim]);
+  const dim = useTransform(progress, [from, to], [0, transforms.panelDim], {
+    clamp: true,
+  });
 
   // reduced/static: a plain stacked list. Same content, same order — the
   // reading experience is identical.
-  if (tier !== 'full') {
+  if (tier !== 'full' || !stackProgress) {
     return (
       <article
         className={cn(
@@ -65,6 +94,7 @@ export function StickyPanel({
           index > 0 && 'mt-6',
           className,
         )}
+        data-panel={`${index + 1}/${total}`}
       >
         {children}
       </article>
@@ -73,20 +103,19 @@ export function StickyPanel({
 
   return (
     <motion.article
-      ref={ref}
       className={cn(
         'sticky top-0 origin-top overflow-hidden rounded-t-panel bg-surface-raised shadow-panel',
         className,
       )}
-      style={{ scale, zIndex: index }}
-      // Last panel does not scale away — nothing covers it.
+      // The last panel never scales away — nothing covers it.
+      style={isLast ? { zIndex: index } : { scale, zIndex: index }}
       data-panel={`${index + 1}/${total}`}
     >
       {children}
       <motion.span
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-[var(--scrim-soft)]"
-        style={{ opacity: index === total - 1 ? 0 : dim }}
+        style={{ opacity: isLast ? 0 : dim }}
       />
     </motion.article>
   );

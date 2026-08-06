@@ -36,15 +36,18 @@ test.describe('skip link', () => {
       `skip link is inside the viewport at rest: ${JSON.stringify(box)}`,
     ).toBe(true);
 
-    // It must not occupy flow space. Absolutely/fixed positioned elements do
-    // not, so assert the header sits at the very top of the document.
-    const headerTop = await page
-      .locator('header')
-      .first()
-      .evaluate((el) => el.getBoundingClientRect().top);
+    // It must not occupy flow space. Measured against the FIRST in-flow block
+    // rather than the header: the pre-launch band legitimately sits above the
+    // header, so asserting `header.top === 0` would fail for the wrong reason.
+    const firstBlockTop = await page.evaluate(() => {
+      const first = document.querySelector(
+        'body > *:not(style):not(script):not(a[data-skip-link])',
+      );
+      return first ? first.getBoundingClientRect().top : Number.NaN;
+    });
     expect(
-      headerTop,
-      'header should start at the top — the skip link must not push it down',
+      firstBlockTop,
+      'the skip link must not push page content down',
     ).toBeLessThanOrEqual(1);
   });
 

@@ -141,6 +141,11 @@ function Stage() {
   useEffect(() => {
     if (!animated) {
       resetHandoff();
+      // Clear inert too. The server renders as if `full`, so a brief full-tier
+      // client render can set it before the tier resolves to reduced — and
+      // then nothing would ever take it off, leaving content inert for exactly
+      // the visitor who must not get it.
+      syncInert({ story: storyRef, venue: venueRef }, false, stages, 1);
       return;
     }
     const value = handoff.get();

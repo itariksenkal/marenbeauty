@@ -1,0 +1,110 @@
+'use client';
+
+import Link from 'next/link';
+
+import { Container } from '@/components/layout/Container';
+import {
+  StickyPanel,
+  StickyPanelStack,
+} from '@/components/motion/StickyPanelStack';
+import { TextReveal } from '@/components/motion/TextReveal';
+import { home } from '@/config/home';
+import { serviceGroups } from '@/config/services';
+import type { Service } from '@/content-layer/schemas';
+import type { CssVars } from '@/lib/css-vars';
+
+/**
+ * Signature #2 in place — the sticky panel stack (docs/MOTION.md §3.2).
+ *
+ * One panel per service group. Each carries its own aurora stops, so the wash
+ * warms as the visitor moves through them; `--aurora-a` is never touched, which
+ * is what keeps the boundaries soft.
+ *
+ * This is the largest rose area on the page and the main test of
+ * docs/DESIGN-SYSTEM.md §1.7 — rose carries the brand through AREA, not detail.
+ *
+ * Groups with no services yet still render: they are the confirmed categories,
+ * and the panel says only the category name. Nothing here claims what a service
+ * involves.
+ */
+export function ServicesPanels({ services }: { services: readonly Service[] }) {
+  return (
+    <section id="hizmetler">
+      <Container className="py-section-y-tight">
+        <p className="text-xs tracking-eyebrow text-text-accent uppercase">
+          {home.sections.servicesEyebrow}
+        </p>
+        <TextReveal
+          lines={home.sections.servicesHeadingLines}
+          as="h2"
+          className="mt-4 max-w-display font-display text-4xl tracking-display text-text-primary"
+        />
+      </Container>
+
+      <StickyPanelStack>
+        {serviceGroups.map((group, index) => {
+          const inGroup = services.filter((s) => s.group === group.id);
+          const style: CssVars = {
+            '--aurora-b': group.auroraB,
+            '--aurora-c': group.auroraC,
+          };
+
+          return (
+            <StickyPanel
+              key={group.id}
+              index={index}
+              total={serviceGroups.length}
+              // The warming ramp — the biggest rose lever on the site
+              // (docs/DESIGN-SYSTEM.md §1.7). Tuned in src/config/services.ts,
+              // not here.
+              className={group.surface}
+            >
+              <div style={style}>
+                <Container>
+                  <div className="flex min-h-[70svh] flex-col justify-center py-16">
+                    <p className="text-xs tracking-eyebrow text-text-secondary uppercase">
+                      {index + 1} / {serviceGroups.length}
+                    </p>
+                    <h3 className="mt-4 font-display text-4xl tracking-display text-text-primary">
+                      {group.label}
+                    </h3>
+
+                    {inGroup.length > 0 ? (
+                      <ul className="mt-8 grid gap-x-8 gap-y-3 sm:grid-cols-2">
+                        {inGroup.map((service) => (
+                          <li key={service.slug}>
+                            <Link
+                              href={`/hizmetler/${service.slug}`}
+                              className="group flex items-baseline justify-between gap-4 border-b border-border-decor py-3 text-text-primary transition-colors hover:bg-surface-decor/40"
+                            >
+                              <span>{service.title}</span>
+                              <span
+                                aria-hidden="true"
+                                className="text-text-accent"
+                              >
+                                →
+                              </span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                </Container>
+              </div>
+            </StickyPanel>
+          );
+        })}
+      </StickyPanelStack>
+
+      <Container className="py-section-y-tight">
+        <Link
+          href="/hizmetler"
+          className="text-text-accent underline decoration-1 underline-offset-4 hover:decoration-2"
+        >
+          {home.sections.servicesLink}
+        </Link>
+      </Container>
+    </section>
+  );
+}

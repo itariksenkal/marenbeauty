@@ -253,6 +253,21 @@ exists but is unused, which is the better outcome.
 
 ---
 
+### C11 — What a visit is like 🟡 → unblocks the second pinned section
+
+`ExperienceProcess` — the second and last pinned section — is built and
+renders **nothing**, because `src/config/experience.ts` ships with no steps.
+
+Every step would be a claim about how the centre operates: what happens on
+arrival, in what order, what is discussed. None of that is confirmed, and the
+centre has not opened.
+
+**Need:** three or four short steps describing a visit, in the owner's words.
+
+**Meanwhile:** the section is absent entirely — no heading, no skeleton, no
+"yakında". Adding two or more steps makes it appear, pinned, with no code
+change. A test covers both states.
+
 ## D. Guard configuration ✅
 
 ### D1 — Lexicon tiers ✅ → M3
@@ -595,6 +610,11 @@ Until M8 the guarantee holds through a different gate: `npm run test` imports
 the content layer at module scope, so invalid content fails `npm run verify`
 and therefore CI. Recorded so nobody later reads "it doesn't fail the build" as
 a hole rather than a sequencing detail.
+
+> ✅ **Closed at M7**, earlier than expected: the home page reads
+> `getAllServices()` and `getAllPosts()` to build the service panels and the
+> blog teaser, which puts the content layer in the build graph. Invalid
+> frontmatter and dangling references now fail `next build` directly.
 
 ---
 

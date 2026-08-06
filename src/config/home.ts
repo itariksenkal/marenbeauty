@@ -48,6 +48,37 @@ export const home = {
   venueImageAlt: 'Merkezin iç mekânından bir görünüm.',
 
   /**
+   * Section headings and calls to action for the rest of the home page.
+   * Headings and labels only — nothing here asserts anything about how the
+   * centre operates.
+   */
+  sections: {
+    servicesEyebrow: 'Hizmetler',
+    servicesHeadingLines: ['Cilde göre', 'seçilmiş uygulamalar.'],
+    servicesLink: 'Tüm hizmetleri görün',
+
+    blogEyebrow: 'Blog',
+    blogHeading: 'Yazılar',
+    blogLink: 'Tüm yazıları görün',
+
+    locationEyebrow: 'Konum',
+    locationHeading: 'Nerede',
+
+    contactEyebrow: 'İletişim',
+    contactHeadingLines: ['Bir mesaj yeterli.'],
+    contactBody: 'Sorularınızı yazın; açılışla birlikte size dönüş yapacağız.',
+    contactFormCta: 'Mesaj gönderin',
+    contactWhatsappCta: "WhatsApp'tan yazın",
+    contactPhoneCta: 'Telefonla arayın',
+  },
+
+  /**
+   * The pre-launch band. An honest sentence and nothing more — no countdown,
+   * no date, because there is no confirmed date (CLAUDE.md §10).
+   */
+  preLaunchNotice: 'Yakında Konya Selçuklu’da açılıyoruz.',
+
+  /**
    * Flips to `true` when the owner has approved the wording. Until then the
    * copy is provisional and `docs/OPEN-QUESTIONS.md` C10 stays open.
    */
