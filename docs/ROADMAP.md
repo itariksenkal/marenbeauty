@@ -712,48 +712,116 @@ npm run verify
 
 ---
 
-## M8 — Services: 20 pages ☐
+## M8 — Services: 20 pages ☑ **DONE 2026-08-06**
 
 **Goal.** The site's primary asset. Index, detail template, all 20 MDX files,
 and the View Transition.
 
-**Files touched**
+**Files touched** — as planned, plus the additions noted below.
 
 ```
 src/app/hizmetler/page.tsx
 src/app/hizmetler/[slug]/page.tsx
-src/components/content/{ServiceCard,ServiceGrid,RelatedServices,Faq,
-                        ManagedImage,ImageCredit,Mdx,Prose}.tsx
-content/services/*.mdx        ← 20 files
-src/config/images.ts
+src/components/content/{ServiceCard,ServiceGrid,RelatedServices,RelatedPosts,
+                        Faq,ManagedImage,ImageCredit,Mdx,Prose}.tsx
+content/services/*.mdx                     ← 20 files
+src/config/images.ts  src/config/services.ts  src/config/motion.ts
+src/content-layer/{integrity,schemas,services,posts}.ts   ← check 8, `file`
+src/components/sections/service-list-item.ts  ← added, see G16
+scripts/generate-placeholders.mjs             ← added, see C7
+scripts/guard.mjs  src/styles/globals.css
 ```
 
 **Acceptance criteria**
 
-- [ ] All 20 services from `docs/CONTENT-PLAN.md` §1 exist, correct slugs,
-      correct groups.
-- [ ] Every page follows the §2 skeleton; body prose **350–600 words** of real
-      Turkish. A page that is 350 honest words is finished — padding it is a
-      defect.
-- [ ] **No prices, no ranges, anywhere.** No before/after. No percentages. No
-      session-count promises.
-- [ ] **Content posture held** (`CLAUDE.md` §9): no durations, no device or
-      product brand names, no staff credentials, no equipment claims, no depths,
-      concentrations or machine settings. Sections lacking a known fact are cut,
-      not padded.
-- [ ] `npm run guard` passes on all 20 — no blocking lexicon; warnings reviewed.
-- [ ] `durationLabel` is `null` on every service and there is **no "Süre" block
-      in the template** — the field is unrendered, not rendering empty.
-- [ ] `relatedServices` resolves for all 20; reciprocity checked.
-- [ ] Every image goes through the manifest with `licence` and `sourceUrl`
-      recorded. One narrow visual family. No stock person presented as owner,
-      staff or client.
-- [ ] View Transition morphs card → detail hero, with
-      `view-transition-name` applied **only to the activated card** and cleared
-      afterwards.
-- [ ] Fixture MDX from M4 deleted.
+- [x] All 20 services from `docs/CONTENT-PLAN.md` §1 exist, correct slugs,
+      correct groups. Asserted against a literal slug→group map copied from the
+      plan, not derived from the content.
+- [x] Every page follows the §2 skeleton; body prose **350–600 words** of real
+      Turkish. Measured: **350–420**, i.e. at the floor. Reaching even 350
+      honestly meant writing about what each page deliberately does not say.
+- [x] **No prices, no ranges, anywhere.** No before/after. No percentages. No
+      session-count promises. Asserted per service over frontmatter and body
+      together.
+- [x] **Content posture held** — no durations, device or product brand names,
+      staff credentials, equipment claims, depths, concentrations or machine
+      settings. Four regex checks, with **Unicode-aware word boundaries** (see
+      G15).
+- [x] `npm run guard` passes on all 20 — **0 blocking, 0 percentage claims**;
+      105 advisory hits, every one of them the required `tıbbi` disclaimer.
+      Reviewed in full; see G14 below for the false positives removed first.
+- [x] `durationLabel` is `null` on every service and the template contains
+      neither `durationLabel` nor "Süre" — asserted against the source.
+- [x] `relatedServices` resolves for all 20, and the graph is **fully
+      reciprocal**: 0 one-way links, 3–4 siblings each, no orphans.
+- [x] Every image goes through the manifest with `licence` and `sourceUrl`
+      recorded. One narrow visual family. No person, and no photograph at all —
+      see C7.
+- [x] View Transition morphs card → detail hero, `view-transition-name` applied
+      only to the activated card and cleared afterwards. Proven by intercepting
+      `startViewTransition` and sampling the DOM **at capture time**.
+- [x] Fixture MDX from M4 deleted, along with the `fixture-placeholder` manifest
+      entry. A test asserts none of the three comes back.
 
-**Verify**
+**Deviations and additions, all deliberate**
+
+**G14 — the guard was reporting hundreds of false positives.** `next/image`
+emits `?url=%2Fimages%2F…` once per breakpoint, and `%2` matches the percentage
+rule. Twenty service pages produced a wall of warnings, none of them a claim.
+Fixed the way the inline-style false positive was fixed at M7: the rule stays
+exactly as strict, and URL-bearing attributes are masked out of its input.
+`content="…"` is deliberately not masked, because a meta description is prose.
+Recorded in `CLAUDE.md` §12; four new fixture tests, including one asserting a
+claim in a `content` attribute still blocks.
+
+**C7 — no stock photography.** Photography arrives after the venue opens, and
+the honest options were a stock photo of a room that is not this one, a stock
+photo of a person who does not work here (already banned by `CLAUDE.md` §8), or
+neither. The launch set is instead **abstract warm gradient artwork generated
+from the palette** by `scripts/generate-placeholders.mjs`, one per service, in
+the same visual family as the aurora. Consequences: `credit` and `sourceUrl` are
+`null` because the artwork is ours, `licence` is the real `CC0-1.0`, and `alt`
+is **empty** — the images carry no information, so decorative markup is the
+correct accessibility answer and no alt text had to be invented either. All 20
+stay `replaceable: true`.
+
+**G15 — a test regex reproduced the exact bug `CLAUDE.md` §12 warns about.** The
+equipment check used `/nm\b/`, and JavaScript's `\b` is ASCII-only, so it matched
+inside _düşünmüyoruz_ and failed a page with no equipment reference at all. The
+posture checks now use `(?<![\p{L}\p{N}])` / `(?![\p{L}\p{N}])` with `/u`, like
+the guard, and a test pins the boundary behaviour so the next added term cannot
+reintroduce it.
+
+**G16 — all twenty MDX bodies were being serialised into the home page.**
+`ServicesPanels` is a client component, so its props cross the boundary as JSON;
+it was taking whole `Service` objects to render twenty titles. A browser test
+found body copy in the payload. Props are now narrowed **on the server** via
+`toListItems()`, which had to live in its own module: anything exported from a
+`'use client'` file is a client reference and calling it during server rendering
+fails the build.
+
+**Faq is a Server Component on native `<details>`**, not a Radix Accordion
+(`docs/ARCHITECTURE.md` §6 updated). Twenty pages would each have shipped a
+client bundle for a widget the browser already implements correctly, and the
+native one works before hydration and with JavaScript off. No dependency added.
+
+**No `ImageReveal` on the detail hero.** It is the View Transition target; a
+`clip-path` wipe and a morph would animate the same element from two different
+start states. The transition is that image's entrance.
+
+**Integrity check 8 added** (`internal-link-missing`) — a `/hizmetler/<slug>`
+link written in a body must resolve. M8 is the first milestone where prose
+carries contextual links, and a dangling one is a guaranteed 404.
+
+**`Service.file` added** so the detail page can name the source file for an MDX
+compile error without writing a `content/` path outside the content layer, which
+`CLAUDE.md` §5 forbids and a test enforces.
+
+**Reciprocity upgraded from warning to assertion.** The plan's table had sixteen
+one-way links. The graph was re-authored symmetric (`docs/CONTENT-PLAN.md` §1
+column revised) and a test now fails on any one-way link.
+
+**Verify** — `npm run verify` exits **0**. 358 unit tests, 60 browser tests.
 
 ```bash
 npm run verify

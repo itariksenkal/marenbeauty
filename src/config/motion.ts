@@ -84,6 +84,18 @@ export const cssVars = {
 } as const;
 
 /**
+ * `view-transition-name` values — signature #5 (docs/MOTION.md §3.5).
+ *
+ * A name must be UNIQUE in the document at capture time, which is why these are
+ * a small fixed set applied to one element at a time: the card the visitor
+ * activated on the way out, the hero on the way in. Putting `serviceHero` on
+ * twenty cards at once makes the transition silently do nothing.
+ */
+export const viewTransitionNames = {
+  serviceHero: 'service-hero',
+} as const;
+
+/**
  * Guard for anything computing a duration at runtime. The budget is a rule,
  * not a suggestion — see docs/MOTION.md §2.
  */

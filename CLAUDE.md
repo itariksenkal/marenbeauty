@@ -474,11 +474,18 @@ Reverting this reintroduces false positives on ordinary Turkish words.
 would flag `kürk` (fur), `kürek` (oar) and `küresel` (global). Every other stem
 is unambiguous enough for greedy suffixes.
 
-**Percentage rules are text-only.** They scan `.html`/`.rsc` but not `.js`,
-because minified framework code is full of `n%100` modulo arithmetic — a guard
-that fails the build when the framework formats a number is a guard nobody
-trusts. Rule 2 is likewise narrowed in JavaScript to SHOUTING tokens, since
-`{{` is ordinary syntax there.
+**Percentage rules are text-only, and run against prose only.** They scan
+`.html`/`.rsc` but not `.js`, because minified framework code is full of `n%100`
+modulo arithmetic — a guard that fails the build when the framework formats a
+number is a guard nobody trusts. Within those files, `style="…"` and
+URL-bearing attributes (`src`, `srcset`, `href`, and their RSC/JSON forms) are
+masked before matching: `clip-path:inset(0 0 100% 0)` is not a claim, and
+neither is the percent-**encoding** in `?url=%2Fimages%2F…`, which `next/image`
+emits once per breakpoint. A percentage claim is something a reader reads, so
+the rule stays exactly as strict and its input is narrowed instead.
+`content="…"` is deliberately **not** masked — a meta description is prose.
+Rule 2 is likewise narrowed in JavaScript to SHOUTING tokens, since `{{` is
+ordinary syntax there.
 
 **Escaped text is decoded before matching** — `\uXXXX` and HTML entities — so a
 banned word cannot slip through as `tedav\u0069`. Decoding is line-preserving,

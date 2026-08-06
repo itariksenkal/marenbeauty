@@ -137,6 +137,12 @@ guess. Logged in `docs/OPEN-QUESTIONS.md`.
 The MDX **body** carries the long-form description, written to the copy rules
 in `CLAUDE.md` §9.
 
+The loaded `Service` (and `Post`) also carries **`file`** — the repo-relative
+source path. Added at M8 so a consumer that needs to _name_ the file, such as an
+MDX compile error, never rebuilds the path from the slug: nothing outside
+`src/content-layer/` may write a path under `content/` (`CLAUDE.md` §5), and a
+unit test enforces it.
+
 ### 3.2 Service groups
 
 ```ts
@@ -181,9 +187,9 @@ schema widens in one place and `BlogPosting.author` switches from
 
 ### 3.4 Referential integrity — enforced at build
 
-**Seven checks** (`src/content-layer/integrity.ts`). Implemented at M4; each has
-a failing fixture test, and the check id is stable so tests assert on the
-specific rule.
+**Eight checks** (`src/content-layer/integrity.ts`). Checks 1–7 were implemented
+at M4, check 8 at M8; each has a failing fixture test, and the check id is
+stable so tests assert on the specific rule.
 
 | #   | id                        | Fails when                                                                         |
 | --- | ------------------------- | ---------------------------------------------------------------------------------- |
@@ -194,6 +200,13 @@ specific rule.
 | 5   | `slug-title-mismatch`     | **A service** filename does not equal `slugify(title)`.                            |
 | 6   | `duplicate-slug`          | Two documents in a collection share a slug.                                        |
 | 7   | `draft-referenced`        | Anything published links to a `draft: true` post, which would be a guaranteed 404. |
+| 8   | `internal-link-missing`   | A `/hizmetler/<slug>` link written in a body has no matching service file.         |
+
+**Check 8 was added at M8**, the first milestone where prose carries contextual
+links (`docs/CONTENT-PLAN.md` §5, "Anchor text"). Those are exactly as easy to
+break by renaming a file as `relatedServices` is, and just as certain a 404, so
+they fail the build the same way rather than waiting to be noticed in
+production.
 
 Two clarifications made when this was built:
 
@@ -415,8 +428,15 @@ marenbeauty/
 | `ImageCredit`                             | S   | Renders licence/credit when the manifest has one.        |
 | `ServiceCard` / `ServiceGrid`             | S   | Card is the View Transition source.                      |
 | `PostCard` / `PostGrid` / `CategoryPills` | S   |                                                          |
-| `Faq`                                     | C   | Accordion + `FAQPage` JSON-LD.                           |
+| `Faq`                                     | S   | Native `<details>`. See below. `FAQPage` JSON-LD at M13. |
 | `RelatedServices` / `RelatedPosts`        | S   | Internal linking map (`docs/CONTENT-PLAN.md` §5).        |
+
+**`Faq` is a Server Component built on native `<details>` / `<summary>`, not a
+Radix Accordion.** Decided at M8. Twenty service pages would otherwise each ship
+a client bundle for a disclosure widget the browser already implements —
+correctly, including keyboard handling and screen-reader announcement — and the
+native version works before hydration and with JavaScript off. No dependency was
+added, so the licence audit is unchanged.
 
 ### `components/sections/`
 

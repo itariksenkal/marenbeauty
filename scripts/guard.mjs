@@ -158,16 +158,42 @@ function decodeLine(line) {
 }
 
 /**
- * Blank out inline `style="…"` values, preserving length so indices still line
- * up. Percentage rules run against this rather than the raw line.
+ * Attribute values that are never prose, and therefore never a claim.
  *
- * Without it, `clip-path:inset(0 0 100% 0)` matches `%\s?\d` and every page
- * using an image or text reveal reports a bogus percentage claim. Warnings
- * that fire on every page teach people to ignore warnings, which costs more
- * than the rule is worth.
+ * A percentage CLAIM is something a reader reads. It lives in a text node, not
+ * in a stylesheet declaration and not in a URL. Two families of false positive
+ * proved that the hard way:
+ *
+ *   - `style="clip-path:inset(0 0 100% 0)"` — every page using an image or text
+ *     reveal reported a percentage claim.
+ *   - `srcset="/_next/image?url=%2Fimages%2F…"` — percent-ENCODING, not a
+ *     percentage. One `next/image` call emits a dozen of these per breakpoint,
+ *     so twenty service pages produced hundreds of warnings.
+ *
+ * Warnings that fire on every page teach people to ignore warnings, which costs
+ * more than the rule is worth. So the rule is kept exactly as strict and its
+ * INPUT is narrowed instead: prose keeps being scanned, machinery does not.
+ *
+ * `content="…"` is deliberately NOT masked — a meta description is prose, and
+ * an efficacy claim there is precisely what this rule exists to catch.
  */
-function maskStyleAttributes(line) {
-  return line.replace(/style="[^"]*"/gi, (match) => ' '.repeat(match.length));
+const STYLE_ATTR = /style\s*=\s*"[^"]*"/gi;
+const URL_ATTR =
+  /\b(?:src|srcset|srcSet|imagesrcset|imageSrcSet|href|action|poster)\s*=\s*"[^"]*"/gi;
+/** The same fields as they appear in an RSC payload, i.e. as JSON. */
+const URL_JSON =
+  /"(?:src|srcSet|imageSrcSet|href|action|poster)"\s*:\s*"[^"]*"/gi;
+
+/**
+ * Blank out the above, preserving length so reported columns still line up.
+ * Percentage rules — and only they — run against this rather than the raw line.
+ */
+function maskNonProse(line) {
+  const blank = (match) => ' '.repeat(match.length);
+  return line
+    .replace(STYLE_ATTR, blank)
+    .replace(URL_ATTR, blank)
+    .replace(URL_JSON, blank);
 }
 
 function excerpt(line, index, length) {
@@ -208,8 +234,8 @@ export function scanText(
 
   lines.forEach((rawLine, i) => {
     const line = decodeLine(rawLine);
-    // Percentage rules only — see maskStyleAttributes.
-    const proseLine = maskStyleAttributes(line);
+    // Percentage rules only — see maskNonProse.
+    const proseLine = maskNonProse(line);
     const lineNo = i + 1;
 
     /**

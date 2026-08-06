@@ -3,14 +3,18 @@
  * (CLAUDE.md §8).
  *
  * Photography arrives after the venue opens. Until then every image is
- * placeholder stock, and the whole set must be swappable without touching a
+ * placeholder artwork, and the whole set must be swappable without touching a
  * single component: components take an `id` and resolve through here.
  */
 export type ManagedImage = {
   readonly id: string;
   /** Path under /public/images. The only place such a path may be written. */
   readonly src: string;
-  /** Turkish, descriptive. Empty string ONLY for decorative images. */
+  /**
+   * Turkish, descriptive. Empty string ONLY for decorative images — see the
+   * note on the launch set below, where empty is the correct answer rather
+   * than a shortcut.
+   */
   readonly alt: string;
   readonly width: number;
   readonly height: number;
@@ -23,31 +27,74 @@ export type ManagedImage = {
 };
 
 /**
- * Empty until M8 adds the launch set. Typed, so the first entry is checked.
+ * The launch set — 20 service heroes.
+ *
+ * These are NOT stock photographs. They are abstract gradient fields generated
+ * from the palette in docs/DESIGN-SYSTEM.md §1.1 by
+ * `scripts/generate-placeholders.mjs`, one per service, in the same visual
+ * family as the aurora wash.
+ *
+ * That choice follows from the content posture (CLAUDE.md §9). A stock photo of
+ * a treatment room is a picture of a room that is not this one; a stock photo of
+ * a person is a person who does not work here. Both are claims about the
+ * business made in pictures rather than in words, and §8 already bans the second
+ * outright. Abstract artwork asserts nothing.
+ *
+ * Three consequences, all deliberate:
+ *
+ *   - `credit` is null and `sourceUrl` is null because the artwork is ours.
+ *     Nothing is attributed to a photographer who does not exist. `licence` is
+ *     CC0-1.0, which is the real licence, not a placeholder.
+ *   - `alt` is EMPTY. These images carry no information — a screen-reader user
+ *     loses nothing by not hearing "warm abstract gradient". Empty alt plus
+ *     aria-hidden is the correct answer for decorative artwork, and it means no
+ *     alt text has to be invented either. When real photography lands, the alt
+ *     is written per image and `ManagedImage` starts announcing it with no
+ *     component change.
+ *   - Every entry is `replaceable: true`. `replaceableImages()` is the swap
+ *     checklist.
  *
  * Constraints that apply to every entry regardless of licence (CLAUDE.md §8):
- * no before/after imagery, and no stock photograph of a person presented as
- * the owner, a staff member or a client.
+ * no before/after imagery, and no stock photograph of a person presented as the
+ * owner, a staff member or a client.
  */
+const PLACEHOLDER = {
+  alt: '',
+  width: 1600,
+  height: 1200,
+  credit: null,
+  licence: 'CC0-1.0',
+  sourceUrl: null,
+  replaceable: true,
+} as const;
+
+const serviceHero = (slug: string): ManagedImage => ({
+  id: `service-${slug}`,
+  src: `/images/services/${slug}.webp`,
+  ...PLACEHOLDER,
+});
+
 export const images: readonly ManagedImage[] = [
-  /**
-   * FIXTURE — deleted at M8 along with content/*\/ornek-*.mdx.
-   *
-   * Exists only so the content fixtures have a heroImageId that resolves, which
-   * is what exercises the image-manifest integrity check end to end. Nothing
-   * renders it: there are no content routes until M8.
-   */
-  {
-    id: 'fixture-placeholder',
-    src: '/images/fixture-placeholder.svg',
-    alt: 'İçerik hattı doğrulaması için geçici görsel.',
-    width: 1600,
-    height: 1200,
-    credit: null,
-    licence: 'CC0-1.0',
-    sourceUrl: null,
-    replaceable: true,
-  },
+  serviceHero('cilt-bakimi'),
+  serviceHero('akne-bakimi'),
+  serviceHero('yaslanma-karsiti-bakim'),
+  serviceHero('leke-bakimi'),
+  serviceHero('hassas-cilt-bakimi'),
+  serviceHero('kolajen-bakimi'),
+  serviceHero('nemlendirme-bakimi'),
+  serviceHero('gozenek-sikilastirma'),
+  serviceHero('hucre-yenileme'),
+  serviceHero('lazer-epilasyon'),
+  serviceHero('hydrafacial'),
+  serviceHero('karbon-peeling'),
+  serviceHero('kimyasal-peeling'),
+  serviceHero('dermapen'),
+  serviceHero('bb-glow'),
+  serviceHero('kalici-makyaj'),
+  serviceHero('microblading'),
+  serviceHero('kirpik-lifting'),
+  serviceHero('kas-tasarimi'),
+  serviceHero('gelin-bakim-paketi'),
 ];
 
 const byId = new Map(images.map((image) => [image.id, image]));
@@ -68,7 +115,7 @@ export function getImage(id: string): ManagedImage {
   return image;
 }
 
-/** Every image still awaiting real photography. Used by the M8 swap checklist. */
+/** Every image still awaiting real photography. The swap checklist. */
 export function replaceableImages(): readonly ManagedImage[] {
   return images.filter((image) => image.replaceable);
 }

@@ -15,6 +15,7 @@ function load(): Post[] {
     ...parseFrontmatter(postFrontmatterSchema, doc),
     slug: doc.slug,
     body: doc.body,
+    file: doc.file,
     readingMinutes: readingMinutes(doc.body),
   }));
 }

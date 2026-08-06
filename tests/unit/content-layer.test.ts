@@ -47,6 +47,7 @@ const service = (over: Partial<Service> = {}): Service => ({
   relatedServices: [],
   seo: { title: null, description: null },
   body: '',
+  file: 'content/services/ornek.mdx',
   ...over,
 });
 
@@ -66,6 +67,7 @@ const post = (over: Partial<Post> = {}): Post => ({
   draft: false,
   seo: { title: null, description: null },
   body: '',
+  file: 'content/blog/ornek-yazi.mdx',
   readingMinutes: 1,
   ...over,
 });
@@ -246,6 +248,43 @@ describe('integrity check 7 — nothing published may link to a draft', () => {
       ],
     });
     expect(checks(issues)).not.toContain('draft-referenced');
+  });
+});
+
+describe('integrity check 8 — a /hizmetler link in a body must resolve', () => {
+  // Added at M8: from here on the prose itself carries contextual links
+  // (docs/CONTENT-PLAN.md §5), which are as easy to break by renaming a file as
+  // `relatedServices` is — and just as certain a 404.
+  it('fails when a service body links to a service that does not exist', () => {
+    const issues = run({
+      services: [service({ body: 'Bakınız [şu](/hizmetler/yok-boyle).' })],
+    });
+    expect(checks(issues)).toContain('internal-link-missing');
+  });
+
+  it('fails when a POST body links to a missing service', () => {
+    const issues = run({
+      services: [service()],
+      posts: [post({ body: 'Detay: /hizmetler/silinmis-hizmet' })],
+    });
+    expect(checks(issues)).toContain('internal-link-missing');
+  });
+
+  it('passes when the link resolves', () => {
+    const issues = run({
+      services: [
+        service({ slug: 'bir', title: 'Bir', body: '[iki](/hizmetler/iki)' }),
+        service({ slug: 'iki', title: 'İki' }),
+      ],
+    });
+    expect(checks(issues)).not.toContain('internal-link-missing');
+  });
+
+  it('does not confuse a /blog link for a /hizmetler one', () => {
+    const issues = run({
+      services: [service({ body: '[yazı](/blog/bir-yazi)' })],
+    });
+    expect(checks(issues)).not.toContain('internal-link-missing');
   });
 });
 
@@ -453,44 +492,74 @@ describe('MDX compilation', () => {
 /* ── Query API over the real fixtures ──────────────────────────────────────── */
 
 describe('query API', () => {
-  it('loads the service fixture', () => {
-    expect(getAllServices().length).toBeGreaterThan(0);
-    expect(getServiceBySlug('ornek-hizmet')).not.toBeNull();
+  // The M4 fixtures (ornek-hizmet, ornek-yazi) were deleted at M8 as scheduled.
+  // These now run against the real content: 20 services, and a blog collection
+  // that is legitimately empty until M10.
+  it('loads all 20 services', () => {
+    expect(getAllServices()).toHaveLength(20);
+    expect(getServiceBySlug('cilt-bakimi')).not.toBeNull();
     expect(getServiceBySlug('yok-boyle')).toBeNull();
   });
 
-  it('loads the post fixture with a computed reading time', () => {
-    const found = getPostBySlug('ornek-yazi');
-    expect(found).not.toBeNull();
-    expect(found!.readingMinutes).toBeGreaterThanOrEqual(1);
-    expect(found!.author).toBe('PENDING');
+  it('sorts by group order, then by the order field', () => {
+    const groups = getAllServices().map((s) => s.group);
+    // Each group appears as one contiguous run, in the configured sequence.
+    expect([...new Set(groups)]).toEqual([
+      'cilt-bakimi',
+      'epilasyon',
+      'cilt-yenileme',
+      'kas-kirpik',
+      'ozel-paket',
+    ]);
+    const ciltBakimi = getServicesByGroup('cilt-bakimi').map((s) => s.order);
+    expect(ciltBakimi).toEqual([...ciltBakimi].sort((a, b) => a - b));
   });
 
-  it('filters by group, service and category', () => {
-    expect(getServicesByGroup('cilt-bakimi').length).toBeGreaterThan(0);
-    expect(getPostsByService('ornek-hizmet').length).toBeGreaterThan(0);
-    expect(getPostsByCategory('cilt-bakimi-rehberi').length).toBeGreaterThan(0);
-    expect(getPostsByCategory('epilasyon-rehberi')).toHaveLength(0);
+  it('filters by group', () => {
+    expect(getServicesByGroup('cilt-bakimi')).toHaveLength(9);
+    expect(getServicesByGroup('epilasyon')).toHaveLength(1);
+    expect(getServicesByGroup('cilt-yenileme')).toHaveLength(5);
+    expect(getServicesByGroup('kas-kirpik')).toHaveLength(4);
+    expect(getServicesByGroup('ozel-paket')).toHaveLength(1);
   });
 
-  it('excludes the post itself from related posts', () => {
-    const found = getPostBySlug('ornek-yazi')!;
-    expect(getRelatedPosts(found).map((p) => p.slug)).not.toContain(found.slug);
+  it('the blog collection is empty until M10, and every query survives that', () => {
+    // Not a placeholder: there are no posts, so every post query returns an
+    // empty list rather than throwing. `RelatedPosts` renders nothing on the
+    // strength of exactly this.
+    expect(getAllPosts()).toEqual([]);
+    expect(getPostBySlug('herhangi-bir-yazi')).toBeNull();
+    expect(getPostsByService('cilt-bakimi')).toEqual([]);
+    expect(getPostsByCategory('cilt-bakimi-rehberi')).toEqual([]);
+    expect(getAllSlugs('blog')).toEqual([]);
+  });
+
+  it('related posts still exclude the post itself, given posts', () => {
+    // Behaviour of the function, proven with factories, since the collection is
+    // empty. Re-pointed at real content at M10.
+    const self = post({ slug: 'bir' });
+    expect(getRelatedPosts(self).map((p) => p.slug)).not.toContain('bir');
   });
 
   it('exposes slugs for generateStaticParams', () => {
-    expect(getAllSlugs('services')).toContain('ornek-hizmet');
-    expect(getAllSlugs('blog')).toContain('ornek-yazi');
+    expect(getAllSlugs('services')).toHaveLength(20);
+    expect(getAllSlugs('services')).toContain('lazer-epilasyon');
   });
 
   it('excludes drafts by default', () => {
     expect(getAllPosts().every((p) => !p.draft)).toBe(true);
   });
 
-  it('every fixture heroImageId resolves in the manifest', () => {
+  it('every heroImageId resolves in the manifest', () => {
     const ids = new Set(images.map((i) => i.id));
     for (const s of getAllServices()) expect(ids).toContain(s.heroImageId);
     for (const p of getAllPosts()) expect(ids).toContain(p.heroImageId);
+  });
+
+  it('no fixture from M4 survives', () => {
+    expect(getServiceBySlug('ornek-hizmet')).toBeNull();
+    expect(getPostBySlug('ornek-yazi')).toBeNull();
+    expect(images.some((i) => i.id === 'fixture-placeholder')).toBe(false);
   });
 });
 

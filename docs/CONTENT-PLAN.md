@@ -12,50 +12,58 @@ All 20 services get a full page. No prices anywhere, not even ranges.
 
 Route: `/hizmetler/<slug>` · file: `content/services/<slug>.mdx`
 
+**The "Related services" column was revised at M8 so the graph is fully
+reciprocal** — every link has a matching link back, with each service holding
+3–4 siblings. The first draft of this table contained sixteen one-way links,
+which §5 called a warning; a warning nobody reads is worse than a constraint, so
+the graph was authored symmetric instead and a unit test asserts it stays that
+way. The changes are only in this column: no service moved group, and no slug
+changed.
+
 ### Group: Cilt Bakımı (`cilt-bakimi`)
 
-| #   | Service                | Slug                     | Search intent                                         | Related services                                             |
-| --- | ---------------------- | ------------------------ | ----------------------------------------------------- | ------------------------------------------------------------ |
-| 1   | Cilt Bakımı            | `cilt-bakimi`            | Informational → commercial. The category entry point. | `hydrafacial`, `nemlendirme-bakimi`, `hucre-yenileme`        |
-| 2   | Akne Bakımı            | `akne-bakimi`            | High-intent, problem-led.                             | `kimyasal-peeling`, `gozenek-sikilastirma`, `karbon-peeling` |
-| 3   | Yaşlanma Karşıtı Bakım | `yaslanma-karsiti-bakim` | Commercial, considered.                               | `kolajen-bakimi`, `dermapen`, `hucre-yenileme`               |
-| 4   | Leke Bakımı            | `leke-bakimi`            | High-intent, seasonal peak late summer.               | `kimyasal-peeling`, `hucre-yenileme`, `cilt-bakimi`          |
-| 5   | Hassas Cilt Bakımı     | `hassas-cilt-bakimi`     | Reassurance-led.                                      | `nemlendirme-bakimi`, `cilt-bakimi`, `kolajen-bakimi`        |
-| 6   | Kolajen Bakımı         | `kolajen-bakimi`         | Informational, name-led search.                       | `yaslanma-karsiti-bakim`, `dermapen`, `hucre-yenileme`       |
-| 7   | Nemlendirme Bakımı     | `nemlendirme-bakimi`     | Informational, winter peak.                           | `hydrafacial`, `hassas-cilt-bakimi`, `cilt-bakimi`           |
-| 8   | Gözenek Sıkılaştırma   | `gozenek-sikilastirma`   | Problem-led.                                          | `karbon-peeling`, `akne-bakimi`, `hydrafacial`               |
-| 9   | Hücre Yenileme         | `hucre-yenileme`         | Informational, low volume, supports cluster.          | `dermapen`, `kimyasal-peeling`, `yaslanma-karsiti-bakim`     |
+| #   | Service                | Slug                     | Search intent                                         | Related services                                                               |
+| --- | ---------------------- | ------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 1   | Cilt Bakımı            | `cilt-bakimi`            | Informational → commercial. The category entry point. | `hydrafacial` · `nemlendirme-bakimi` · `hucre-yenileme` · `gelin-bakim-paketi` |
+| 2   | Akne Bakımı            | `akne-bakimi`            | High-intent, problem-led.                             | `kimyasal-peeling` · `gozenek-sikilastirma` · `karbon-peeling`                 |
+| 3   | Yaşlanma Karşıtı Bakım | `yaslanma-karsiti-bakim` | Commercial, considered.                               | `kolajen-bakimi` · `dermapen` · `leke-bakimi`                                  |
+| 4   | Leke Bakımı            | `leke-bakimi`            | High-intent, seasonal peak late summer.               | `yaslanma-karsiti-bakim` · `kimyasal-peeling` · `bb-glow`                      |
+| 5   | Hassas Cilt Bakımı     | `hassas-cilt-bakimi`     | Reassurance-led.                                      | `nemlendirme-bakimi` · `kolajen-bakimi` · `lazer-epilasyon`                    |
+| 6   | Kolajen Bakımı         | `kolajen-bakimi`         | Informational, name-led search.                       | `yaslanma-karsiti-bakim` · `hassas-cilt-bakimi` · `dermapen`                   |
+| 7   | Nemlendirme Bakımı     | `nemlendirme-bakimi`     | Informational, winter peak.                           | `cilt-bakimi` · `hassas-cilt-bakimi` · `hydrafacial` · `lazer-epilasyon`       |
+| 8   | Gözenek Sıkılaştırma   | `gozenek-sikilastirma`   | Problem-led.                                          | `akne-bakimi` · `karbon-peeling` · `hydrafacial`                               |
+| 9   | Hücre Yenileme         | `hucre-yenileme`         | Informational, low volume, supports cluster.          | `cilt-bakimi` · `dermapen` · `kimyasal-peeling`                                |
 
 ### Group: Epilasyon (`epilasyon`)
 
-| #   | Service         | Slug              | Search intent                                      | Related services                                          |
-| --- | --------------- | ----------------- | -------------------------------------------------- | --------------------------------------------------------- |
-| 10  | Lazer Epilasyon | `lazer-epilasyon` | **Highest volume on the site.** Commercial, local. | `cilt-bakimi`, `hassas-cilt-bakimi`, `gelin-bakim-paketi` |
+| #   | Service         | Slug              | Search intent                                      | Related services                                                   |
+| --- | --------------- | ----------------- | -------------------------------------------------- | ------------------------------------------------------------------ |
+| 10  | Lazer Epilasyon | `lazer-epilasyon` | **Highest volume on the site.** Commercial, local. | `hassas-cilt-bakimi` · `nemlendirme-bakimi` · `gelin-bakim-paketi` |
 
 ### Group: Cilt Yenileme Uygulamaları (`cilt-yenileme`)
 
-| #   | Service          | Slug               | Search intent                                          | Related services                                             |
-| --- | ---------------- | ------------------ | ------------------------------------------------------ | ------------------------------------------------------------ |
-| 11  | Hydrafacial      | `hydrafacial`      | Brand-name search, high commercial intent.             | `cilt-bakimi`, `nemlendirme-bakimi`, `gozenek-sikilastirma`  |
-| 12  | Karbon Peeling   | `karbon-peeling`   | Name-led, curiosity → commercial.                      | `gozenek-sikilastirma`, `akne-bakimi`, `kimyasal-peeling`    |
-| 13  | Kimyasal Peeling | `kimyasal-peeling` | Informational, needs careful wording.                  | `leke-bakimi`, `akne-bakimi`, `hucre-yenileme`               |
-| 14  | Dermapen         | `dermapen`         | Name-led, high intent. ⚠️ See `docs/OPEN-QUESTIONS.md` | `kolajen-bakimi`, `hucre-yenileme`, `yaslanma-karsiti-bakim` |
-| 15  | BB Glow          | `bb-glow`          | Trend-led. ⚠️ See `docs/OPEN-QUESTIONS.md`             | `cilt-bakimi`, `hydrafacial`, `leke-bakimi`                  |
+| #   | Service          | Slug               | Search intent                                          | Related services                                                           |
+| --- | ---------------- | ------------------ | ------------------------------------------------------ | -------------------------------------------------------------------------- |
+| 11  | Hydrafacial      | `hydrafacial`      | Brand-name search, high commercial intent.             | `cilt-bakimi` · `nemlendirme-bakimi` · `gozenek-sikilastirma` · `bb-glow`  |
+| 12  | Karbon Peeling   | `karbon-peeling`   | Name-led, curiosity → commercial.                      | `akne-bakimi` · `gozenek-sikilastirma` · `kimyasal-peeling`                |
+| 13  | Kimyasal Peeling | `kimyasal-peeling` | Informational, needs careful wording.                  | `akne-bakimi` · `leke-bakimi` · `hucre-yenileme` · `karbon-peeling`        |
+| 14  | Dermapen         | `dermapen`         | Name-led, high intent. ⚠️ See `docs/OPEN-QUESTIONS.md` | `yaslanma-karsiti-bakim` · `kolajen-bakimi` · `hucre-yenileme` · `bb-glow` |
+| 15  | BB Glow          | `bb-glow`          | Trend-led. ⚠️ See `docs/OPEN-QUESTIONS.md`             | `leke-bakimi` · `hydrafacial` · `dermapen`                                 |
 
 ### Group: Kaş & Kirpik (`kas-kirpik`)
 
-| #   | Service        | Slug             | Search intent                                          | Related services                                      |
-| --- | -------------- | ---------------- | ------------------------------------------------------ | ----------------------------------------------------- |
-| 16  | Kalıcı Makyaj  | `kalici-makyaj`  | Commercial, local. ⚠️ See `docs/OPEN-QUESTIONS.md`     | `microblading`, `kas-tasarimi`, `gelin-bakim-paketi`  |
-| 17  | Microblading   | `microblading`   | Name-led, high intent. ⚠️ See `docs/OPEN-QUESTIONS.md` | `kalici-makyaj`, `kas-tasarimi`, `gelin-bakim-paketi` |
-| 18  | Kirpik Lifting | `kirpik-lifting` | Commercial, growing.                                   | `kas-tasarimi`, `gelin-bakim-paketi`, `kalici-makyaj` |
-| 19  | Kaş Tasarımı   | `kas-tasarimi`   | Everyday, repeat-visit driver.                         | `microblading`, `kirpik-lifting`, `kalici-makyaj`     |
+| #   | Service        | Slug             | Search intent                                          | Related services                                                          |
+| --- | -------------- | ---------------- | ------------------------------------------------------ | ------------------------------------------------------------------------- |
+| 16  | Kalıcı Makyaj  | `kalici-makyaj`  | Commercial, local. ⚠️ See `docs/OPEN-QUESTIONS.md`     | `microblading` · `kas-tasarimi` · `kirpik-lifting` · `gelin-bakim-paketi` |
+| 17  | Microblading   | `microblading`   | Name-led, high intent. ⚠️ See `docs/OPEN-QUESTIONS.md` | `kalici-makyaj` · `kas-tasarimi` · `kirpik-lifting`                       |
+| 18  | Kirpik Lifting | `kirpik-lifting` | Commercial, growing.                                   | `kas-tasarimi` · `kalici-makyaj` · `microblading` · `gelin-bakim-paketi`  |
+| 19  | Kaş Tasarımı   | `kas-tasarimi`   | Everyday, repeat-visit driver.                         | `kalici-makyaj` · `microblading` · `kirpik-lifting`                       |
 
 ### Group: Özel Paketler (`ozel-paket`)
 
-| #   | Service            | Slug                 | Search intent                         | Related services                                   |
-| --- | ------------------ | -------------------- | ------------------------------------- | -------------------------------------------------- |
-| 20  | Gelin Bakım Paketi | `gelin-bakim-paketi` | Seasonal, high value, group decision. | `cilt-bakimi`, `kirpik-lifting`, `lazer-epilasyon` |
+| #   | Service            | Slug                 | Search intent                         | Related services                                                       |
+| --- | ------------------ | -------------------- | ------------------------------------- | ---------------------------------------------------------------------- |
+| 20  | Gelin Bakım Paketi | `gelin-bakim-paketi` | Seasonal, high value, group decision. | `cilt-bakimi` · `lazer-epilasyon` · `kalici-makyaj` · `kirpik-lifting` |
 
 ---
 
@@ -69,8 +77,8 @@ comes from the MDX body.
 | -------------------- | ------------------- | ------------------------------------------ |
 | Eyebrow + `h1`       | `eyebrow`, `title`  | View Transition target from the card       |
 | Lead paragraph       | `summary`           | 60–165 chars, doubles as meta description  |
-| Hero image           | `heroImageId`       | Manifest-resolved, `ImageReveal`           |
-| "Bu uygulama nedir?" | MDX body            | 150–250 words, plain and precise           |
+| Hero image           | `heroImageId`       | Manifest-resolved. View Transition target  |
+| "Bu uygulama nedir?" | MDX body            | The whole body, `h3` subheadings           |
 | "Nasıl ilerler?"     | `steps[]`           | 2–6 steps. **What happens in the room.**   |
 | "Kimler için uygun?" | `suitableFor[]`     | Suitability, never diagnosis               |
 | "Sonrasında"         | `aftercare[]`       | Practical aftercare notes. **No numbers.** |
@@ -89,6 +97,13 @@ Target length: **350–600 words** of body prose. Deliberately shorter than a
 typical service page, because that is the honest length for what is actually
 known before the centre opens.
 
+Two notes from building it at M8. The hero is the **View Transition target**, so
+it does not also get `ImageReveal` — a `clip-path` wipe and a morph would
+animate the same element from two different start states. And the MDX body is
+the whole "Bu uygulama nedir?" section rather than a capped opening paragraph:
+the template renders that heading as `h2`, so subheadings inside the body are
+`h3` and heading order stays intact.
+
 ### Content posture
 
 `CLAUDE.md` §9 and `docs/OPEN-QUESTIONS.md` §H, restated here because it binds
@@ -102,6 +117,13 @@ The `durationLabel` field remains in the schema and stays `null` (C4), but there
 is no longer a "Süre" block in the page structure — the field is unrendered, not
 rendering empty. `suitableFor` and `aftercare` stay general and may not carry a
 number.
+
+**Written at M8.** All twenty bodies landed at 350–420 words: at the floor
+rather than the ceiling, which is what the posture predicts. Reaching even 350
+honestly meant writing about what the page deliberately does **not** say — why
+there is no session count, why no device is named, why there are no before/after
+photographs — and that turned out to be the most useful material on the pages.
+Where a section would have needed a fact we do not have, it was cut.
 
 A page that is 350 honest words is finished. Padding it to 800 with plausible
 detail is a defect, not an improvement.
@@ -235,17 +257,17 @@ reference (`docs/ARCHITECTURE.md` §3.4).
 
 ### Rules
 
-| Rule                   | Detail                                                                                                                                                                                                            |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Up**                 | Every post links to its mapped service hub — once in the body, in context, and once in the closing block. Never a bare "tıklayın".                                                                                |
-| **Down**               | Every service hub lists its posts under "İlgili yazılar", newest first.                                                                                                                                           |
-| **Lateral (services)** | Each hub links to 3–4 sibling services via `relatedServices`. Reciprocity is checked at build; a one-way link is a warning.                                                                                       |
-| **Lateral (posts)**    | Each post links to 2–3 posts, preferring same service, then same category.                                                                                                                                        |
-| **Bridges**            | Cross-group links only where genuinely useful: `lazer-epilasyon` ↔ `gelin-bakim-paketi`, `akne-bakimi` ↔ `gozenek-sikilastirma`, `leke-bakimi` ↔ `kimyasal-peeling`, `kolajen-bakimi` ↔ `yaslanma-karsiti-bakim`. |
-| **Conversion**         | Every post ends with exactly one CTA to `/iletisim`. One, not two.                                                                                                                                                |
-| **Anchor text**        | Descriptive and natural — "lazer epilasyon uygulaması", never "buraya tıklayın", never an exact-match keyword stuffed mid-sentence.                                                                               |
-| **Depth**              | Every page reachable within 3 clicks of `/`.                                                                                                                                                                      |
-| **Orphans**            | Zero. A page with no inbound internal link fails review.                                                                                                                                                          |
+| Rule                   | Detail                                                                                                                                                                                                                                   |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Up**                 | Every post links to its mapped service hub — once in the body, in context, and once in the closing block. Never a bare "tıklayın".                                                                                                       |
+| **Down**               | Every service hub lists its posts under "İlgili yazılar", newest first.                                                                                                                                                                  |
+| **Lateral (services)** | Each hub links to 3–4 sibling services via `relatedServices`. **Reciprocity is asserted by a unit test** (M8): a one-way link fails `npm run test`, not a warning nobody reads. Adding a service means adding it to its siblings' lists. |
+| **Lateral (posts)**    | Each post links to 2–3 posts, preferring same service, then same category.                                                                                                                                                               |
+| **Bridges**            | Cross-group links only where genuinely useful: `lazer-epilasyon` ↔ `gelin-bakim-paketi`, `akne-bakimi` ↔ `gozenek-sikilastirma`, `leke-bakimi` ↔ `kimyasal-peeling`, `kolajen-bakimi` ↔ `yaslanma-karsiti-bakim`.                        |
+| **Conversion**         | Every post ends with exactly one CTA to `/iletisim`. One, not two.                                                                                                                                                                       |
+| **Anchor text**        | Descriptive and natural — "lazer epilasyon uygulaması", never "buraya tıklayın", never an exact-match keyword stuffed mid-sentence.                                                                                                      |
+| **Depth**              | Every page reachable within 3 clicks of `/`.                                                                                                                                                                                             |
+| **Orphans**            | Zero. A page with no inbound internal link fails review.                                                                                                                                                                                 |
 
 ### Cluster shape (example: `lazer-epilasyon`)
 

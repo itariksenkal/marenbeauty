@@ -21,6 +21,7 @@ function load(): Service[] {
     ...parseFrontmatter(serviceFrontmatterSchema, doc),
     slug: doc.slug,
     body: doc.body,
+    file: doc.file,
   }));
 }
 

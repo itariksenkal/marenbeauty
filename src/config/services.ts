@@ -71,3 +71,64 @@ export const serviceGroups: readonly {
     surface: 'bg-surface-accent',
   },
 ];
+
+const groupLabels = new Map(
+  serviceGroups.map((group) => [group.id, group.label]),
+);
+
+export function serviceGroupLabel(group: ServiceGroup): string {
+  const label = groupLabels.get(group);
+  if (!label) {
+    throw new Error(`No display label for service group "${group}".`);
+  }
+  return label;
+}
+
+/**
+ * Every user-facing string on `/hizmetler` and `/hizmetler/[slug]`.
+ *
+ * Components may not contain a Turkish sentence (CLAUDE.md §7), so the section
+ * headings, the empty-state wording and the disclaimer all live here. Editing
+ * the page's language is an edit to this file.
+ *
+ * Nothing here asserts a fact about the business. The headings are questions the
+ * frontmatter answers; where a service has no data for a block, the block is not
+ * rendered at all rather than rendered empty (`docs/CONTENT-PLAN.md` §2).
+ */
+export const servicePage = {
+  index: {
+    eyebrow: 'Hizmetler',
+    headingLines: ['Uygulamalar,', 'gruplar hâlinde.'],
+    /**
+     * Says only what is true today: these are the services offered, and which
+     * one suits you is decided in person rather than from a page.
+     */
+    lead: 'Aşağıdaki başlıklar merkezde sunulan uygulamalardır. Hangisinin size uygun olduğuna, seans öncesinde birlikte karar veriyoruz.',
+  },
+
+  detail: {
+    backToIndex: 'Tüm hizmetler',
+    about: 'Bu uygulama nedir?',
+    steps: 'Nasıl ilerler?',
+    suitableFor: 'Kimler için uygun?',
+    aftercare: 'Sonrasında',
+    faq: 'Sık sorulan sorular',
+    related: 'İlgili hizmetler',
+    relatedPosts: 'İlgili yazılar',
+    /*
+     * There is no CTA copy here on purpose. The closing call to action is the
+     * shared `ContactCta` section (docs/CONTENT-PLAN.md §2), so the wording
+     * lives once in `home.sections` and every page says the same thing.
+     */
+  },
+
+  /**
+   * The required disclaimer, verbatim (CLAUDE.md §9).
+   *
+   * It contains `tıbbi`, which is why that term is ADVISORY and not blocking in
+   * the guard. A fixture test asserts this exact sentence passes; promoting the
+   * term to the blocking tier breaks the disclaimer and fails that test first.
+   */
+  disclaimer:
+    'Bu uygulamalar kozmetik bakım amaçlıdır ve tıbbi bir hizmetin yerine geçmez.',
+} as const;

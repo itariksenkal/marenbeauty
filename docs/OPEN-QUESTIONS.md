@@ -55,6 +55,13 @@ limits that the service copy should reflect. Since copy publishes **no** device
 names, depths or concentrations (§H), this is unlikely to force a rewrite — but
 it should be checked at the same time as the boxes above.
 
+**M8 update — all six pages are now written and live in the build.** Each says
+explicitly, in its own words, that the technical detail is not published and is
+discussed before a session instead. Nothing on any of them names a device, a
+depth, a concentration or a setting, and a unit test asserts it per service. So
+the copy is already inside whatever the permits turn out to allow, and the boxes
+above remain a compliance check rather than a rewrite risk.
+
 ### A3 — Other recorded decisions ✅ 🟢
 
 | Decision                                                       | Recorded |
@@ -150,7 +157,7 @@ three are updated **everywhere at once** — footer, schema, GBP, every director
 listing — in a single change. Partial updates create the inconsistency this
 lock exists to prevent.
 
-### C4 — Session durations ✅ → M8
+### C4 — Session durations ✅ → held at M8
 
 **Answered 2026-08-06: publish none.** `durationLabel` stays `null` on all 20
 services and renders **nothing** — no dash, no "TBD", no estimate.
@@ -193,13 +200,31 @@ At launch, therefore:
 - Result: no cookies, no third-party requests, and a gate already in place for
   the day advertising starts.
 
-### C7 — Photography ✅ 🟢 → M8
+### C7 — Photography ✅ 🟢 → judged at M8, one question back to the owner
 
 **Answered 2026-08-06:** free stock at launch, curated to **one narrow visual
 family**. Manifest as specified.
 
 Paid stock is revisited **only if the free set looks generic in review** — a
 judgement made when the images are on the page, not in advance.
+
+**M8 outcome: no stock photograph ships, free or paid.** Once the pages existed,
+every stock option turned out to be a claim in picture form. A treatment room is
+a room that is not this one. A face is a person who does not work here — already
+banned outright by `CLAUDE.md` §8. Neither survives the content posture in §H,
+which is the same standard the copy is held to.
+
+The launch set is **abstract warm gradient artwork generated from the palette**
+(`scripts/generate-placeholders.mjs`), one per service, in the same visual
+family as the aurora. It asserts nothing. Because it is ours: `licence` is a
+real `CC0-1.0`, `credit` and `sourceUrl` are `null` rather than fabricated, and
+`alt` is empty — the images carry no information, so decorative markup is the
+correct accessibility answer and no alt text had to be invented either.
+
+**For the owner:** this is a design decision, not only a legal one, and it is
+worth a look on screen at `/hizmetler`. If the pages read too abstract, the
+alternative is real photography of the actual space once it exists — not stock.
+Swapping the set is one edit to `src/config/images.ts`; no component moves.
 
 ### C8 — KVKK review and VERBİS 🟡 → M12
 
@@ -663,6 +688,72 @@ underlying error; the production build was, correctly, unaffected.
 `npm run test` fails with exit 1, naming the file and both offending fields, so
 `npm run verify` would not have gone green on a genuinely bad commit. That was
 confirmed rather than assumed.
+
+### G14 — The guard drowned itself in false positives 🟢 → fixed at M8
+
+**What happened.** The first real build with images produced **105 advisory hits
+and several hundred percentage-claim warnings**. Not one percentage was a claim.
+`next/image` emits `?url=%2Fimages%2Fservices%2F….webp` once per breakpoint, and
+`%2` matches `/%\s?\d/`. Twenty service pages, a dozen breakpoints each.
+
+This is the failure mode the guard's own notes warn about: _warnings that fire
+on every page teach people to ignore warnings_, which costs more than the rule
+is worth. At that volume the 105 genuine advisories would have been invisible.
+
+**Fixed the way the M7 inline-style false positive was fixed** — the rule stays
+exactly as strict and its INPUT is narrowed. `style="…"` was already masked;
+URL-bearing attributes (`src`, `srcset`, `href`, `action`, `poster`, and their
+RSC/JSON forms) now are too. A percentage claim is something a reader reads, so
+it lives in a text node, never in a URL.
+
+**`content="…"` is deliberately not masked** — a meta description is prose, and
+an efficacy claim there is precisely what the rule exists to catch. A fixture
+test asserts `%100` inside a `content` attribute still blocks.
+
+Recorded in `CLAUDE.md` §12 alongside the other load-bearing details.
+
+### G15 — A test regex reproduced the ASCII `\b` bug 🟢 → fixed at M8
+
+`CLAUDE.md` §12 explains at length that JavaScript's `\b` is ASCII-only and
+matches inside Turkish words. The M8 content-posture checks then used
+`/\b(…|nm\b|…)\b/` — and it matched inside **düşünmüyoruz**, failing a page that
+contains no equipment reference at all.
+
+The rule is documented; the reflex is not. Any new pattern touching Turkish
+needs `(?<![\p{L}\p{N}])` / `(?![\p{L}\p{N}])` with `/u`, and the posture checks
+now share one helper that does. A test pins the behaviour in both directions, so
+the next term added cannot reintroduce it.
+
+**Worth noting for future milestones:** this is the second time this exact bug
+has appeared, in two different files. Anything that matches Turkish text should
+start from the guard's boundary helpers rather than from `\b`.
+
+### G16 — Client-component props are payload 🟢 → fixed at M8
+
+`ServicesPanels` is a client component. It took `readonly Service[]` and rendered
+twenty titles — but every prop of a client component is serialised into the RSC
+payload, so **all twenty MDX bodies, roughly nine thousand words, shipped inside
+the home page**. Nothing rendered them; they were simply there.
+
+Found by a browser test that was looking for something else entirely: a check
+that the word "görüş" never appears on the home page (part of the testimonials
+absence rule) matched inside a service body in the serialised stream.
+
+**Fixed by narrowing on the server** — `toListItems()` maps to `{slug, title,
+group}` at the call site in `page.tsx`. Narrowing inside the component would be
+too late; by then the wide object has already been serialised.
+
+**A second lesson, learned by failing the build:** `toListItems` could not live
+in `ServicesPanels.tsx`, because anything exported from a `'use client'` module
+is a client reference and calling it during server rendering fails with
+_"attempted to call it from the server"_. It lives in
+`src/components/sections/service-list-item.ts`.
+
+Two tests now hold the line: a unit test asserting the component's props type,
+and a browser test asserting body copy never appears in the home page payload.
+
+**Applies to every future client component that takes content** — `PostCard` and
+the blog teaser at M9/M10 have the same shape.
 
 ---
 

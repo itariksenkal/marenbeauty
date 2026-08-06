@@ -27,16 +27,18 @@ export type IntegrityInput = {
   readonly imageIds: readonly string[];
 };
 
-/** Internal blog links written in an MDX body, e.g. `/blog/lazer-epilasyon-nedir`. */
-function blogLinksIn(body: string): string[] {
+/** Internal links of one kind written in an MDX body, e.g. `/blog/<slug>`. */
+function linksIn(body: string, prefix: 'blog' | 'hizmetler'): string[] {
   const found = new Set<string>();
-  const pattern = /\/blog\/([a-z0-9-]+)/g;
+  const pattern = new RegExp(`/${prefix}/([a-z0-9-]+)`, 'g');
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(body)) !== null) {
     if (match[1]) found.add(match[1]);
   }
   return [...found];
 }
+
+const blogLinksIn = (body: string) => linksIn(body, 'blog');
 
 export function checkIntegrity(input: IntegrityInput): IntegrityIssue[] {
   const { services, posts, imageIds } = input;
@@ -173,6 +175,31 @@ export function checkIntegrity(input: IntegrityInput): IntegrityIssue[] {
             `links to /blog/${linked}, which is draft: true and will 404.`,
           );
         }
+      }
+    }
+  }
+
+  // 8 — a `/hizmetler/<slug>` link written in a body must resolve.
+  //     `relatedServices` is checked by rule 1, but from M8 the prose itself
+  //     carries contextual links (docs/CONTENT-PLAN.md §5, "Anchor text"), and
+  //     those are exactly as easy to break by renaming a file. A dangling one
+  //     is a guaranteed 404, so it fails the build like every other dangling
+  //     reference rather than waiting to be noticed in production.
+  const allDocs = [
+    ...services.map((s) => ({
+      file: `content/services/${s.slug}.mdx`,
+      body: s.body,
+    })),
+    ...posts.map((p) => ({ file: `content/blog/${p.slug}.mdx`, body: p.body })),
+  ];
+  for (const doc of allDocs) {
+    for (const linked of linksIn(doc.body, 'hizmetler')) {
+      if (!serviceSlugs.has(linked)) {
+        push(
+          'internal-link-missing',
+          doc.file,
+          `links to /hizmetler/${linked}, which has no matching service file.`,
+        );
       }
     }
   }

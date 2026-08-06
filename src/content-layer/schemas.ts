@@ -103,11 +103,22 @@ export type PostFrontmatter = z.infer<typeof postFrontmatterSchema>;
 export type Service = ServiceFrontmatter & {
   readonly slug: string;
   readonly body: string;
+  /**
+   * Repo-relative source path, e.g. `content/services/cilt-bakimi.mdx`.
+   *
+   * Carried on the document so a consumer that needs to NAME the file — an MDX
+   * compile error, say — never has to rebuild the path from the slug. Nothing
+   * outside `src/content-layer/` may write a path under `content/`
+   * (CLAUDE.md §5), and a unit test enforces that; this is how the rule stays
+   * satisfiable without weakening it.
+   */
+  readonly file: string;
 };
 
 export type Post = PostFrontmatter & {
   readonly slug: string;
   readonly body: string;
+  readonly file: string;
   /** Computed from the body. Never authored — `.strict()` rejects the key. */
   readonly readingMinutes: number;
 };

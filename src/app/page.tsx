@@ -5,6 +5,7 @@ import { ExperienceProcess } from '@/components/sections/ExperienceProcess';
 import { HeroWater } from '@/components/sections/HeroWater';
 import { LocationCard } from '@/components/sections/LocationCard';
 import { ServicesPanels } from '@/components/sections/ServicesPanels';
+import { toListItems } from '@/components/sections/service-list-item';
 import { TestimonialsSection } from '@/components/sections/TestimonialsSection';
 import { getAllPosts, getAllServices } from '@/content-layer';
 
@@ -24,7 +25,9 @@ export default function HomePage() {
   return (
     <>
       <HeroWater />
-      <ServicesPanels services={services} />
+      {/* Narrowed here, on the server: the panel list is a client component,
+          so anything passed whole is serialised into the RSC payload. */}
+      <ServicesPanels services={toListItems(services)} />
       <ExperienceProcess />
       <TestimonialsSection />
       <BlogTeaser posts={posts} />

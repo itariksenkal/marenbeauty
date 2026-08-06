@@ -80,6 +80,17 @@
   }
 }
 
+/* Signature #5 — View Transitions (docs/MOTION.md §3.5).
+   The browser's default cross-fade runs at its own pace, which is outside the
+   400ms budget's control. Binding every part of the transition tree to
+   --duration-slow puts it back inside the system. */
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: var(--duration-slow);
+  animation-timing-function: var(--ease-water);
+}
+
 /* Motion contract — docs/MOTION.md §2.4. Reduced motion means the final state
    immediately, not a faster animation. */
 @media (prefers-reduced-motion: reduce) {
@@ -94,5 +105,15 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* The universal selector above does NOT reach the view-transition pseudo-
+     element tree — it is generated outside the document. `ViewTransitionLink`
+     already declines to start one below the `full` tier, so this covers the
+     remaining case: a transition the user agent starts by itself. */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.01ms !important;
   }
 }

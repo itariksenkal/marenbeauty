@@ -262,6 +262,33 @@ describe('rules 5 and 6 — warnings do not block', () => {
     // would make the guard untrustworthy.
     expect(scan('const r=n%100;', '.js')).toHaveLength(0);
   });
+
+  it('ignores percent-ENCODING in a URL attribute', () => {
+    // `next/image` emits `?url=%2Fimages%2F…` once per breakpoint. Before this
+    // was masked, twenty service pages produced hundreds of "percentage claim"
+    // warnings, none of which was a claim. Found at M8 against a real build.
+    const srcset =
+      '<img srcset="/_next/image?url=%2Fimages%2Fservices%2Fcilt-bakimi.webp&amp;w=640&amp;q=75 640w" src="/_next/image?url=%2Fimages%2Fservices%2Fcilt-bakimi.webp&amp;w=1200&amp;q=75" alt="">';
+    expect(scan(srcset)).toHaveLength(0);
+  });
+
+  it('ignores the same URL in its RSC-payload (JSON) form', () => {
+    const rsc = '{"src":"/_next/image?url=%2Fimages%2Fx.webp&w=750&q=75"}';
+    expect(scan(rsc, '.rsc')).toHaveLength(0);
+  });
+
+  it('still catches a percentage in copy on a line that also has a URL', () => {
+    const mixed =
+      '<img src="/_next/image?url=%2Fa.webp"><p>Nemlilik %40 arttı.</p>';
+    expect(warnings(mixed).map((v) => v.rule)).toContain('percentage-claim');
+    expect(warnings(mixed)).toHaveLength(1);
+  });
+
+  it('does NOT mask content="…" — a meta description is prose', () => {
+    // The one attribute a claim can legitimately appear in.
+    const meta = '<meta name="description" content="Cildiniz %100 yenilenir.">';
+    expect(errors(meta).map((v) => v.rule)).toContain('blocking:%100');
+  });
 });
 
 /* ── F9 — %100 blocks and is not masked by the percentage warning ──────────── */

@@ -57,6 +57,18 @@ test.describe('home sections', () => {
     }
   });
 
+  test('service bodies never reach the home page payload', async ({ page }) => {
+    // `ServicesPanels` is a client component, so every prop is serialised into
+    // the RSC payload. Passing whole `Service` objects put all twenty MDX
+    // bodies — thousands of words — into the home page for a list that renders
+    // twenty titles. The props are narrowed on the server; this pins that.
+    await page.goto('/');
+    const html = await page.content();
+    expect(html).toContain('Lazer Epilasyon');
+    expect(html).not.toContain('kozmetik bir uygulamadır');
+    expect(html).not.toContain('Uygunluk seans öncesinde');
+  });
+
   test('the process section is absent while it has no steps', async ({
     page,
   }) => {

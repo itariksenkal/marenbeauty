@@ -10,8 +10,9 @@ import {
 import { TextReveal } from '@/components/motion/TextReveal';
 import { home } from '@/config/home';
 import { serviceGroups } from '@/config/services';
-import type { Service } from '@/content-layer/schemas';
 import type { CssVars } from '@/lib/css-vars';
+
+import type { ServiceListItem } from './service-list-item';
 
 /**
  * Signature #2 in place — the sticky panel stack (docs/MOTION.md §3.2).
@@ -26,8 +27,14 @@ import type { CssVars } from '@/lib/css-vars';
  * Groups with no services yet still render: they are the confirmed categories,
  * and the panel says only the category name. Nothing here claims what a service
  * involves.
+ *
+ * Props are `ServiceListItem`, deliberately — see `./service-list-item.ts`.
  */
-export function ServicesPanels({ services }: { services: readonly Service[] }) {
+export function ServicesPanels({
+  services,
+}: {
+  services: readonly ServiceListItem[];
+}) {
   return (
     <section id="hizmetler">
       <Container className="py-section-y-tight">
