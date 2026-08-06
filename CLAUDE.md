@@ -437,12 +437,44 @@ Rules, all of which fail the build with a file, line and excerpt:
 
 5. **Warning lexicon** (§9) — `klinik`, `tıbbi`, `doktor kontrolünde`.
 6. **Percentage claims** — `%\d`. Reviewed by hand before merge. Note `%100` is
-   rule 1, and must be tested **before** this rule so the blocking hit is not
-   masked by the warning.
+   rule 1, and is tested **before** this rule so the blocking hit is not masked
+   by the warning.
 
 Exit non-zero on any error-tier hit. Print every violation of either tier, not
 just the first. `scripts/guard.allow.json` ships empty — the exception
 mechanism exists but is deliberately unused.
+
+### Four implementation details that are load-bearing
+
+**Word boundaries are Unicode-aware, not `\b`.** JavaScript's `\b` is ASCII-only
+and treats `ü` as a _non-word_ character, so `/\bkür/` matches inside `şükür`.
+The guard uses `(?<![\p{L}\p{N}])` / `(?![\p{L}\p{N}])` with the `u` flag.
+Reverting this reintroduces false positives on ordinary Turkish words.
+
+**`kür` uses an explicit suffix whitelist**, not a greedy one. Greedy matching
+would flag `kürk` (fur), `kürek` (oar) and `küresel` (global). Every other stem
+is unambiguous enough for greedy suffixes.
+
+**Percentage rules are text-only.** They scan `.html`/`.rsc` but not `.js`,
+because minified framework code is full of `n%100` modulo arithmetic — a guard
+that fails the build when the framework formats a number is a guard nobody
+trusts. Rule 2 is likewise narrowed in JavaScript to SHOUTING tokens, since
+`{{` is ordinary syntax there.
+
+**Escaped text is decoded before matching** — `\uXXXX` and HTML entities — so a
+banned word cannot slip through as `tedav\u0069`. Decoding is line-preserving,
+so reported line numbers stay true.
+
+### Channel-link contract
+
+Rule 3 checks anchors two ways: any bare-scheme `href` (`tel:`, `mailto:`,
+`sms:`, a numberless `wa.me/`) in either HTML or RSC-payload form, **and** any
+`<a>` carrying `data-channel` whose href is `#` or empty.
+
+So every contact-channel link must carry
+`data-channel="whatsapp|phone|email|instagram"`. That attribute is what lets the
+guard tell a dead channel button from an ordinary in-page anchor. Components
+built at M11 must set it.
 
 ---
 

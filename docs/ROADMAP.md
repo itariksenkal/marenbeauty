@@ -251,7 +251,7 @@ npm run verify
 
 ---
 
-## M3 — Content guard script ☐
+## M3 — Content guard script ☑ **DONE 2026-08-06**
 
 **Goal.** The build refuses to ship banned language, unresolved tokens or dead
 links. Built before any content exists, so no bad copy can ever land.
@@ -260,39 +260,61 @@ links. Built before any content exists, so no bad copy can ever land.
 
 ```
 scripts/guard.mjs  scripts/guard.allow.json
+tests/unit/guard.test.ts   ← added: 62 fixture tests
 package.json  .github/workflows/ci.yml
 docs/OPEN-QUESTIONS.md
 ```
 
 **Acceptance criteria**
 
-- [ ] Scans `.next/server/app/**/*.{html,rsc}` and
-      `.next/static/chunks/**/*.js`. **Does not scan `docs/` or source** — this
-      repo discusses the banned words openly.
-- [ ] Rule 1 — **blocking lexicon, all 16 terms** (`CLAUDE.md` §9): `tedavi`,
-      `terapi`, `kür`, `iyileştir`, `yok ed`, `garanti`, `kesin sonuç`,
-      `mucize`, `kalıcı çözüm`, `kanıtlanmış`, `%100`, `risksiz`, `yan etkisiz`,
-      `ağrısız`, `1 numaralı`, `en iyi`. Verified to catch `tedavisi`/`tedaviler`
-      and verified **not** to flag `kürk`, `kürek`, `şükür`, `küresel` (F7).
-- [ ] Rule 2 — any `{{…}}` in output fails the build.
-- [ ] Rule 3 — empty-target links fail: `href="tel:"`, `href="mailto:"`,
-      `wa.me/` with no number, `href="#"` on a channel button.
-- [ ] Rule 4 — `lorem ipsum` / `dolor sit amet` fail.
-- [ ] Rule 5 — **warning lexicon**: `klinik`, `tıbbi`, `doktor kontrolünde`.
-      Reported, exit 0.
-- [ ] Rule 6 — `%\d` warns. **Tested after rule 1**, so a `%100` hit reports as
-      blocking and is not masked by the warning (F9).
-- [ ] **F8 — the C9 disclaimer passes unmodified.** Fixture test on the exact
-      sentence: _"Bu uygulamalar kozmetik bakım amaçlıdır ve tıbbi bir hizmetin
-      yerine geçmez."_ This is what keeps `tıbbi` non-blocking honest.
-- [ ] Reports **every** violation with file, line, excerpt and tier — not just
-      the first.
-- [ ] `guard.allow.json` supports exact-phrase exceptions, each with a
-      `reason` field; an entry without a reason is rejected. **Ships empty.**
-- [ ] Fixture test: a deliberately bad page fails the guard; a clean page passes.
-- [ ] CI runs `npm run verify` on every push and pull request.
+- [x] Scans `.next/server/app/**/*.{html,rsc}` and
+      `.next/static/chunks/**/*.js`. **Does not scan `docs/` or source.**
+      28 build artefacts scanned on a clean run.
+- [x] Rule 1 — **blocking lexicon, all 16 terms**, each with its own fixture
+      test. Catches `tedavisi`/`tedaviler`/`tedavide`, and does **not** flag
+      `kürk`, `kürek`, `şükür`, `küresel`, `küre`, `kürkçü`, `kürekçi` (F7).
+- [x] Rule 2 — `{{…}}` in output fails the build.
+- [x] Rule 3 — empty-target links fail, in both HTML and RSC-payload form.
+- [x] Rule 4 — `lorem ipsum` / `dolor sit amet` fail.
+- [x] Rule 5 — warning lexicon `klinik`, `tıbbi`, `doktor kontrolünde`
+      reported, exit 0.
+- [x] Rule 6 — `%\d` warns, tested **after** rule 1, so `%100` reports as
+      blocking and is not masked (F9). Verified both ways: a line containing
+      `%100 etkili, nem %30 arttı` yields exactly one blocking hit and exactly
+      one warning.
+- [x] **F8 — the C9 disclaimer passes unmodified.** Fixture test on the exact
+      sentence: no blocking violation, exactly one advisory hit (`tıbbi`).
+- [x] Reports **every** violation with file, line, column, excerpt and tier.
+      Demonstrated end-to-end against a deliberately bad page: 13 blocking
+      violations reported in one run, exit 1.
+- [x] `guard.allow.json` supports exact-phrase exceptions; an entry without a
+      `reason` is rejected. **Ships empty**, and a test asserts it stays empty.
+- [x] Fixture tests: a clean page passes, a bad page fails on every rule.
+      **62 guard tests; 133 unit tests total.**
+- [x] CI runs `npm run verify` on every push and pull request.
 
-**Verify**
+**Four decisions worth carrying forward**
+
+- **Unicode word boundaries, not `\b`.** JavaScript's `\b` is ASCII-only and
+  treats `ü` as a non-word character, so `/\bkür/` matches inside `şükür` —
+  a test asserts the naive form fails and ours does not. This is the single
+  detail that separates a working Turkish guard from one that flags ordinary
+  words.
+- **`kür` takes an explicit suffix whitelist** while every other stem uses a
+  greedy suffix, because greedy matching flags `kürk`, `kürek` and `küresel`.
+- **Percentage rules are text-only.** Minified framework code is full of
+  `n%100` modulo arithmetic; failing a build on that would make the guard
+  untrustworthy. Rule 2 is narrowed in JavaScript for the same reason — `{{`
+  is ordinary syntax there.
+- **Escaped text is decoded before matching**, so `tedav\u0069` cannot slip
+  through. Line-preserving, so reported line numbers stay true.
+
+**New contract for M11:** every contact-channel link must carry
+`data-channel="whatsapp|phone|email|instagram"`. That attribute is how rule 3
+distinguishes a dead channel button from an ordinary in-page anchor. Recorded
+in `CLAUDE.md` §12.
+
+**Verify** — `npm run verify` exits **0**.
 
 ```bash
 npm run build && npm run guard && npm run test
@@ -607,6 +629,8 @@ src/lib/mail/{transport,templates}.ts  src/config/env.ts
 - [ ] **Nothing is persisted** — no database, no file, no log line containing
       the message body or email address.
 - [ ] Consent checkbox is required, unchecked by default, links to `/kvkk`.
+- [ ] Every channel link carries `data-channel="whatsapp|phone|email|instagram"`
+      so guard rule 3 can catch a dead channel button (`CLAUDE.md` §12).
 - [ ] Works **without JavaScript** via a plain form POST.
 - [ ] Errors, success and pending states announced via `role="status"` /
       `aria-live="polite"`. Not a toast.

@@ -1,0 +1,11 @@
+{
+  "$comment": "Exact-phrase exceptions to the content guard (CLAUDE.md §9, §12). Every entry MUST carry a `reason` — the guard exits 1 on an entry without one. Ships EMPTY and should stay that way: the C9 disclaimer was reworded rather than excepted (docs/OPEN-QUESTIONS.md C9), which is the better outcome. Adding an entry here means a banned term is shipping to visitors, so it needs the owner's agreement, not a developer's convenience.",
+
+  "$schema": {
+    "phrase": "Exact text that may contain a banned term. Case-insensitive. A violation is suppressed only when the match falls INSIDE an occurrence of this phrase — an allowance never disables a rule globally.",
+    "reason": "Required. Why this phrase is acceptable and who agreed.",
+    "rule": "Optional. Which rule id this relates to, for readers."
+  },
+
+  "allow": []
+}

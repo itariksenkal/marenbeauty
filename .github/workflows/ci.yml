@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch makes an in-flight run obsolete.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: npm run verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Read from .nvmrc so there is one source of truth for the runtime
+          # (CLAUDE.md §2). Bumping Node is a repo change, not a CI change.
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Cached separately from node_modules: the browser download is ~115 MB
+      # and changes only when Playwright itself does.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      # Even on a cache hit the OS-level libraries are not cached, so they are
+      # installed separately. Without them Chromium fails to launch.
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      # THE gate. typecheck → lint → format → fonts → build → guard → tests →
+      # e2e → a11y → licences. Defined once in package.json so CI cannot drift
+      # from what a developer runs locally (CLAUDE.md §4).
+      - name: Verify
+        run: npm run verify
+
+      # The guard inspects build output, so its report is the useful artefact
+      # when a run fails on content rather than on code.
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

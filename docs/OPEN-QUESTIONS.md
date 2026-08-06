@@ -368,9 +368,9 @@ Assumptions that must be confirmed by testing, not by reasoning.
 | F4  | The aurora holds AA contrast for overlaid text at **every** scroll position      | Worst-case check per section, not at rest                                                                 | M7, M15 | ☐                                                       |
 | F5  | View Transitions degrade cleanly where unsupported                               | Test in a browser without `document.startViewTransition`                                                  | M8      | ☐                                                       |
 | F6  | The `static` motion tier heuristics do not misclassify mid-range Android devices | Real-device check; absent APIs must resolve to `full`                                                     | M15     | ☐                                                       |
-| F7  | Turkish stem matching does not flag `kürk`, `kürek`, `şükür`, `küresel`          | Fixture tests, both directions                                                                            | M3      | ☐                                                       |
-| F8  | The C9 disclaimer sentence passes the guard unmodified                           | Fixture test on the exact sentence                                                                        | M3      | ☐                                                       |
-| F9  | `%100` is caught as blocking and is not masked by the `%\d` warning              | Fixture test, ordering asserted                                                                           | M3      | ☐                                                       |
+| F7  | Turkish stem matching does not flag `kürk`, `kürek`, `şükür`, `küresel`          | Fixture tests, both directions                                                                            | M3      | ✅ **Passed** — plus `küre`, `kürkçü`, `kürekçi`        |
+| F8  | The C9 disclaimer sentence passes the guard unmodified                           | Fixture test on the exact sentence                                                                        | M3      | ✅ **Passed** — 0 blocking, 1 advisory (`tıbbi`)        |
+| F9  | `%100` is caught as blocking and is not masked by the `%\d` warning              | Fixture test, ordering asserted                                                                           | M3      | ✅ **Passed** — both directions                         |
 
 ---
 
@@ -497,6 +497,45 @@ old implementation with exactly the reported symptom.
 Also found and fixed while investigating: the M0 placeholder page rendered its
 own `<main id="main">` inside the layout's, giving two landmarks and a
 duplicate id.
+
+---
+
+### G9 — Guard scoping decisions 🟢 → resolved at M3
+
+Three narrowings, each made because the obvious implementation would have made
+the guard untrustworthy rather than stricter.
+
+**Percentage rules scan rendered text only** (`.html`/`.rsc`), not `.js`.
+Minified framework code is full of `n%100` modulo arithmetic. A guard that
+fails the build because the framework formatted a number is one that people
+start bypassing — which is worse than a narrower rule. Any `%100` a component
+actually renders still reaches the HTML and is caught there.
+
+**Rule 2 is narrowed in JavaScript** to SHOUTING tokens (`{{LEGAL_ENTITY}}`),
+because `{{` is ordinary syntax in minified code. In rendered text, any `{{…}}`
+still fails.
+
+**`terapi` is matched at a word boundary**, so `fizyoterapi` is _not_ flagged.
+That follows from the ruling — the blocking list is the sixteen terms as
+specified, not a family of related words. If the owner wants `fizyoterapi`
+caught, it is a one-line addition to the advisory tier; recorded here rather
+than assumed.
+
+Not a narrowing, but recorded for the same reason: **`1 numaralı` is matched as
+specified, so `bir numaralı` is not caught.** Adding it would be inventing
+scope beyond the ruling.
+
+### G10 — Channel links need a `data-channel` attribute 🟢 → new contract
+
+Guard rule 3 catches bare-scheme hrefs (`tel:`, `mailto:`, numberless
+`wa.me/`) anywhere. But `href="#"` is only wrong on a _channel_ button — it is
+perfectly ordinary on an in-page anchor — so the guard cannot judge it without
+a marker.
+
+**Contract:** every contact-channel link carries
+`data-channel="whatsapp|phone|email|instagram"`. Recorded in `CLAUDE.md` §12
+and added to M11's acceptance criteria, since that is where the first channel
+link is built.
 
 ---
 
