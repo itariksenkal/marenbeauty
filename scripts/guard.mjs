@@ -157,6 +157,19 @@ function decodeLine(line) {
     .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(Number(dec)));
 }
 
+/**
+ * Blank out inline `style="…"` values, preserving length so indices still line
+ * up. Percentage rules run against this rather than the raw line.
+ *
+ * Without it, `clip-path:inset(0 0 100% 0)` matches `%\s?\d` and every page
+ * using an image or text reveal reports a bogus percentage claim. Warnings
+ * that fire on every page teach people to ignore warnings, which costs more
+ * than the rule is worth.
+ */
+function maskStyleAttributes(line) {
+  return line.replace(/style="[^"]*"/gi, (match) => ' '.repeat(match.length));
+}
+
 function excerpt(line, index, length) {
   const from = Math.max(0, index - 40);
   const to = Math.min(line.length, index + length + 40);
@@ -195,6 +208,8 @@ export function scanText(
 
   lines.forEach((rawLine, i) => {
     const line = decodeLine(rawLine);
+    // Percentage rules only — see maskStyleAttributes.
+    const proseLine = maskStyleAttributes(line);
     const lineNo = i + 1;
 
     /**
@@ -230,8 +245,10 @@ export function scanText(
     for (const rule of BLOCKING_RULES) {
       if (!applies(rule)) continue;
       rule.regex.lastIndex = 0;
+      // `%100` is a percentage rule and must not fire inside a style attribute.
+      const haystack = rule.scope === 'text' ? proseLine : line;
       let m;
-      while ((m = rule.regex.exec(line)) !== null) {
+      while ((m = rule.regex.exec(haystack)) !== null) {
         blockedRanges.push([m.index, m.index + m[0].length]);
         push('error', `blocking:${rule.id}`, m.index, m[0]);
         if (m[0].length === 0) rule.regex.lastIndex++;
@@ -293,7 +310,7 @@ export function scanText(
     if (SCOPES.text.includes(ext)) {
       PERCENT.lastIndex = 0;
       let p;
-      while ((p = PERCENT.exec(line)) !== null) {
+      while ((p = PERCENT.exec(proseLine)) !== null) {
         const overlaps = blockedRanges.some(
           ([start, end]) => p.index < end && p.index + p[0].length > start,
         );

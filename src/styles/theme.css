@@ -397,3 +397,90 @@
   filter: blur(var(--aurora-blur));
   opacity: var(--aurora-alpha);
 }
+
+/* ── Water form — docs/MOTION.md §1 ─────────────────────────────────────────
+   The continuous surface behind the pinned opening. Blur is set once; only
+   transform and opacity ever animate. */
+@utility water-form {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  contain: layout paint style;
+}
+
+.water-form > .water-layer {
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  width: 90vmax;
+  height: 45vmax;
+  margin-left: -45vmax;
+  margin-top: -22vmax;
+  border-radius: var(--radius-full);
+  filter: blur(var(--water-blur, 70px));
+  will-change: transform, opacity;
+}
+
+/* static tier: no blur, no compositing layers — a flat warm band. */
+[data-motion-tier='static'] .water-form > .water-layer {
+  display: none;
+}
+[data-motion-tier='static'] .water-form {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--color-surface-accent) 55%,
+    transparent 100%
+  );
+}
+
+/* ── Wordmark handoff — docs/MOTION.md §4 ───────────────────────────────────
+   A cross-fade between TWO elements, never a DOM move: the hero wordmark and
+   the header wordmark are separate, and neither travels into the other's
+   position. That keeps the header a plain sticky element with no JS layout,
+   and it survives a mid-page refresh.
+
+   Defaults to 1 so every page WITHOUT a hero shows its header wordmark. */
+:root {
+  --hero-handoff: 1;
+}
+
+[data-header-wordmark] {
+  opacity: var(--hero-handoff);
+}
+
+/* Below the threshold the header wordmark is not merely transparent — it is
+   removed from the tab order and the accessibility tree. An invisible link a
+   keyboard user can still land on is worse than no link. */
+[data-hero-handoff='pending'] [data-header-wordmark] {
+  visibility: hidden;
+}
+
+/* ── Tier correction before hydration ───────────────────────────────────────
+   The server cannot know the motion tier, so it renders the `full` structure:
+   a pinned wrapper, a sticky stage, and reveal lines carrying inline
+   clip-path. React corrects that once it hydrates — but a reduced-motion
+   visitor would see a pinned, clipped page until then.
+
+   These rules make the tier take effect from the FIRST PAINT. `!important` is
+   required because they override inline styles written by the animation
+   library; it is the narrow, correct use of it. */
+[data-motion-tier='reduced'] [data-pinned-sequence],
+[data-motion-tier='static'] [data-pinned-sequence] {
+  height: auto !important;
+}
+
+[data-motion-tier='reduced'] [data-pinned-sequence] > div,
+[data-motion-tier='static'] [data-pinned-sequence] > div {
+  position: static !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+[data-motion-tier='reduced'] [data-reveal-line],
+[data-motion-tier='static'] [data-reveal-line] {
+  clip-path: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+}

@@ -213,6 +213,28 @@ the review has happened.
 
 Still outstanding: the review itself, and the VERBİS determination.
 
+### C10 — Home opening copy 🟡 → owner approval
+
+The pinned opening ships with **real Turkish placeholder copy** in
+`src/config/home.ts`. It is written to the tone in `docs/BRIEF.md` §5 and
+**states no fact about the business that is not already confirmed**.
+
+What it says:
+
+| Line                                           | Basis                                                                                                                     |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `Konya Selçuklu’de güzellik merkezi.`          | Category and district, both confirmed. District is interpolated from `site.address`, and a test asserts it still appears. |
+| `Maren, denizle akraba bir isim.`              | The brand rationale in `docs/BRIEF.md` §2.                                                                                |
+| `Sakin, ölçülü, acelesi olmayan bir yaklaşım.` | Positioning and tone, not a claim.                                                                                        |
+| `Yakında kapılarımızı açıyoruz.`               | Pre-launch status, which is true.                                                                                         |
+
+What it deliberately does **not** say: anything about the team, the room, the
+services, session lengths, credentials, equipment, or an opening date. The
+first screen a visitor ever sees is the last place to start inventing.
+
+**Needed:** the owner's wording, or approval of this. `home.copyApproved` flips
+to `true` when that happens; until then this stays open.
+
 ### C9 — Disclaimer wording ✅ → M12
 
 **Answered 2026-08-06: reword. No allowlist entry.** The exact sentence:

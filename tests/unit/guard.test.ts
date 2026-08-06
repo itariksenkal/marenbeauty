@@ -234,6 +234,29 @@ describe('rules 5 and 6 — warnings do not block', () => {
     );
   });
 
+  it('ignores percentages inside an inline style attribute', () => {
+    // clip-path:inset(0 0 100% 0) matched `%\s?\d` and reported a bogus claim
+    // on every page using an image or text reveal. Warnings that fire
+    // everywhere teach people to ignore warnings.
+    const reveal =
+      '<span style="clip-path:inset(0 0 100% 0);transform:translateY(0.36em)">Sakin bir bakım.</span>';
+    expect(scan(reveal)).toHaveLength(0);
+  });
+
+  it('still catches a percentage in visible copy on the same line', () => {
+    const mixed =
+      '<span style="clip-path:inset(0 0 100% 0)">Nem %40 arttı.</span>';
+    expect(warnings(mixed).map((v) => v.rule)).toContain('percentage-claim');
+    expect(warnings(mixed)).toHaveLength(1);
+  });
+
+  it('still blocks %100 in copy but not in a style attribute', () => {
+    expect(errors('<p style="width:100% 0">Temiz metin.</p>')).toHaveLength(0);
+    expect(
+      errors('<p>Cildiniz %100 yenilenir.</p>').map((v) => v.rule),
+    ).toContain('blocking:%100');
+  });
+
   it('does not scan JavaScript for percentages — modulo is not a claim', () => {
     // Minified framework code is full of `n%100`; failing a build on that
     // would make the guard untrustworthy.

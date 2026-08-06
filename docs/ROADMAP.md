@@ -497,7 +497,7 @@ npm run verify
 
 ---
 
-## M6 — Home: pinned opening ☐
+## M6 — Home: pinned opening ☑ **DONE 2026-08-06**
 
 **Goal.** The five-stage water sequence — the first thing anyone sees.
 
@@ -507,26 +507,97 @@ npm run verify
 src/app/page.tsx
 src/components/sections/{HeroWater,BrandStory}.tsx
 src/components/motion/WaterForm.tsx
-src/config/navigation.ts  content/ (home copy)
+src/components/motion/TextReveal.tsx      ← progress-driven mode added
+src/components/layout/SiteHeader.tsx      ← receiving half of the handoff
+src/config/home.ts                        ← ALL copy, placeholder
+src/config/site.ts                        ← site.wordmark
+src/hooks/use-media-query.ts  src/styles/theme.css
+tests/e2e/production/hero.spec.ts                     ← 10 tests
+tests/e2e/production-reduced/hero-reduced-motion.spec.ts ← 2 tests
 ```
 
 **Acceptance criteria**
 
-- [ ] All five stages implemented at the progress ranges in `docs/MOTION.md` §4.
-- [ ] Wordmark handoff is a **cross-fade between two elements**, not a DOM move.
-      Correct after a mid-page refresh.
-- [ ] Pinned distance 300vh desktop, 180vh below 768px, stages 2–3 merged on
-      mobile.
-- [ ] Brand story lines are authored arrays; text is in the DOM from first paint
-      and findable by find-in-page before reveal.
-- [ ] Elements in stages not yet reached are `inert`; keyboard traversal is sane
-      throughout.
-- [ ] No horizontal scroll at 320px. No jump when the mobile address bar
-      collapses.
-- [ ] Real Turkish copy — positioning line and story lines. No placeholder.
-- [ ] Reviewed at `reduced` **as a composition**, not just for function.
+- [x] All five stages implemented at the progress ranges in `docs/MOTION.md` §4.
+- [x] Wordmark handoff is a **cross-fade between two elements**, not a DOM move.
+      The hero publishes `--hero-handoff` on `<html>`; the header reads it and
+      needs no knowledge of the hero. Asserted, including that no `h1` ever ends
+      up inside the header.
+- [x] **Correct after a mid-page refresh** — the hero seeds from the current
+      scroll position, not from zero. Asserted by scrolling to 0.75, reloading,
+      and checking the state survived.
+- [x] Pinned distance **300svh desktop / 180svh below 768px**, both measured
+      against the viewport in a browser. Stages 2–3 overlap on mobile.
+- [x] Brand story lines are authored arrays; the text is **in the DOM from
+      first paint** — asserted at `domcontentloaded`, before any reveal — and
+      only `clip-path`/`transform` change, so find-in-page locates it.
+- [x] Stages not yet reached are `inert`, and nothing is inert once the
+      sequence completes. `inert` does not hide text from find-in-page, which
+      is why it is the right tool here.
+- [x] Keyboard traversal is sane: focus never lands on the withheld header
+      wordmark, which is `visibility: hidden` rather than merely transparent.
+- [x] **No horizontal scroll at 320px**, checked at four points through the
+      sequence.
+- [x] The stage is exactly one viewport tall and sized in `svh`, which is what
+      stops it jumping when mobile chrome collapses. (The no-jump behaviour
+      itself remains a manual check on a real device — a headless browser has
+      no dynamic chrome.)
+- [x] Reviewed at `reduced` **as a composition**: no pinning, every line
+      visible and unclipped, header wordmark present, nothing inert.
 
-**Verify**
+**Copy, as instructed**
+
+Real Turkish, and **placeholder pending the owner's approval**
+(`docs/OPEN-QUESTIONS.md` C10). It lives entirely in `src/config/home.ts`; no
+component contains a sentence.
+
+It states nothing about the business that is not already confirmed — no team,
+no room, no services, no durations, no opening date beyond "yakında". It says
+only where the name comes from, the category, the district, and that the centre
+is not open yet. The district is interpolated from `site.address` and a test
+asserts it still appears, so the first screen anyone sees cannot carry a stale
+location.
+
+**Three test-harness bugs found — each would have made a green run meaningless**
+
+- **`scroll-behavior: smooth` made the scroll helper lie.** `window.scrollTo`
+  animated, successive calls interrupted each other, and the page never arrived
+  where the test believed. Four tests "passed" against a page still at scroll 65. Fixed with `behavior: 'instant'`.
+- **`waitUntil: 'commit'` returns before `<body>` exists**, so the
+  first-paint assertion was reading the inline script rather than the copy.
+- **`use: { reducedMotion: 'reduce' }` had no effect** at describe, file OR
+  project level. Probed directly: `matchMedia` still reported `false`, so the
+  reduced-motion tests were running against the full tier while claiming
+  otherwise — worse than not having them. Now applied with
+  `page.emulateMedia()` in a `beforeEach`, which is verifiable. Once it worked,
+  it immediately caught the SSR tier bug below.
+
+**A real bug the tests exposed: SSR always assumes the `full` tier**
+
+The server cannot know the motion tier, so it renders the full-tier structure —
+a pinned wrapper, a sticky stage, reveal lines carrying inline `clip-path`, and
+`inert` on unreached stages. React corrected all of it on hydration, but a
+**reduced-motion visitor saw a pinned, clipped page until then.** The failing
+test was right and the implementation was wrong.
+
+Fixed two ways, both taking effect before hydration:
+
+- **CSS tier correction.** `[data-motion-tier='reduced'|'static']` branches
+  un-pin the sequence and un-clip the reveal lines from the first paint. The
+  tier attribute is written by the inline script, so this is correct before any
+  JavaScript runs. `!important` is required to override the animation library's
+  inline styles — the narrow, correct use of it.
+- **`inert` applied imperatively**, from a module-level helper after mount,
+  rather than as React state. State-driven `inert` shipped in the HTML; now the
+  markup a reduced-motion visitor receives never had it at all.
+
+**One more hygiene fix**
+
+`free-ports.mjs` now also runs as `posttest:e2e`. Playwright does not shut its
+dev webServer down cleanly on Windows, so a run left a stray behind that broke
+the next one.
+
+**Verify** — `npm run verify` exits **0**. 204 unit tests, 32 browser tests.
 
 ```bash
 npm run verify

@@ -454,6 +454,23 @@ carrying the shadow via `opacity` (`docs/MOTION.md` §5).
 | `--scrim-strong`  | `rgb(58 36 30 / 0.60)` | Guarantees AA over any photo          |
 | `--grain-opacity` | `0.04`                 | Site-wide grain overlay — fixed at 4% |
 
+**Two grain decisions, ruled 2026-08-06 after reviewing `/motion` on screen.**
+
+_Grain reads stronger on espresso than on ivory._ **Accepted.** Espresso appears
+only in small areas and the grain has never looked wrong there. A per-surface
+grain opacity would be one more token to keep in sync for a difference nobody
+will notice — `--grain-opacity` stays a single value.
+
+_A plain-alpha overlay pulls light surfaces very slightly toward grey._
+**Accepted**, and the `mix-blend-mode` ban stands: a full-screen blend forces
+the entire page into one composited group, a real cost for a barely-visible
+gain.
+
+> If ivory ever reads dull once real sections exist, **fix it by warming the
+> token, not by changing the compositing model.** `--mb-ivory` is one hex value
+> plus a recomputation of §1.4; the blend mode is a page-wide performance
+> characteristic. Do not trade the second for the first.
+
 ---
 
 ## 6. Elevation / z-index

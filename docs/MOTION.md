@@ -374,6 +374,43 @@ checked for "does it still work".
 
 ---
 
+## 6b. The server does not know the tier
+
+Server rendering happens before any tier detection, so the HTML is always the
+**`full`** structure: a pinned wrapper, a sticky stage, reveal lines carrying
+inline `clip-path`, and so on. React corrects it on hydration.
+
+That correction is too late. A reduced-motion visitor would see a pinned,
+clipped page for as long as hydration takes.
+
+So the tier is corrected **in CSS, before hydration**:
+
+```css
+[data-motion-tier='reduced'] [data-pinned-sequence] {
+  height: auto !important;
+}
+[data-motion-tier='reduced'] [data-reveal-line] {
+  clip-path: none !important;
+}
+```
+
+The attribute is written by the inline script before first paint, so these
+apply with no JavaScript. `!important` is necessary because they override
+inline styles written by the animation library — this is the narrow case where
+it is correct.
+
+**The rule that follows:** any tier difference that changes STRUCTURE or
+VISIBILITY needs a CSS branch, not only a React branch. React branches are for
+behaviour that cannot be expressed in CSS — scroll binding, `inert`, event
+listeners. Anything a reduced-motion visitor would otherwise _see_ must be
+handled before hydration.
+
+`inert` is applied imperatively after mount for the same reason: rendered from
+React state it would ship in the HTML, and a reduced-motion visitor would
+receive inert content until hydration removed it.
+
+---
+
 ## 7. Budget and enforcement
 
 | Limit                              | Value                            |

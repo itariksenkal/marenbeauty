@@ -1,18 +1,17 @@
-import { site } from '@/config/site';
+import { HeroWater } from '@/components/sections/HeroWater';
 
 /**
- * Home — placeholder.
+ * Home.
  *
- * The real page is built at M6 (pinned water sequence) and M7 (services,
- * process, teaser, CTA). Nothing here survives those milestones.
+ * M6 builds the pinned opening. The services panels, process sequence, blog
+ * teaser and contact CTA arrive at M7.
  *
- * No <main> element here: the root layout owns it, along with `id="main"` and
- * the `tabIndex={-1}` the skip link targets. Rendering another one nested
- * inside produced two landmarks and a duplicate id.
+ * No <main> here: the root layout owns it, along with `id="main"` and the
+ * `tabIndex={-1}` the skip link targets.
  *
- * Carries no Turkish copy — user-facing strings live in content/ or
- * src/config/, never inline in a component (CLAUDE.md §7).
+ * No copy here either — every sentence in the opening comes from
+ * `src/config/home.ts` (CLAUDE.md §7).
  */
 export default function HomePage() {
-  return <h1>{site.name}</h1>;
+  return <HeroWater />;
 }

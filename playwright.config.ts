@@ -26,6 +26,16 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], baseURL: 'http://127.0.0.1:3100' },
     },
     {
+      // Reduced motion, against the production build. The emulation itself is
+      // applied per-test with page.emulateMedia(): the `reducedMotion` use-option
+      // had no effect at describe, file OR project level here — probed directly,
+      // matchMedia still reported false — so relying on it would have meant
+      // these tests silently running against the full tier.
+      name: 'production-reduced',
+      testDir: './tests/e2e/production-reduced',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://127.0.0.1:3100' },
+    },
+    {
       name: 'development',
       testDir: './tests/e2e/development',
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3101' },

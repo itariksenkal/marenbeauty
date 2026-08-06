@@ -5,6 +5,14 @@
  */
 export const site = {
   name: 'Maren Beauty',
+
+  /**
+   * The word used alone as the oversized hero wordmark. Held separately rather
+   * than derived from `name`, so the hero never depends on string surgery over
+   * a value someone may later change to "Maren Beauty Konya".
+   */
+  wordmark: 'Maren',
+
   domain: 'marenbeauty.com',
 
   /**
