@@ -91,8 +91,47 @@ for (const pid of nextDevPids()) {
   console.log(`  stopped pid ${pid} (stray next dev)`);
 }
 
+/**
+ * Killing is asynchronous: a process can still hold its socket for a moment
+ * after taskkill returns, and Playwright then fails to bind. Wait until the
+ * ports are genuinely free rather than assuming.
+ */
+function sleep(ms) {
+  const until = Date.now() + ms;
+  while (Date.now() < until) {
+    // Deliberately synchronous — this script runs alone, before the test run.
+  }
+}
+
+let waited = 0;
+while (waited < 6000) {
+  const held = PORTS.flatMap((port) => pidsOnPort(port));
+  const strays = nextDevPids();
+  if (held.length === 0 && strays.length === 0) break;
+  for (const pid of [...held, ...strays]) {
+    kill(pid);
+    stopped.add(pid);
+  }
+  sleep(400);
+  waited += 400;
+}
+
+const stillHeld = PORTS.flatMap((port) => pidsOnPort(port));
+if (stillHeld.length > 0) {
+  console.error(
+    `
+  ✗ ports still held after ${waited}ms by pid(s) ${stillHeld.join(', ')}.
+` +
+      `    Stop them by hand — the test run would otherwise fail for a reason
+` +
+      `    that has nothing to do with the code.
+`,
+  );
+  process.exit(1);
+}
+
 console.log(
   stopped.size === 0
     ? '  no stale servers.'
-    : `  ${stopped.size} stale server(s) stopped.`,
+    : `  ${stopped.size} stale server(s) stopped, ports confirmed free.`,
 );
