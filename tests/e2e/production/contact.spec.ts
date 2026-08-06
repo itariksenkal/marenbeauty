@@ -133,9 +133,20 @@ test.describe('the contact page', () => {
     await expect(status).toHaveAttribute('aria-live', 'polite');
   });
 
-  test('no channel renders, and nothing is disabled', async ({ page }) => {
+  test('every channel link has a real target, and nothing is disabled', async ({
+    page,
+  }) => {
     await page.goto('/iletisim');
-    expect(await page.locator('[data-channel]').count()).toBe(0);
+    // Channels are configured from M17, so links DO render. What must never
+    // appear is a dead one. `npm run guard` fails the build on a bare scheme;
+    // this is the same contract, checked in a browser.
+    const hrefs = await page
+      .locator('[data-channel]')
+      .evaluateAll((els) => els.map((el) => el.getAttribute('href') ?? ''));
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const href of hrefs) {
+      expect(href).toMatch(/^(?:tel:\+?\d|mailto:[^@]+@|https:\/\/)/);
+    }
     expect(
       await page.locator('a[href="tel:"], a[href="mailto:"]').count(),
     ).toBe(0);

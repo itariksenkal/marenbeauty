@@ -3,7 +3,7 @@ import { join, sep } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { channelHref, contact } from '@/config/contact';
+import { channelHref, contact, type ContactChannelKey } from '@/config/contact';
 import { experience } from '@/config/experience';
 import { home } from '@/config/home';
 import { serviceGroups } from '@/config/services';
@@ -125,19 +125,42 @@ describe('absence rather than placeholder', () => {
     );
   });
 
-  it('experience steps are empty, so the process section renders nothing', () => {
-    // Every step would be a claim about how the centre operates, and none is
-    // confirmed (docs/OPEN-QUESTIONS.md C11).
-    expect(experience.steps).toEqual([]);
+  /**
+   * The steps are no longer empty — they are placeholder copy pending the
+   * owner's words (docs/OPEN-QUESTIONS.md C11). What must survive is the
+   * MECHANISM: emptying the array removes the section with no component edit.
+   */
+  it('the process section still disappears when the steps are emptied', () => {
     expect(read('sections/ExperienceProcess.tsx')).toMatch(
+      /experience\.steps\.length === 0\)\s*return null/,
+    );
+    expect(read('sections/ExperienceSteps.tsx')).toMatch(
       /experience\.steps\.length === 0\)\s*return null/,
     );
   });
 
-  it('all contact channels are unset and resolve to null', () => {
-    expect(Object.values(contact).every((c) => c === null)).toBe(true);
-    for (const key of ['whatsapp', 'phone', 'email', 'instagram'] as const) {
-      expect(channelHref(key), key).toBeNull();
+  it('the visit steps state no fact the business has not confirmed', () => {
+    const copy = experience.steps
+      .map((step) => `${step.title} ${step.body}`)
+      .join(' ');
+
+    // No duration, no session count, no product, no device, no credential.
+    expect(copy).not.toMatch(/\d+\s*(dakika|saat|seans|hafta|ay)/i);
+    expect(copy).not.toMatch(/(?<![\p{L}\p{N}])(?:dr\.|uzman|hemşire)/iu);
+    expect(copy).not.toMatch(/%\s?\d/);
+  });
+
+  /**
+   * Channels are configured from M17 with PLACEHOLDER values (docs/STATUS.md).
+   * The invariant that matters is unchanged: `channelHref` never returns a bare
+   * scheme, and a channel set back to `null` disappears.
+   */
+  it('every configured channel resolves to a complete href, never a bare scheme', () => {
+    for (const key of Object.keys(contact) as ContactChannelKey[]) {
+      const href = channelHref(key);
+      expect(href, key).not.toBeNull();
+      expect(href, key).not.toMatch(/^(tel|mailto|sms):$/);
+      expect(href, key).toMatch(/^(?:tel:\+?\d|mailto:[^@]+@|https:\/\/)/);
     }
   });
 

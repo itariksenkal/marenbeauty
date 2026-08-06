@@ -198,9 +198,15 @@ test.describe('service detail', () => {
     ).toBeVisible();
   });
 
-  test('unset channels render nothing here either', async ({ page }) => {
+  test('no channel link is dead here either', async ({ page }) => {
     await page.goto('/hizmetler/hydrafacial');
-    expect(await page.locator('[data-channel]').count()).toBe(0);
+    const hrefs = await page
+      .locator('[data-channel]')
+      .evaluateAll((els) => els.map((el) => el.getAttribute('href') ?? ''));
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const href of hrefs) {
+      expect(href).toMatch(/^(?:tel:\+?\d|mailto:[^@]+@|https:\/\/)/);
+    }
     expect(
       await page.locator('a[href="tel:"], a[href="mailto:"]').count(),
     ).toBe(0);

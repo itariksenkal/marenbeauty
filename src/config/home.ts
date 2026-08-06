@@ -61,8 +61,20 @@ export const home = {
     blogHeading: 'Yazılar',
     blogLink: 'Tüm yazıları görün',
 
+    experienceEyebrow: 'Bir ziyaret',
+    experienceHeading: 'Nasıl ilerliyor',
+
     locationEyebrow: 'Konum',
     locationHeading: 'Nerede',
+    locationHoursHeading: 'Çalışma saatleri',
+    /**
+     * The hours are not confirmed (docs/OPEN-QUESTIONS.md C12), so the page
+     * says so rather than presenting them as settled. Removed when the owner
+     * confirms them and `site.isPreLaunch` flips.
+     */
+    locationHoursNote:
+      'Planlanan saatler. Açılışla birlikte kesinleşecek ve burada güncellenecek.',
+    locationClosed: 'Kapalı',
 
     contactEyebrow: 'İletişim',
     contactHeadingLines: ['Bir mesaj yeterli.'],

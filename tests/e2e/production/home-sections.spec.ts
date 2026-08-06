@@ -28,13 +28,20 @@ test.describe('home sections', () => {
     expect(errors.consoleErrors).toEqual([]);
   });
 
-  test('unset channels render nothing at all', async ({ page }) => {
+  test('no channel link is ever dead, and nothing is disabled', async ({
+    page,
+  }) => {
     await page.goto('/');
 
-    // No channel links, because none is configured.
-    expect(await page.locator('[data-channel]').count()).toBe(0);
+    const hrefs = await page
+      .locator('[data-channel]')
+      .evaluateAll((els) => els.map((el) => el.getAttribute('href') ?? ''));
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const href of hrefs) {
+      expect(href).toMatch(/^(?:tel:\+?\d|mailto:[^@]+@|https:\/\/)/);
+    }
 
-    // And crucially, no dead targets and no disabled stand-ins.
+    // No dead targets and no disabled stand-ins.
     expect(
       await page.locator('a[href="tel:"], a[href="mailto:"]').count(),
     ).toBe(0);
@@ -69,13 +76,28 @@ test.describe('home sections', () => {
     expect(html).not.toContain('Uygunluk seans öncesinde');
   });
 
-  test('the process section is absent while it has no steps', async ({
+  test('exactly two sections hold the viewport, and no more', async ({
     page,
   }) => {
     await page.goto('/');
-    // Only the hero remains pinned — the second pinned section renders nothing
-    // until the owner describes a visit.
-    expect(await page.locator('[data-pinned-sequence]').count()).toBe(1);
+    // The hero → brand-story opening and the process section. Two is the whole
+    // budget (docs/MOTION.md §2.6); a third would be a new signature
+    // interaction, which needs owner approval.
+    expect(await page.locator('[data-pinned-sequence]').count()).toBe(2);
+  });
+
+  test('every visit step is in the DOM from first paint, none hidden', async ({
+    page,
+  }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    // The pinned sequence only ever changes opacity. If a step were mounted on
+    // scroll, find-in-page would not locate it and a reader who never scrolls
+    // would lose three quarters of the section.
+    const steps = page.locator('[data-step]');
+    await expect(steps).toHaveCount(4);
+    for (const text of await steps.allInnerTexts()) {
+      expect(text.trim().length).toBeGreaterThan(20);
+    }
   });
 
   test('the pre-launch band is honest and carries no date', async ({

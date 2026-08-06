@@ -299,20 +299,43 @@ exists but is unused, which is the better outcome.
 
 ---
 
-### C11 — What a visit is like 🟡 → unblocks the second pinned section
+### C11 — What a visit is like 🟡 → placeholder copy shipped at M17
 
-`ExperienceProcess` — the second and last pinned section — is built and
-renders **nothing**, because `src/config/experience.ts` ships with no steps.
+`ExperienceProcess` — the second and last pinned section — rendered **nothing**
+through M16, because `src/config/experience.ts` shipped with no steps.
 
-Every step would be a claim about how the centre operates: what happens on
-arrival, in what order, what is discussed. None of that is confirmed, and the
-centre has not opened.
+**Changed at M17, on instruction:** four steps are now written and the section
+renders on the home page (pinned) and on `/hakkimizda` (unpinned, same source).
 
-**Need:** three or four short steps describing a visit, in the owner's words.
+They are **placeholder copy pending the owner's words.** They describe a
+sequence — arrival, conversation, the session, afterwards — and state no fact
+the business has not confirmed: no durations, no session counts, no products, no
+devices, no credentials, no room description, no promise about a result. A test
+asserts each of those absences.
 
-**Meanwhile:** the section is absent entirely — no heading, no skeleton, no
-"yakında". Adding two or more steps makes it appear, pinned, with no code
-change. A test covers both states.
+**Need:** the owner's own wording, or approval of this.
+
+**The mechanism is unchanged and must stay:** emptying `experience.steps`
+removes the section everywhere with no component edit, and a test asserts the
+`return null` branch still exists in both components.
+
+### C12 — Opening hours 🟡 → placeholder shipped at M17
+
+**Placeholder.** `src/config/site.ts` carries Pazartesi–Cuma 10:00–19:00,
+Cumartesi 10:00–18:00, Pazar closed. These are ordinary hours for a Konya
+beauty centre. **They are not hours the owner has confirmed.**
+
+They are shown on `/iletisim`, `/hakkimizda` and the home page because a
+location block with no hours is a hole a visitor notices — and they are
+labelled on screen as _"Planlanan saatler. Açılışla birlikte kesinleşecek."_
+
+They are deliberately **absent from structured data** while
+`site.isPreLaunch` is true. A line on a page that says "planlanan" is a
+different kind of statement from `openingHoursSpecification`, which tells a
+search engine the business is open at those times. `docs/SEO.md` §2.5 and a
+unit test both hold that line.
+
+**Need:** the real hours. Then flip `isPreLaunch` and the schema fills itself in.
 
 ## D. Guard configuration ✅
 

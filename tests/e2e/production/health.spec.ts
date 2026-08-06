@@ -9,7 +9,21 @@ import { watchForRuntimeErrors } from '../helpers/runtime-errors';
  * that throws after hydration passes the build and reaches a visitor, so it
  * needs a gate that actually loads the page.
  */
-const ROUTES = ['/'];
+const ROUTES = [
+  '/',
+  '/hizmetler',
+  '/hizmetler/hydrafacial',
+  '/hakkimizda',
+  '/blog',
+  '/blog/cilt-bakimi-nedir',
+  '/blog/kategori/cilt-bakimi-rehberi',
+  '/sss',
+  '/iletisim',
+  '/kvkk',
+  '/cerez-politikasi',
+  '/kullanim-kosullari',
+  '/lisanslar',
+];
 
 test.describe('shipped routes render cleanly', () => {
   for (const route of ROUTES) {

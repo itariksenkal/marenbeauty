@@ -32,6 +32,13 @@ export {
   type LegalFrontmatter,
 } from './legal';
 
+export {
+  getAllEditorialPages,
+  getEditorialPage,
+  type EditorialPage,
+  type PageFrontmatter,
+} from './pages';
+
 export { compileMdxBody } from './mdx';
 
 export {

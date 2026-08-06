@@ -1209,6 +1209,92 @@ npm run verify
 
 ---
 
+## M17 — Remaining pages and configured facts ☑ **DONE 2026-08-07**
+
+**Not in the original plan.** Added because `/hakkimizda` and `/sss` were in
+`docs/ARCHITECTURE.md` §2 from the start but never got a milestone, and the
+header had linked to both since M1. M13's sitemap and canonicals need every
+route to exist, so this runs before it.
+
+Also the milestone where **the empty configuration gets filled in**, on
+instruction: contact channels, social profiles, opening hours and the visit
+sequence.
+
+**Files touched**
+
+```
+src/app/{hakkimizda,sss}/page.tsx
+content/pages/hakkimizda.mdx   src/content-layer/pages.ts       ← new collection
+src/config/{contact,site,experience,faq,home}.ts
+src/components/sections/{ExperienceSteps,SocialLinks}.tsx       ← added
+src/components/sections/{ExperienceProcess,ContactChannels,LocationCard}.tsx
+tests/unit/site-pages.test.ts   tests/e2e/production/site-pages.spec.ts
+```
+
+**Acceptance criteria**
+
+- [x] `/hakkimizda` renders from MDX, one `h1`, no skipped heading level, and
+      names no person, credential or team member — while keeping the referral
+      sentence that tells a reader to see a specialist.
+- [x] `/sss` asks ten general questions, none duplicating a per-service one — a
+      test compares against every service's `faq` frontmatter, because the same
+      question on two indexable URLs is a real defect. Native `<details>`, so
+      the answers open with JavaScript disabled; a browser test proves it.
+- [x] **Every contact channel is configured and live**, each carrying
+      `data-channel`, each resolving to a complete href. The bare-scheme
+      invariant is unchanged and now asserted in three browser tests as well as
+      in unit tests.
+- [x] All four social profiles render. Google points at a **working Maps
+      search**, not a fabricated `g.page` URL that would 404 on a visitor.
+- [x] Opening hours render, grouped into ranges by a computed function rather
+      than authored twice, and are labelled provisional on screen (C12).
+- [x] The visit sequence has four steps, rendered from one source in two places
+      — pinned on the home page, static on `/hakkimizda`. The pinned version
+      changes **only opacity**; all four steps are in the DOM at
+      `domcontentloaded`, asserted.
+- [x] Guard: 323 artefacts, **0 blocking**, 184 advisory. The 19 new advisories
+      are `tıbbi` on `/sss` (the disclaimer and the question that asks about it)
+      and `klinik` on `/hakkimizda` (the sentence explaining what the design
+      avoids looking like). Both reviewed.
+
+**Everything added here is a placeholder, and every one is labelled**
+
+| Placeholder             | Where                      | Recorded |
+| ----------------------- | -------------------------- | -------- |
+| `0500 000 00 00`        | `src/config/contact.ts`    | STATUS   |
+| Social handles ×4       | `src/config/contact.ts`    | STATUS   |
+| Opening hours           | `src/config/site.ts`       | C12      |
+| Visit sequence, 4 steps | `src/config/experience.ts` | C11      |
+
+`0500` is not an allocated Turkish mobile prefix, which is the point: the number
+cannot be dialled by mistake and cannot be read as a real one somebody forgot to
+change. A test pins it.
+
+**Two things that did NOT change, deliberately**
+
+- **Testimonials still ship empty.** The instruction to fill every section and
+  the instruction "no fabricated reviews" collide here, and the second wins —
+  it is in `CLAUDE.md` §9, it is a KVKK problem (the type requires recorded
+  consent), and review markup for reviews that do not exist violates Google's
+  policy outright. `TestimonialsSection` returns null, so no empty section
+  renders either.
+- **No street address.** Guessing one is banned (`CLAUDE.md` §18.7) and it is
+  the one fact a wrong value actively harms — a visitor who drives somewhere.
+
+**No icon set was added.** `CLAUDE.md` §2 pins Lucide as the only permitted one,
+and Lucide has no TikTok glyph and is retiring brand marks generally — so an
+icon row would have meant a second icon set (forbidden) or hand-drawn
+trademarks (worse). The social links are words. It suits a typographic brand
+better anyway.
+
+**Verify** — `npm run verify` exits **0**. 639 unit tests, 150 browser tests.
+
+```bash
+npm run verify
+```
+
+---
+
 ## M13 — SEO ☐
 
 **Goal.** `docs/SEO.md` implemented end to end.

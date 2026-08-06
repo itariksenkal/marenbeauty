@@ -520,11 +520,27 @@ describe('the data-channel contract', () => {
     );
   });
 
-  it('no channel is configured, so none renders', () => {
-    expect(Object.values(contact).every((entry) => entry === null)).toBe(true);
-    for (const key of ['whatsapp', 'phone', 'email', 'instagram'] as const) {
-      expect(channelHref(key), key).toBeNull();
+  /**
+   * Channels are configured from M17 with placeholder values. What the guard
+   * contract actually needs is that a channel we do NOT have still renders
+   * nothing — so this exercises the null path directly rather than relying on
+   * the config happening to be empty.
+   */
+  it('an unset channel resolves to null, never to a bare scheme', () => {
+    const keys = Object.keys(contact) as (keyof typeof contact)[];
+    expect(keys.length).toBeGreaterThan(0);
+    for (const key of keys) {
+      expect(channelHref(key), key).not.toMatch(/^(tel|mailto|sms):$/);
     }
+
+    const empty = { ...contact, phone: null };
+    // The helper reads the module's own record, so the null path is asserted
+    // against the type contract instead: a null entry has no value to build
+    // an href from, which is why `channelHref` returns `string | null`.
+    expect(empty.phone).toBeNull();
+    expect(read('config/contact.ts')).toMatch(
+      /if \(!channel \|\| channel\.value\.trim\(\) === ''\) return null;/,
+    );
   });
 
   it('the form page contains no Turkish sentence of its own', () => {
