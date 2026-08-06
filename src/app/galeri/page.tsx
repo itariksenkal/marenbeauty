@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { ImageFigure } from '@/components/content/ImageFigure';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { ContactCta } from '@/components/sections/ContactCta';
@@ -10,6 +11,10 @@ import {
   imagesInGroup,
   type ManagedImage,
 } from '@/config/images';
+import { routeSeo } from '@/config/seo';
+import { standardGraph } from '@/lib/schema/graph';
+import { pageMetadata } from '@/lib/seo/metadata';
+import { getAllServices } from '@/content-layer';
 
 /**
  * `/galeri` — the whole launch image set, grouped by the surface it serves.
@@ -22,10 +27,11 @@ import {
  * `imageCredits()` dedupes by photographer, which turns 48 captions into a
  * readable list and keeps the grid from becoming a wall of small print.
  */
-export const metadata: Metadata = {
-  title: 'Galeri',
-  description: galleryPage.lead.slice(0, 160),
-};
+export const metadata: Metadata = pageMetadata({
+  title: routeSeo.gallery.title,
+  description: routeSeo.gallery.description,
+  path: '/galeri',
+});
 
 const TONES = ['transparent', 'raised', 'transparent', 'sunken'] as const;
 
@@ -34,6 +40,16 @@ export default function GalleryPage() {
 
   return (
     <>
+      <JsonLd
+        graph={standardGraph({
+          path: '/galeri',
+          name: routeSeo.gallery.title,
+          description: routeSeo.gallery.description,
+          type: 'CollectionPage',
+          trail: [{ name: routeSeo.gallery.title, path: '/galeri' }],
+          services: getAllServices(),
+        })}
+      />
       <Section
         tone="transparent"
         rhythm="tight"

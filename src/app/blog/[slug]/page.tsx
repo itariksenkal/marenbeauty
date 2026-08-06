@@ -7,11 +7,21 @@ import { ImageCredit } from '@/components/content/ImageCredit';
 import { ManagedImage } from '@/components/content/ManagedImage';
 import { Mdx } from '@/components/content/Mdx';
 import { RelatedPosts } from '@/components/content/RelatedPosts';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { blog, blogCategory } from '@/config/blog';
+import { getImage } from '@/config/images';
+import { absoluteUrl, routeSeo } from '@/config/seo';
+import {
+  blogPostingNode,
+  faqPageNode,
+  standardGraph,
+} from '@/lib/schema/graph';
+import { pageMetadata } from '@/lib/seo/metadata';
 import {
   getAllPostSlugs,
+  getAllServices,
   getPostBySlug,
   getRelatedPosts,
   getServiceBySlug,
@@ -56,13 +66,17 @@ export async function generateMetadata({
   const post = getPostBySlug(slug, { includeDrafts: true });
   if (!post) return {};
 
-  return {
+  return pageMetadata({
     title: post.seo.title ?? post.title,
     description: post.seo.description ?? post.summary,
+    path: `/blog/${post.slug}`,
+    type: 'article',
+    publishedTime: post.publishedAt,
+    modifiedTime: post.updatedAt ?? post.publishedAt,
     // A draft is reachable in development only, but say so anyway: a preview
     // URL that leaks must never be indexable.
-    robots: post.draft ? { index: false, follow: false } : undefined,
-  };
+    noIndex: post.draft,
+  });
 }
 
 export default async function BlogPostPage({
@@ -80,6 +94,27 @@ export default async function BlogPostPage({
 
   return (
     <>
+      <JsonLd
+        graph={standardGraph({
+          path: `/blog/${post.slug}`,
+          name: post.title,
+          description: post.summary,
+          type: 'ItemPage',
+          trail: [
+            { name: routeSeo.blog.title, path: '/blog' },
+            {
+              name: category.label,
+              path: `/blog/kategori/${category.id}`,
+            },
+            { name: post.title, path: `/blog/${post.slug}` },
+          ],
+          services: getAllServices(),
+          extra: [
+            blogPostingNode(post, absoluteUrl(getImage(post.heroImageId).src)),
+            faqPageNode(`/blog/${post.slug}`, post.faq),
+          ],
+        })}
+      />
       <Section
         tone="transparent"
         rhythm="tight"

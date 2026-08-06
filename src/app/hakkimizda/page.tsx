@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { ImageFigure } from '@/components/content/ImageFigure';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { Mdx } from '@/components/content/Mdx';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
@@ -8,7 +9,9 @@ import { ContactCta } from '@/components/sections/ContactCta';
 import { ExperienceSteps } from '@/components/sections/ExperienceSteps';
 import { LocationCard } from '@/components/sections/LocationCard';
 import { home } from '@/config/home';
-import { getEditorialPage } from '@/content-layer';
+import { standardGraph } from '@/lib/schema/graph';
+import { pageMetadata } from '@/lib/seo/metadata';
+import { getAllServices, getEditorialPage } from '@/content-layer';
 
 const SLUG = 'hakkimizda';
 
@@ -21,16 +24,27 @@ const SLUG = 'hakkimizda';
  * site holds the viewport in exactly two places and this is not one of them
  * (docs/MOTION.md §2.6).
  */
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: getEditorialPage(SLUG).title,
   description: getEditorialPage(SLUG).summary,
-};
+  path: '/hakkimizda',
+});
 
 export default function AboutPage() {
   const page = getEditorialPage(SLUG);
 
   return (
     <>
+      <JsonLd
+        graph={standardGraph({
+          path: '/hakkimizda',
+          name: page.title,
+          description: page.summary,
+          type: 'AboutPage',
+          trail: [{ name: page.title, path: '/hakkimizda' }],
+          services: getAllServices(),
+        })}
+      />
       <Section
         tone="transparent"
         rhythm="tight"

@@ -22,6 +22,7 @@ function load(): Service[] {
     slug: doc.slug,
     body: doc.body,
     file: doc.file,
+    modifiedAt: doc.modifiedAt,
   }));
 }
 

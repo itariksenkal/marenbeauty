@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 
 import { PostListing } from '@/components/content/PostListing';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { blog, POSTS_PER_PAGE } from '@/config/blog';
-import { site } from '@/config/site';
-import { getAllPosts } from '@/content-layer';
+import { routeSeo } from '@/config/seo';
+import { blogNode, standardGraph } from '@/lib/schema/graph';
+import { pageMetadata } from '@/lib/seo/metadata';
+import { getAllPosts, getAllServices } from '@/content-layer';
 import { paginate } from '@/lib/pagination';
 
 /**
@@ -17,19 +20,17 @@ import { paginate } from '@/lib/pagination';
  * With no posts published this renders the empty state — a real sentence, and a
  * link to the pages that do exist.
  */
-export const metadata: Metadata = {
-  title: blog.index.heading,
-  description: blog.index.lead,
-  alternates: { canonical: `${site.url}/blog` },
-  /**
-   * An empty listing is thin content, so it is not offered for indexing while
-   * it is empty. This flips by itself the moment the first post publishes —
-   * nothing to remember. Full canonical/robots handling arrives at M13; this
-   * much is here because M9's own criteria are about page-1 canonicals.
-   */
-  robots:
-    getAllPosts().length === 0 ? { index: false, follow: true } : undefined,
-};
+/**
+ * An empty listing is thin content, so it is not offered for indexing while it
+ * is empty. That flips by itself the moment the first post publishes — nothing
+ * to remember.
+ */
+export const metadata: Metadata = pageMetadata({
+  title: routeSeo.blog.title,
+  description: routeSeo.blog.description,
+  path: '/blog',
+  noIndex: getAllPosts().length === 0,
+});
 
 export default function BlogIndexPage() {
   const posts = getAllPosts();
@@ -37,13 +38,26 @@ export default function BlogIndexPage() {
   const result = paginate(posts, 1, POSTS_PER_PAGE)!;
 
   return (
-    <PostListing
-      eyebrow={blog.index.eyebrow}
-      heading={blog.index.heading}
-      lead={blog.index.lead}
-      result={result}
-      basePath="/blog"
-      emptyMessage={blog.empty.all}
-    />
+    <>
+      <JsonLd
+        graph={standardGraph({
+          path: '/blog',
+          name: routeSeo.blog.title,
+          description: routeSeo.blog.description,
+          type: 'CollectionPage',
+          trail: [{ name: routeSeo.blog.title, path: '/blog' }],
+          services: getAllServices(),
+          extra: [blogNode('/blog')],
+        })}
+      />
+      <PostListing
+        eyebrow={blog.index.eyebrow}
+        heading={blog.index.heading}
+        lead={blog.index.lead}
+        result={result}
+        basePath="/blog"
+        emptyMessage={blog.empty.all}
+      />
+    </>
   );
 }

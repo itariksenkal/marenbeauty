@@ -4,8 +4,12 @@ import { ContactForm } from '@/components/forms/ContactForm';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { ContactChannels } from '@/components/sections/ContactChannels';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { LocationCard } from '@/components/sections/LocationCard';
 import { contactForm, type ContactResult } from '@/config/forms';
+import { routeSeo } from '@/config/seo';
+import { standardGraph } from '@/lib/schema/graph';
+import { pageMetadata } from '@/lib/seo/metadata';
 import { getAllServices } from '@/content-layer';
 import { issueFormToken } from '@/lib/spam/form-token';
 
@@ -33,10 +37,11 @@ import { issueFormToken } from '@/lib/spam/form-token';
  */
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: contactForm.eyebrow,
-  description: contactForm.lead,
-};
+export const metadata: Metadata = pageMetadata({
+  title: routeSeo.contact.title,
+  description: routeSeo.contact.description,
+  path: '/iletisim',
+});
 
 /** Only the values the handler can actually send back. */
 function readResult(value: string | undefined): ContactResult | undefined {
@@ -55,13 +60,24 @@ export default async function ContactPage({
   const raw = params[contactForm.resultParam];
   const result = readResult(Array.isArray(raw) ? raw[0] : raw);
 
-  const services = getAllServices().map((service) => ({
+  const allServices = getAllServices();
+  const services = allServices.map((service) => ({
     slug: service.slug,
     title: service.title,
   }));
 
   return (
     <>
+      <JsonLd
+        graph={standardGraph({
+          path: '/iletisim',
+          name: routeSeo.contact.title,
+          description: routeSeo.contact.description,
+          type: 'ContactPage',
+          trail: [{ name: routeSeo.contact.title, path: '/iletisim' }],
+          services: allServices,
+        })}
+      />
       <Section
         tone="transparent"
         rhythm="tight"

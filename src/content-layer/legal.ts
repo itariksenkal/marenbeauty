@@ -32,6 +32,7 @@ export type LegalDocument = LegalFrontmatter & {
   readonly slug: string;
   readonly body: string;
   readonly file: string;
+  readonly modifiedAt: Date;
 };
 
 const documents: readonly LegalDocument[] = readCollection('legal')
@@ -40,6 +41,7 @@ const documents: readonly LegalDocument[] = readCollection('legal')
     slug: doc.slug,
     body: doc.body,
     file: doc.file,
+    modifiedAt: doc.modifiedAt,
   }))
   .sort((a, b) => a.order - b.order);
 

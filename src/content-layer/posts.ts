@@ -16,6 +16,7 @@ function load(): Post[] {
     slug: doc.slug,
     body: doc.body,
     file: doc.file,
+    modifiedAt: doc.modifiedAt,
     readingMinutes: readingMinutes(doc.body),
   }));
 }

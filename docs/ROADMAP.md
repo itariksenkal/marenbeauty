@@ -1445,43 +1445,110 @@ npm run verify
 
 ---
 
-## M13 — SEO ☐
+## M13 — SEO ☑ **DONE 2026-08-07**
 
 **Goal.** `docs/SEO.md` implemented end to end.
 
 **Files touched**
 
 ```
-src/lib/schema/*.ts  src/components/seo/JsonLd.tsx
-src/app/sitemap.ts  src/app/robots.ts  src/app/manifest.ts
-src/app/**/opengraph-image.tsx
-generateMetadata across every route
+src/config/seo.ts  src/lib/seo/{metadata.ts,og.tsx}          ← added
+src/lib/schema/graph.ts  src/components/seo/JsonLd.tsx        ← added
+src/app/{sitemap,robots,manifest}.ts                          ← added
+src/app/opengraph-image.tsx
+src/app/{hizmetler,blog}/[slug]/opengraph-image.tsx           ← added
+src/fonts/og/{fraunces,manrope}-og.ttf                        ← added, build-only
+public/icon.svg                                               ← added
+generateMetadata / metadata across all 13 page routes
+src/content-layer/{load,modified,legal,pages,posts,services,schemas}.ts
+scripts/verify-fonts.mjs
+tests/unit/seo.test.ts  tests/e2e/production/guard-dynamic.spec.ts
 ```
 
 **Acceptance criteria**
 
-- [ ] Every route sets an explicit absolute canonical. Titles ≤ 60 chars,
-      descriptions 150–165.
-- [ ] One JSON-LD `@graph` per page with the stable `@id`s from §2.1; entities
-      referenced, never duplicated.
-- [ ] Types per route match §2.2. **No `MedicalBusiness`, `MedicalClinic`,
-      `MedicalProcedure`, `MedicalTherapy` or `Physician` anywhere** — asserted
-      by test.
-- [ ] `streetAddress` and `postalCode` absent from `PostalAddress`.
-- [ ] Pre-launch omissions in §2.5 each covered by a passing unit test.
-- [ ] `BlogPosting.author` references the Organization, never a fabricated
-      Person.
-- [ ] OG images render for site, service and post; text passes the guard.
-- [ ] Sitemap excludes drafts, carries real `lastModified`.
-- [ ] Rich Results Test clean on one URL per route type.
+- [x] Every route sets an **explicit absolute canonical**, built by one helper
+      so the canonical and `og:url` cannot disagree. Titles ≤ 60 characters
+      **including the ` | Maren Beauty` suffix** — counted in the test, because
+      the suffix is invisible in the config and is what pushes a title over.
+      Descriptions 150–165.
+- [x] One JSON-LD `@graph` per page with the stable `@id`s from §2.1. A test
+      walks every graph the site can produce and asserts each `@id` is declared
+      exactly once and **every reference resolves** — no dangling `@id`, no
+      entity serialised twice.
+- [x] Types per route match §2.2. **No `MedicalBusiness`, `MedicalClinic`,
+      `MedicalProcedure`, `MedicalTherapy`, `Physician` or `Hospital`** — eight
+      types asserted absent across every graph.
+- [x] `streetAddress` and `postalCode` absent from `PostalAddress`.
+- [x] **Every pre-launch omission in §2.5 has a passing test** —
+      `openingHoursSpecification`, `aggregateRating`, `review`, `priceRange`,
+      `PriceSpecification`, `geo`, `hasMap`, `foundingDate`,
+      `numberOfEmployees`. The hours DO exist in config now and render on the
+      page as provisional; this is the one place they must not appear.
+- [x] `BlogPosting.author` references the Organization by `@id`. Asserted per
+      post, along with the absence of `"Person"` and of the literal `PENDING`.
+- [x] OG images render for site, service and post — 1200×630, generated at
+      build time from the design tokens, **no photography**. Every string they
+      can print goes through the content guard, and every colour is checked
+      against `theme.css`.
+- [x] Sitemap excludes drafts and `/lisanslar` (which is `noindex` — a sitemap
+      entry for a page we ask not to index is a contradiction), lists no
+      `…/sayfa/1`, no URL twice, and carries a real `lastModified`: posts from
+      their own frontmatter, everything else from file mtime.
+- [x] Structured data validated by 59 unit tests over the graphs.
 
-**Verify**
+**G21 — DECIDED: the guard is not taught to render**
+
+The question was whether `npm run guard` should boot a server and scan dynamic
+routes. **No.** That would couple a fast static scan to a running application
+and duplicate machinery the browser suite already has.
+
+The HTML moves to the guard instead. `tests/e2e/production/guard-dynamic.spec.ts`
+fetches `/iletisim` in all four states it can render — including each no-JS
+outcome — writes each into a fixture build tree, and runs **the guard's own
+CLI** over it via the `--root=` flag M12 added. Same script, same lexicon, same
+`guard.allow.json`; nothing reimplemented. A fifth test poisons the fetched HTML
+with a known-bad sentence and asserts the pipeline reports it, so the four green
+checks cannot be green for the wrong reason.
+
+**Coverage is now 100% of routes**: static through build output, dynamic
+through this.
+
+**Four things found by building it**
+
+**The sitemap was tracing the whole project into the server bundle.** A
+`statSync` on a computed path inside a route makes Turbopack give up on static
+analysis and include everything — `public/` is 5 MB of photography. The mtimes
+moved into the content layer, which opens those files anyway, and
+`src/app/sitemap.ts` now touches the filesystem not at all. A test asserts it.
+
+**satori cannot read WOFF2.** `next/og` renders through it, and all four faces
+the site serves are WOFF2, so the OG cards would have fallen back to a system
+font — which on a Turkish share card means "Kalıcı Makyaj" rendered with a
+substituted ı, in the most public place a missing glyph can appear. Two static
+TTFs now live in `src/fonts/og/`, used at build time and never served, and
+**`npm run fonts` gates them on the same 20 Turkish codepoints** as the shipped
+faces. Verified on a rendered card.
+
+**Six titles overran 60 characters with the suffix.** Fixed with a short
+`seo.title` on each; the `h1` is unchanged, because a page heading has no
+character budget and shortening it to please a SERP makes the page worse for
+the reader who arrives.
+
+**The first OG card read grey.** Wide `nude` gradient stops over cream produced
+the same "reads beige" failure the M7 panel review found — in the one image
+that appears outside the site's own stylesheet. Warm stops, tighter radius.
+
+**Verify** — `npm run verify` exits **0**. 722 unit tests, 186 browser tests.
+Guard: 329 artefacts, **0 blocking**, 199 advisory.
 
 ```bash
 npm run verify
 ```
 
-Plus Rich Results Test and the Schema.org validator.
+Still to run against the live domain, because both tools fetch a URL:
+Google's Rich Results Test and the Schema.org validator, one URL per route
+type. Recorded in `docs/DEPLOY.md`.
 
 ---
 

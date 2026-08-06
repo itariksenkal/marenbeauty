@@ -119,6 +119,8 @@ export type PostFrontmatter = z.infer<typeof postFrontmatterSchema>;
 export type Service = ServiceFrontmatter & {
   readonly slug: string;
   readonly body: string;
+  /** Source-file mtime, for the sitemap's `lastModified`. */
+  readonly modifiedAt: Date;
   /**
    * Repo-relative source path, e.g. `content/services/cilt-bakimi.mdx`.
    *
@@ -135,6 +137,8 @@ export type Post = PostFrontmatter & {
   readonly slug: string;
   readonly body: string;
   readonly file: string;
+  /** Source-file mtime. Posts prefer their authored dates; this is a fallback. */
+  readonly modifiedAt: Date;
   /** Computed from the body. Never authored — `.strict()` rejects the key. */
   readonly readingMinutes: number;
 };

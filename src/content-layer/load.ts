@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 import matter from 'gray-matter';
@@ -17,6 +17,17 @@ export type RawDoc = {
   readonly file: string;
   readonly data: unknown;
   readonly body: string;
+  /**
+   * Filesystem modification time.
+   *
+   * Read HERE rather than in `app/sitemap.ts`, and that is not tidiness.
+   * Turbopack's static analysis flags a `statSync` on a computed path inside a
+   * route as "dynamic filesystem access", and traces the ENTIRE project —
+   * including `public/`, which is 5 MB of photography — into the server
+   * bundle. This module already opens every one of these files, so the stat is
+   * free here and the route needs no filesystem access at all.
+   */
+  readonly modifiedAt: Date;
 };
 
 export function contentDir(collection: string): string {
@@ -52,15 +63,37 @@ export function readCollection(collection: string): RawDoc[] {
     .sort()
     .map((name) => {
       const slug = name.replace(/\.mdx$/, '');
-      const raw = readFileSync(join(dir, name), 'utf8');
+      const path = join(dir, name);
+      const raw = readFileSync(path, 'utf8');
       const { data, content } = matter(raw);
       return {
         slug,
         file: `content/${collection}/${name}`,
         data: normaliseDates(data),
         body: content,
+        modifiedAt: statSync(path).mtime,
       };
     });
+}
+
+/**
+ * The newest modification time across every content file.
+ *
+ * The sitemap's `lastModified` for routes that are composed rather than
+ * authored — the home page, the service index, `/sss` — where "when did this
+ * page last change" has no single file to point at. Using the newest content
+ * timestamp is both true and stable: it moves when the site's content moves and
+ * not when a build runs, which is the whole difference between a useful
+ * `lastModified` and a meaningless one.
+ */
+export function newestContentMtime(collections: readonly string[]): Date {
+  let newest = new Date(0);
+  for (const collection of collections) {
+    for (const doc of readCollection(collection)) {
+      if (doc.modifiedAt > newest) newest = doc.modifiedAt;
+    }
+  }
+  return newest.getTime() === 0 ? new Date() : newest;
 }
 
 /**

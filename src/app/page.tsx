@@ -1,4 +1,5 @@
 import { ImageFigure } from '@/components/content/ImageFigure';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { BlogTeaser } from '@/components/sections/BlogTeaser';
@@ -9,7 +10,24 @@ import { LocationCard } from '@/components/sections/LocationCard';
 import { ServicesPanels } from '@/components/sections/ServicesPanels';
 import { toListItems } from '@/components/sections/service-list-item';
 import { TestimonialsSection } from '@/components/sections/TestimonialsSection';
+import { routeSeo } from '@/config/seo';
+import { standardGraph } from '@/lib/schema/graph';
+import { pageMetadata } from '@/lib/seo/metadata';
 import { getAllPosts, getAllServices } from '@/content-layer';
+
+/**
+ * The home title deliberately does NOT take the `%s | Maren Beauty` template:
+ * it already carries the brand name, and a doubled suffix is the commonest way
+ * a home title overruns 60 characters (docs/SEO.md §1).
+ */
+export const metadata = {
+  ...pageMetadata({
+    title: routeSeo.home.title,
+    description: routeSeo.home.description,
+    path: '/',
+  }),
+  title: { absolute: routeSeo.home.title },
+};
 
 /**
  * Home.
@@ -26,6 +44,14 @@ export default function HomePage() {
 
   return (
     <>
+      <JsonLd
+        graph={standardGraph({
+          path: '/',
+          name: routeSeo.home.title,
+          description: routeSeo.home.description,
+          services,
+        })}
+      />
       <HeroWater />
       {/* Narrowed here, on the server: the panel list is a client component,
           so anything passed whole is serialised into the RSC payload. */}

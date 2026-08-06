@@ -32,6 +32,7 @@ export type EditorialPage = PageFrontmatter & {
   readonly slug: string;
   readonly body: string;
   readonly file: string;
+  readonly modifiedAt: Date;
 };
 
 const pages: readonly EditorialPage[] = readCollection('pages').map((doc) => ({
@@ -39,6 +40,7 @@ const pages: readonly EditorialPage[] = readCollection('pages').map((doc) => ({
   slug: doc.slug,
   body: doc.body,
   file: doc.file,
+  modifiedAt: doc.modifiedAt,
 }));
 
 const bySlug = new Map(pages.map((page) => [page.slug, page]));

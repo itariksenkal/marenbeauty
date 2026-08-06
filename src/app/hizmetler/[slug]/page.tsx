@@ -9,6 +9,7 @@ import { ManagedImage } from '@/components/content/ManagedImage';
 import { Mdx } from '@/components/content/Mdx';
 import { RelatedPosts } from '@/components/content/RelatedPosts';
 import { RelatedServices } from '@/components/content/RelatedServices';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { ContactCta } from '@/components/sections/ContactCta';
@@ -19,7 +20,11 @@ import {
   servicePage,
   supportingImageIds,
 } from '@/config/services';
+import { routeSeo } from '@/config/seo';
+import { faqPageNode, serviceNode, standardGraph } from '@/lib/schema/graph';
+import { pageMetadata } from '@/lib/seo/metadata';
 import {
+  getAllServices,
   getAllServiceSlugs,
   getPostsByService,
   getServiceBySlug,
@@ -60,10 +65,11 @@ export async function generateMetadata({
   const service = getServiceBySlug(slug);
   if (!service) return {};
 
-  return {
+  return pageMetadata({
     title: service.seo.title ?? service.title,
     description: service.seo.description ?? service.summary,
-  };
+    path: `/hizmetler/${service.slug}`,
+  });
 }
 
 function aurora(service: Service) {
@@ -88,6 +94,23 @@ export default async function ServiceDetailPage({
 
   return (
     <>
+      <JsonLd
+        graph={standardGraph({
+          path: `/hizmetler/${service.slug}`,
+          name: service.title,
+          description: service.summary,
+          type: 'ItemPage',
+          trail: [
+            { name: routeSeo.services.title, path: '/hizmetler' },
+            { name: service.title, path: `/hizmetler/${service.slug}` },
+          ],
+          services: getAllServices(),
+          extra: [
+            serviceNode(service),
+            faqPageNode(`/hizmetler/${service.slug}`, service.faq),
+          ],
+        })}
+      />
       <Section tone="transparent" rhythm="tight" aurora={aurora(service)}>
         <Container>
           <p>

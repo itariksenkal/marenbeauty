@@ -6,6 +6,8 @@ import type { Metadata } from 'next';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { legalPage } from '@/config/legal';
+import { routeSeo } from '@/config/seo';
+import { pageMetadata } from '@/lib/seo/metadata';
 
 /**
  * `/lisanslar` — third-party attribution.
@@ -22,11 +24,12 @@ import { legalPage } from '@/config/legal';
  * `noindex`: it is a required attribution surface, not search-facing content,
  * and 1,200 lines of package names would be a poor thing to rank for.
  */
-export const metadata: Metadata = {
-  title: legalPage.licences.title,
-  description: legalPage.licences.lead,
-  robots: { index: false, follow: true },
-};
+export const metadata: Metadata = pageMetadata({
+  title: routeSeo.licences.title,
+  description: routeSeo.licences.description,
+  path: '/lisanslar',
+  noIndex: true,
+});
 
 function readNotice(): string {
   return readFileSync(join(process.cwd(), 'NOTICE'), 'utf8');

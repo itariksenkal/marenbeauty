@@ -2,9 +2,12 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { PostListing } from '@/components/content/PostListing';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { blog, POSTS_PER_PAGE } from '@/config/blog';
 import { site } from '@/config/site';
-import { getAllPosts } from '@/content-layer';
+import { routeSeo } from '@/config/seo';
+import { standardGraph } from '@/lib/schema/graph';
+import { getAllPosts, getAllServices } from '@/content-layer';
 import { hrefForPage, pagesAfterFirst, paginate } from '@/lib/pagination';
 
 /**
@@ -63,14 +66,31 @@ export default async function BlogPaginatedPage({
   const result = resolve(page);
   if (!result) notFound();
 
+  const path = hrefForPage('/blog', result.page);
+
   return (
-    <PostListing
-      eyebrow={blog.index.eyebrow}
-      heading={blog.index.heading}
-      lead={blog.index.lead}
-      result={result}
-      basePath="/blog"
-      emptyMessage={blog.empty.all}
-    />
+    <>
+      <JsonLd
+        graph={standardGraph({
+          path,
+          name: `${blog.index.heading} — ${blog.pagination.pageWord} ${result.page}`,
+          description: blog.index.lead,
+          type: 'CollectionPage',
+          trail: [
+            { name: routeSeo.blog.title, path: '/blog' },
+            { name: `${blog.pagination.pageWord} ${result.page}`, path },
+          ],
+          services: getAllServices(),
+        })}
+      />
+      <PostListing
+        eyebrow={blog.index.eyebrow}
+        heading={blog.index.heading}
+        lead={blog.index.lead}
+        result={result}
+        basePath="/blog"
+        emptyMessage={blog.empty.all}
+      />
+    </>
   );
 }

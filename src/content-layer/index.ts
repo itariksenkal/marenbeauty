@@ -39,6 +39,8 @@ export {
   type PageFrontmatter,
 } from './pages';
 
+export { contentLastModified } from './modified';
+
 export { compileMdxBody } from './mdx';
 
 export {

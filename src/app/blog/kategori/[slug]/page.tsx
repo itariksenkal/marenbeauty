@@ -2,9 +2,16 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { PostListing } from '@/components/content/PostListing';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { blog, blogCategories, POSTS_PER_PAGE } from '@/config/blog';
 import { site } from '@/config/site';
-import { BLOG_CATEGORIES, getPostsByCategory } from '@/content-layer';
+import { routeSeo } from '@/config/seo';
+import { standardGraph } from '@/lib/schema/graph';
+import {
+  BLOG_CATEGORIES,
+  getAllServices,
+  getPostsByCategory,
+} from '@/content-layer';
 import type { BlogCategory } from '@/content-layer';
 import { paginate } from '@/lib/pagination';
 
@@ -60,15 +67,32 @@ export default async function BlogCategoryPage({
   const found = resolve(slug);
   if (!found) notFound();
 
+  const path = `/blog/kategori/${found.category.id}`;
+
   return (
-    <PostListing
-      eyebrow={blog.index.eyebrow}
-      heading={found.category.label}
-      lead={found.category.description}
-      activeCategory={found.category.id}
-      result={found.result}
-      basePath={`/blog/kategori/${found.category.id}`}
-      emptyMessage={blog.empty.category}
-    />
+    <>
+      <JsonLd
+        graph={standardGraph({
+          path,
+          name: found.category.label,
+          description: found.category.description,
+          type: 'CollectionPage',
+          trail: [
+            { name: routeSeo.blog.title, path: '/blog' },
+            { name: found.category.label, path },
+          ],
+          services: getAllServices(),
+        })}
+      />
+      <PostListing
+        eyebrow={blog.index.eyebrow}
+        heading={found.category.label}
+        lead={found.category.description}
+        activeCategory={found.category.id}
+        result={found.result}
+        basePath={path}
+        emptyMessage={blog.empty.category}
+      />
+    </>
   );
 }

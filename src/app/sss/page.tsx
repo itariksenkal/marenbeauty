@@ -2,11 +2,15 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { Faq } from '@/components/content/Faq';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { ContactCta } from '@/components/sections/ContactCta';
 import { faqPage, generalFaq } from '@/config/faq';
 import { serviceGroups, serviceGroupLabel } from '@/config/services';
+import { routeSeo } from '@/config/seo';
+import { faqPageNode, standardGraph } from '@/lib/schema/graph';
+import { pageMetadata } from '@/lib/seo/metadata';
 import { getAllServices } from '@/content-layer';
 
 /**
@@ -18,16 +22,30 @@ import { getAllServices } from '@/content-layer';
  * indexable URLs. This page links to the services that have questions instead,
  * and says how many — which is information the visitor can act on.
  */
-export const metadata: Metadata = {
-  title: 'Sık Sorulan Sorular',
-  description: faqPage.lead,
-};
+export const metadata: Metadata = pageMetadata({
+  title: routeSeo.faq.title,
+  description: routeSeo.faq.description,
+  path: '/sss',
+});
 
 export default function FaqRoute() {
   const services = getAllServices();
 
   return (
     <>
+      <JsonLd
+        graph={standardGraph({
+          path: '/sss',
+          name: routeSeo.faq.title,
+          description: routeSeo.faq.description,
+          trail: [{ name: routeSeo.faq.title, path: '/sss' }],
+          services,
+          // The general questions only. Each service page carries its own
+          // FAQPage for its own questions; repeating them here would put the
+          // same Q&A on two indexable URLs.
+          extra: [faqPageNode('/sss', generalFaq)],
+        })}
+      />
       <Section
         tone="transparent"
         rhythm="tight"

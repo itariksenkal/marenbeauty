@@ -48,6 +48,7 @@ const service = (over: Partial<Service> = {}): Service => ({
   seo: { title: null, description: null },
   body: '',
   file: 'content/services/ornek.mdx',
+  modifiedAt: new Date('2026-08-06T00:00:00Z'),
   ...over,
 });
 
@@ -70,6 +71,7 @@ const post = (over: Partial<Post> = {}): Post => ({
   seo: { title: null, description: null },
   body: '',
   file: 'content/blog/ornek-yazi.mdx',
+  modifiedAt: new Date('2026-08-06T00:00:00Z'),
   readingMinutes: 1,
   ...over,
 });
@@ -335,6 +337,7 @@ const doc = (data: unknown): RawDoc => ({
   file: 'content/services/x.mdx',
   data,
   body: '',
+  modifiedAt: new Date('2026-08-06T00:00:00Z'),
 });
 
 describe('frontmatter validation', () => {

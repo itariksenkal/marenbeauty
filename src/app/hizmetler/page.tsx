@@ -1,10 +1,14 @@
 import type { Metadata } from 'next';
 
 import { ServiceGrid } from '@/components/content/ServiceGrid';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { ContactCta } from '@/components/sections/ContactCta';
 import { serviceGroups, servicePage } from '@/config/services';
+import { routeSeo } from '@/config/seo';
+import { standardGraph } from '@/lib/schema/graph';
+import { pageMetadata } from '@/lib/seo/metadata';
 import { getAllServices } from '@/content-layer';
 
 /**
@@ -21,16 +25,27 @@ import { getAllServices } from '@/content-layer';
  * Full SEO — canonicals, OG images, JSON-LD — arrives at M13. This sets only
  * the title and description, from copy that already exists.
  */
-export const metadata: Metadata = {
-  title: servicePage.index.eyebrow,
-  description: servicePage.index.lead,
-};
+export const metadata: Metadata = pageMetadata({
+  title: routeSeo.services.title,
+  description: routeSeo.services.description,
+  path: '/hizmetler',
+});
 
 export default function ServicesIndexPage() {
   const services = getAllServices();
 
   return (
     <>
+      <JsonLd
+        graph={standardGraph({
+          path: '/hizmetler',
+          name: routeSeo.services.title,
+          description: routeSeo.services.description,
+          type: 'CollectionPage',
+          trail: [{ name: routeSeo.services.title, path: '/hizmetler' }],
+          services,
+        })}
+      />
       <Section
         tone="transparent"
         rhythm="tight"

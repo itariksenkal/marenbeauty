@@ -160,6 +160,30 @@ function readWoff2Tables(file) {
   return tables;
 }
 
+/**
+ * Read a plain TrueType/OpenType file's table directory.
+ *
+ * The OG images cannot use the shipped .woff2 files: satori — which
+ * `next/og` renders through — reads TTF, OTF and WOFF, and NOT WOFF2. So two
+ * static TTFs live in `src/fonts/og/`, used at build time only and never
+ * served to a browser. They are held to exactly the same glyph gate as the
+ * fonts visitors get: a share card that renders "Kalıcı Makyaj" with a
+ * substituted ı is the most public place a missing glyph can appear.
+ */
+function readSfntTables(file) {
+  const buf = readFileSync(file);
+  const numTables = buf.readUInt16BE(4);
+  const tables = new Map();
+  for (let i = 0; i < numTables; i++) {
+    const rec = 12 + i * 16;
+    const tag = buf.toString('latin1', rec, rec + 4);
+    const offset = buf.readUInt32BE(rec + 8);
+    const length = buf.readUInt32BE(rec + 12);
+    tables.set(tag, buf.subarray(offset, offset + length));
+  }
+  return tables;
+}
+
 /** Collect every codepoint a cmap table maps to a non-zero glyph. */
 function cmapCoverage(cmap) {
   const covered = new Set();
@@ -304,6 +328,16 @@ const FAMILIES = [
       'src/fonts/manrope-latin-ext.woff2',
     ],
   },
+  {
+    name: 'Fraunces (OG)',
+    role: 'share cards',
+    files: ['src/fonts/og/fraunces-og.ttf'],
+  },
+  {
+    name: 'Manrope (OG)',
+    role: 'share cards',
+    files: ['src/fonts/og/manrope-og.ttf'],
+  },
 ];
 
 // ── Run ─────────────────────────────────────────────────────────────────────
@@ -324,7 +358,9 @@ for (const family of FAMILIES) {
       failed = true;
       continue;
     }
-    const tables = readWoff2Tables(file);
+    const tables = rel.endsWith('.ttf')
+      ? readSfntTables(file)
+      : readWoff2Tables(file);
     const cmap = tables.get('cmap');
     if (!cmap) throw new Error(`${rel} has no cmap table`);
     const covered = cmapCoverage(cmap);
@@ -370,5 +406,6 @@ if (failed) {
   process.exit(1);
 }
 console.log(
-  '  ✓ F1 passed — both families cover Turkish in the bytes we ship.\n',
+  '  ✓ F1 passed — every face covers Turkish in the bytes we ship,\n' +
+    '    including the two used only to render OG share cards.\n',
 );

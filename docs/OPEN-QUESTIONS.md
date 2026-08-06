@@ -919,7 +919,7 @@ which variables are missing, and returns the generic message. The gap between
 "deployed" and "known broken" is one enquiry, and `docs/DEPLOY.md` carries the
 check as a pre-flight item. The stale promise in `env.ts` was corrected.
 
-### G21 — A dynamic route escapes the content guard 🟡 → confirm at M13
+### G21 — A dynamic route escapes the content guard 🟢 → DECIDED at M13
 
 `npm run guard` scans **prerendered output**. `/iletisim` is rendered per
 request (it issues a signed token and reads `searchParams`), so it emits no
@@ -931,9 +931,27 @@ gate that exists to catch banned language.
 comes free: the form is a client component, so its strings appear in
 `.next/static/chunks` and the guard does scan those.
 
-**Open:** whether the guard should additionally render dynamic routes and scan
-the result. That is a change to the gate itself and belongs with the SEO pass at
-M13, when `/iletisim` is not the only dynamic page.
+**DECIDED at M13: the guard is not taught to render.**
+
+Booting a server inside `scripts/guard.mjs` would couple a fast static scan to a
+running application, add a server lifecycle to a script whose whole value is
+that it cannot fail for interesting reasons, and duplicate machinery the browser
+suite already has — it starts the production server for every run anyway.
+
+So the HTML moves to the guard. `tests/e2e/production/guard-dynamic.spec.ts`
+fetches `/iletisim` in all four states it can render (including each no-JS
+outcome), writes each into a fixture build tree, and runs **the guard's own CLI**
+over it through the `--root=` flag M12 added. Same script, same lexicon, same
+`guard.allow.json`.
+
+A fifth test poisons the fetched HTML with a known-bad sentence and asserts the
+pipeline reports it — so the four green checks cannot be green because the
+plumbing is broken.
+
+**Guard coverage is now 100% of routes.** Static ones through build output,
+dynamic ones through this. Neither path reimplements the other, and `/iletisim`
+remained the only dynamic route, which is why the cheaper answer was the right
+one.
 
 ### G22 — One env blob coupled two unrelated secrets 🟢 → fixed at M11
 
