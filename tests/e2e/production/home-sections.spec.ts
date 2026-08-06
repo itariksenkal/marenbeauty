@@ -113,7 +113,10 @@ test.describe('home sections', () => {
 
   test('location shows the district and embeds no map', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText('Konya, Selçuklu')).toBeVisible();
+    // Scoped to <main>: the footer carries the same address on every page.
+    await expect(
+      page.locator('main').getByText('Konya, Selçuklu'),
+    ).toBeVisible();
     expect(await page.locator('iframe').count()).toBe(0);
   });
 

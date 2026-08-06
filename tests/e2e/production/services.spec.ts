@@ -57,7 +57,9 @@ test.describe('service index', () => {
     await page.goto('/hizmetler');
     await page.waitForLoadState('networkidle');
 
-    const cards = page.locator('a[href^="/hizmetler/"]');
+    // Scoped to <main>: from M19 the header mega menu and the footer both
+    // link to all twenty as well, which is the point of them.
+    const cards = page.locator('main a[href^="/hizmetler/"]');
     await expect(cards).toHaveCount(SLUGS.length);
 
     expect(errors.pageErrors).toEqual([]);
@@ -67,7 +69,7 @@ test.describe('service index', () => {
   test('every card points at a distinct, real service', async ({ page }) => {
     await page.goto('/hizmetler');
     const hrefs = await page
-      .locator('a[href^="/hizmetler/"]')
+      .locator('main a[href^="/hizmetler/"]')
       .evaluateAll((links) =>
         links.map((link) => link.getAttribute('href') ?? ''),
       );
@@ -174,7 +176,7 @@ test.describe('service detail', () => {
     });
 
     await page.goto('/hizmetler');
-    await page.locator('a[href="/hizmetler/hydrafacial"]').click();
+    await page.locator('main a[href="/hizmetler/hydrafacial"]').click();
     await expect(page).toHaveURL(/\/hizmetler\/hydrafacial$/);
 
     const captured = await page.evaluate(

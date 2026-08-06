@@ -1372,6 +1372,79 @@ npm run verify
 
 ---
 
+## M19 — Navbar and footer ☑ **DONE 2026-08-07**
+
+**Not in the original plan.** The header and footer had been the M1 shell since
+M1 — a wordmark and a copyright line. This designs them.
+
+**Files touched**
+
+```
+src/components/layout/{SiteHeader,SiteFooter}.tsx
+src/components/layout/{HeaderNav,HeaderScrollState}.tsx   ← added
+src/config/navigation.ts  src/styles/globals.css
+tests/e2e/production/chrome.spec.ts                        ← added, 21 tests
+```
+
+**Acceptance criteria**
+
+- [x] Full navigation: Hizmetlerimiz, Hakkımızda, Blog, Galeri, SSS, İletişim.
+      The first opens a **mega menu listing all twenty services by group**.
+- [x] Sticky, with a scroll state: transparent at rest so the aurora runs
+      behind it, gaining a surface once the page leaves the top. Driven by an
+      **IntersectionObserver over a 1px sentinel — no scroll listener**, so
+      nothing runs per frame and nothing re-renders. The site's one scroll
+      listener is still the aurora's.
+- [x] **The header never changes height on scroll** — only background, border
+      and backdrop-filter change. Asserted by measuring the box before and
+      after. A header that resizes reflows the document on the frame it changes.
+- [x] Prominent WhatsApp CTA, degrading to the form when no channel is
+      configured — the same hierarchy as the closing CTA, so a visitor is never
+      offered two different primary actions.
+- [x] Real mobile drawer: full-screen, animated, **focus-trapped** (30 Tab
+      presses never leave it), Escape closes it and **returns focus to the
+      button that opened it**, the body does not scroll behind it, and it
+      **closes on route change** — asserted by clicking a link inside it.
+- [x] Closed panels are `inert`, so neither is reachable by keyboard while
+      hidden, and both stay in the DOM so find-in-page reaches all twenty
+      service names.
+- [x] **The wordmark handoff still works.** Unchanged mechanism: opacity from
+      `--hero-handoff`, `visibility: hidden` below the threshold. Three tests —
+      withheld at the top of the home page, present immediately on a page with
+      no hero, and **the navigation and CTA are never withheld**, because a
+      first screen with no way out would be the cost of making them part of it.
+- [x] Mega footer: five service groups with all twenty links, site pages, four
+      legal pages, address, three contact channels, opening hours with their
+      provisional note, four social profiles, brand paragraph, wordmark,
+      copyright stamped at render, and the legal row.
+- [x] No horizontal scroll at 320px. Guard unchanged: **0 blocking**.
+
+**Two decisions worth naming**
+
+**The mega menu opens on click only.** Hover-to-open layered on a click toggle
+is worse than either: the pointer opens the menu on its way to the button, so
+the click that follows reads as "close" — one control with two contradictory
+meanings depending on how you arrived. That was a real bug, caught by the first
+run of the browser tests. Click, plus Escape and an outside click to dismiss.
+
+**Neither the drawer nor the mega panel is a sixth signature interaction**
+(`docs/MOTION.md` §2 rule 5). Both are chrome, in the same category as a hover
+state: a 220ms opacity-and-transform transition on compositable properties. The
+five signatures are unchanged, and so are the two pinned sections.
+
+**Also fixed:** `setState` in an effect for the route-change close. Replaced
+with React's documented "adjust state during render" pattern, so the extra
+render is discarded before paint rather than after commit — which is the
+difference between closing the drawer and flashing it over the new page.
+
+**Verify** — `npm run verify` exits **0**. 663 unit tests, 181 browser tests.
+
+```bash
+npm run verify
+```
+
+---
+
 ## M13 — SEO ☐
 
 **Goal.** `docs/SEO.md` implemented end to end.

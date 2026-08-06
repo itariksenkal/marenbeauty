@@ -93,11 +93,13 @@ test.describe('configured facts', () => {
     page,
   }) => {
     await page.goto('/iletisim');
-    const location = page.locator('address').first();
+    const location = page.locator('main address').first();
     await expect(location).toContainText('Selçuklu');
 
-    await expect(page.getByText('Pazartesi – Cuma')).toBeVisible();
-    await expect(page.getByText('Planlanan saatler')).toBeVisible();
+    // Scoped to <main>: the footer repeats the hours on every page.
+    const main = page.locator('main');
+    await expect(main.getByText('Pazartesi – Cuma')).toBeVisible();
+    await expect(main.getByText('Planlanan saatler')).toBeVisible();
   });
 
   test('every social profile renders with a live target', async ({ page }) => {

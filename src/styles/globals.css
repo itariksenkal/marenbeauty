@@ -117,3 +117,22 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ── Header scroll state — M19 ──────────────────────────────────────────────
+   The header is transparent at rest so the aurora runs behind it, and gains a
+   surface once the page leaves the top. `data-scrolled` is written on <html>
+   by an IntersectionObserver over a 1px sentinel (`HeaderScrollState`), not by
+   a scroll handler — so this costs nothing per frame and nothing re-renders.
+
+   Only background, border and backdrop-filter change. No height, no padding,
+   no font-size: a header that resizes on scroll reflows the whole document on
+   the frame it changes, which is the failure docs/MOTION.md §2 rule 2 names. */
+[data-scrolled] [data-site-header] {
+  background-color: color-mix(
+    in srgb,
+    var(--color-surface-page) 88%,
+    transparent
+  );
+  border-bottom-color: var(--color-border-subtle);
+  backdrop-filter: blur(10px);
+}

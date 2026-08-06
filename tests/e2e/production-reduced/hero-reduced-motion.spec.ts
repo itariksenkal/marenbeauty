@@ -58,8 +58,12 @@ test.describe('pinned opening — reduced motion', () => {
     expect(clipped, 'lines still clipped at reduced motion').toEqual([]);
   });
 
-  test('nothing is inert at reduced motion', async ({ page }) => {
+  test('no page content is inert at reduced motion', async ({ page }) => {
     await page.goto('/');
-    expect(await page.locator('[inert]').count()).toBe(0);
+    // Scoped to <main>: the header's closed mobile drawer and mega panel are
+    // legitimately inert — that is what stops a keyboard user tabbing into a
+    // menu they cannot see. The rule being checked is that no CONTENT is
+    // withheld from a reduced-motion visitor.
+    expect(await page.locator('main [inert]').count()).toBe(0);
   });
 });

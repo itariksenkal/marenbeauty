@@ -9,6 +9,8 @@ import { site } from '@/config/site';
 export type NavItem = {
   readonly href: string;
   readonly label: string;
+  /** Optional one-line description, shown in the mega menu and the footer. */
+  readonly description?: string;
 };
 
 export const primaryNav: readonly NavItem[] = [
@@ -24,18 +26,7 @@ export const legalNav: readonly NavItem[] = [
   { href: '/kvkk', label: 'KVKK Aydınlatma Metni' },
   { href: '/cerez-politikasi', label: 'Çerez Politikası' },
   { href: '/kullanim-kosullari', label: 'Kullanım Koşulları' },
-];
-
-/**
- * Footer columns. Contact channels are deliberately absent: they render from
- * `contact.ts` and disappear entirely while unset (CLAUDE.md §7).
- */
-export const footerNav: readonly {
-  readonly heading: string;
-  readonly items: readonly NavItem[];
-}[] = [
-  { heading: 'Menü', items: primaryNav },
-  { heading: 'Yasal', items: legalNav },
+  { href: '/lisanslar', label: 'Lisanslar' },
 ];
 
 /** Home is not in `primaryNav` — the wordmark is the home link. */
@@ -43,6 +34,14 @@ export const homeHref = '/';
 
 /** Where the skip link and in-page anchors land. */
 export const mainContentId = 'main';
+
+/**
+ * Which primary item opens the service mega menu.
+ *
+ * Held as a href rather than an index so reordering `primaryNav` cannot
+ * silently attach the menu to "Blog".
+ */
+export const megaMenuHref = '/hizmetler';
 
 /**
  * Shell chrome labels — the few user-facing strings the layout itself needs.
@@ -55,6 +54,40 @@ export const chrome = {
   skipToContent: 'İçeriğe geç',
   allRightsReserved: 'Tüm hakları saklıdır.',
   legalNavLabel: 'Yasal metinler',
+
+  primaryNavLabel: 'Ana menü',
+  footerNavLabel: 'Alt menü',
+  socialNavLabel: 'Sosyal hesaplar',
+
+  openMenu: 'Menüyü aç',
+  closeMenu: 'Menüyü kapat',
+  /** Announced when the mega menu expands, for the `aria-expanded` control. */
+  servicesMenuLabel: 'Hizmet grupları',
+  allServices: 'Tüm hizmetler',
+
+  /**
+   * The header call to action. WhatsApp-first (docs/BRIEF.md §6), degrading to
+   * the form when no channel is configured — which is the same hierarchy the
+   * closing CTA uses, so a visitor sees one consistent primary action.
+   */
+  ctaWhatsapp: 'WhatsApp',
+  ctaForm: 'Mesaj gönderin',
+} as const;
+
+/**
+ * The footer's brand paragraph.
+ *
+ * Says only what is confirmed: the category, the district, and that the centre
+ * is not open yet. No team, no room, no date (CLAUDE.md §9, §10).
+ */
+export const footerBrand = {
+  paragraph: `${site.address.region} ${site.address.locality}’de bir güzellik merkezi. Sakin, ölçülü ve acelesi olmayan bir yaklaşım. Yakında kapılarımızı açıyoruz.`,
+  servicesHeading: 'Hizmet grupları',
+  pagesHeading: 'Sayfalar',
+  legalHeading: 'Yasal',
+  contactHeading: 'İletişim',
+  hoursHeading: 'Çalışma saatleri',
+  socialHeading: 'Bizi takip edin',
 } as const;
 
 export const siteName = site.name;
