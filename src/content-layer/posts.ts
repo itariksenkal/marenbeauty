@@ -80,6 +80,14 @@ export function getRelatedPosts(post: Post, limit = 3): readonly Post[] {
     .slice(0, limit);
 }
 
-export function getAllPostSlugs(): readonly string[] {
-  return getAllPosts().map((post) => post.slug);
+/**
+ * Slugs for `generateStaticParams`.
+ *
+ * `includeDrafts` is honoured only outside production (see `visible`), which is
+ * what lets a draft post have a route under `next dev` and no route at all in a
+ * production build — the mechanism the post-template preview relies on
+ * (docs/OPEN-QUESTIONS.md G17).
+ */
+export function getAllPostSlugs(query?: PostQuery): readonly string[] {
+  return getAllPosts(query).map((post) => post.slug);
 }

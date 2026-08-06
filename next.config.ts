@@ -24,6 +24,20 @@ const nextConfig: NextConfig = {
         destination: `https://${CANONICAL_HOST}/:path*`,
         permanent: true,
       },
+
+      /*
+       * Page 1 of a listing lives at the bare path and nowhere else
+       * (`src/lib/pagination.ts`). `/blog/sayfa/1` is therefore never generated
+       * — but it is the first thing a curious visitor types after seeing
+       * `/blog/sayfa/2`, so it redirects rather than 404s. The page still does
+       * not exist; it simply resolves to the URL that does.
+       */
+      { source: '/blog/sayfa/1', destination: '/blog', permanent: true },
+      {
+        source: '/blog/kategori/:slug/sayfa/1',
+        destination: '/blog/kategori/:slug',
+        permanent: true,
+      },
     ];
   },
 };

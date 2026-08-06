@@ -29,23 +29,24 @@ admin UI (a later milestone) a drop-in rather than a migration.
 All user-facing slugs are Turkish, ASCII-folded (`CLAUDE.md` §6). `/api/*` is
 English because it is not user-facing.
 
-| Route                   | File                                | Render           | Purpose                                                               |
-| ----------------------- | ----------------------------------- | ---------------- | --------------------------------------------------------------------- |
-| `/`                     | `app/page.tsx`                      | Static           | Home. The pinned water sequence, services, process, blog teaser, CTA. |
-| `/hizmetler`            | `app/hizmetler/page.tsx`            | Static           | Service index — all 20, grouped.                                      |
-| `/hizmetler/[slug]`     | `app/hizmetler/[slug]/page.tsx`     | SSG ×20          | Service detail. View Transition target from the card.                 |
-| `/hakkimizda`           | `app/hakkimizda/page.tsx`           | Static           | The centre, the approach, the space.                                  |
-| `/blog`                 | `app/blog/page.tsx`                 | Static           | Latest posts + category filter.                                       |
-| `/blog/sayfa/[page]`    | `app/blog/sayfa/[page]/page.tsx`    | SSG              | Pagination, 12 per page. Page 1 canonicalises to `/blog`.             |
-| `/blog/[slug]`          | `app/blog/[slug]/page.tsx`          | SSG ×12→50+      | Post detail.                                                          |
-| `/blog/kategori/[slug]` | `app/blog/kategori/[slug]/page.tsx` | SSG ×6           | Category archive.                                                     |
-| `/sss`                  | `app/sss/page.tsx`                  | Static           | FAQ. `FAQPage` schema.                                                |
-| `/iletisim`             | `app/iletisim/page.tsx`             | Static           | Contact form, location, channels.                                     |
-| `/kvkk`                 | `app/kvkk/page.tsx`                 | Static           | KVKK Aydınlatma Metni.                                                |
-| `/cerez-politikasi`     | `app/cerez-politikasi/page.tsx`     | Static           | Cookie policy.                                                        |
-| `/kullanim-kosullari`   | `app/kullanim-kosullari/page.tsx`   | Static           | Terms of use.                                                         |
-| `/api/contact`          | `app/api/contact/route.ts`          | **Node runtime** | `POST` → Altcha verify → Zod → Nodemailer. Persists nothing.          |
-| `/api/altcha`           | `app/api/altcha/route.ts`           | **Node runtime** | `GET` → signed proof-of-work challenge.                               |
+| Route                                | File                                             | Render           | Purpose                                                               |
+| ------------------------------------ | ------------------------------------------------ | ---------------- | --------------------------------------------------------------------- |
+| `/`                                  | `app/page.tsx`                                   | Static           | Home. The pinned water sequence, services, process, blog teaser, CTA. |
+| `/hizmetler`                         | `app/hizmetler/page.tsx`                         | Static           | Service index — all 20, grouped.                                      |
+| `/hizmetler/[slug]`                  | `app/hizmetler/[slug]/page.tsx`                  | SSG ×20          | Service detail. View Transition target from the card.                 |
+| `/hakkimizda`                        | `app/hakkimizda/page.tsx`                        | Static           | The centre, the approach, the space.                                  |
+| `/blog`                              | `app/blog/page.tsx`                              | Static           | **Page 1.** Latest posts + category filter.                           |
+| `/blog/sayfa/[page]`                 | `app/blog/sayfa/[page]/page.tsx`                 | SSG              | Pages **2+**, 12 per page. Each self-canonical.                       |
+| `/blog/[slug]`                       | `app/blog/[slug]/page.tsx`                       | SSG ×12→50+      | Post detail.                                                          |
+| `/blog/kategori/[slug]`              | `app/blog/kategori/[slug]/page.tsx`              | SSG ×6           | Category archive, page 1.                                             |
+| `/blog/kategori/[slug]/sayfa/[page]` | `app/blog/kategori/[slug]/sayfa/[page]/page.tsx` | SSG              | Archive pages **2+**. See below.                                      |
+| `/sss`                               | `app/sss/page.tsx`                               | Static           | FAQ. `FAQPage` schema.                                                |
+| `/iletisim`                          | `app/iletisim/page.tsx`                          | Static           | Contact form, location, channels.                                     |
+| `/kvkk`                              | `app/kvkk/page.tsx`                              | Static           | KVKK Aydınlatma Metni.                                                |
+| `/cerez-politikasi`                  | `app/cerez-politikasi/page.tsx`                  | Static           | Cookie policy.                                                        |
+| `/kullanim-kosullari`                | `app/kullanim-kosullari/page.tsx`                | Static           | Terms of use.                                                         |
+| `/api/contact`                       | `app/api/contact/route.ts`                       | **Node runtime** | `POST` → Altcha verify → Zod → Nodemailer. Persists nothing.          |
+| `/api/altcha`                        | `app/api/altcha/route.ts`                        | **Node runtime** | `GET` → signed proof-of-work challenge.                               |
 
 ### Generated files
 
@@ -68,6 +69,29 @@ English because it is not user-facing.
 - No `/yorumlar` — testimonials are empty until real ones exist.
 - No `/en/*` — Turkish only, no i18n scaffolding by decision.
 - No auth, no account area, no cart.
+
+### Pagination convention
+
+One rule, in one place (`src/lib/pagination.ts`), shared by the blog index and
+every category archive:
+
+> **Page 1 is the bare path. Page numbers start at 2.**
+
+`pagesAfterFirst()` returns `[2 … n]`, so `…/sayfa/1` is never generated and
+`dynamicParams = false` makes every ungenerated page number a 404 rather than an
+empty grid. `hrefForPage()` maps page 1 back to the bare path, so no component
+can emit the duplicate by arithmetic accident. `next.config.ts` redirects
+`…/sayfa/1` permanently to the bare path — the page still does not exist, it
+simply resolves to the URL that does.
+
+**Category archives are paginated from M9, before they need it.** Fourteen of
+the fifty planned posts (`docs/CONTENT-PLAN.md` §4) map to
+`cilt-yenileme-rehberi`, which is more than one page of twelve. Adding the route
+after those posts existed would have changed archive URLs that were already
+published.
+
+An empty collection is **one** page, not zero: `/blog` still renders, with its
+empty state.
 
 ### Slug permanence
 
@@ -167,10 +191,12 @@ const postSchema = z.object({
   tags: z.array(z.string()).max(5),
   service: z.string(), // slug — every post maps to one
   author: z.literal('PENDING'), // never a fabricated name
-  heroImageId: z.string(),
+  heroImageId: z.string(), // one per CATEGORY, not per post
   keyword: z.string(), // primary target keyword
   intent: z.enum(['informational', 'commercial', 'transactional']),
   draft: z.boolean().default(false),
+  keyPoints: z.array(z.string()).max(5), // the "Kısaca" block — §6
+  faq: z.array(z.object({ question, answer })).max(4), // feeds FAQPage
   seo: z.object({
     title: z.string().max(60).nullable(),
     description: z.string().max(165).nullable(),
@@ -184,6 +210,17 @@ schema widens in one place and `BlogPosting.author` switches from
 `Organization` to `Person`.
 
 `readingMinutes` is **computed** from the body, never authored.
+
+`keyPoints` and `faq` were added at M9 so the post template can implement the
+§6 structure from data rather than by parsing headings back out of prose, and so
+M13's `FAQPage` JSON-LD has question/answer pairs to work from. Both may be
+empty; an empty list renders nothing.
+
+**Drafts have a route in development and none in production.** `visible()`
+honours `includeDrafts` only when `NODE_ENV !== 'production'`, so
+`generateStaticParams` for `/blog/[slug]` produces the draft under `next dev`
+and omits it from the build that ships. That is what gives the post template a
+review surface — and browser coverage — before the first real post exists.
 
 ### 3.4 Referential integrity — enforced at build
 
@@ -427,7 +464,8 @@ marenbeauty/
 | `ManagedImage`                            | S   | Takes a manifest `id`. **The only `next/image` caller.** |
 | `ImageCredit`                             | S   | Renders licence/credit when the manifest has one.        |
 | `ServiceCard` / `ServiceGrid`             | S   | Card is the View Transition source.                      |
-| `PostCard` / `PostGrid` / `CategoryPills` | S   |                                                          |
+| `PostCard` / `PostGrid` / `CategoryPills` | S   | No byline. Pills are plain links, so filtering is a URL. |
+| `Pagination` / `PostListing`              | S   | Shared by all four listing routes. Renders nothing at 1. |
 | `Faq`                                     | S   | Native `<details>`. See below. `FAQPage` JSON-LD at M13. |
 | `RelatedServices` / `RelatedPosts`        | S   | Internal linking map (`docs/CONTENT-PLAN.md` §5).        |
 

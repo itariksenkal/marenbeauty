@@ -330,8 +330,11 @@ describe('relatedServices', () => {
 /* ── Images — CLAUDE.md §8 ────────────────────────────────────────────────── */
 
 describe('the image manifest', () => {
-  it('holds one entry per service and nothing else', () => {
-    expect(images).toHaveLength(services.length);
+  it('holds one entry per service', () => {
+    // Blog heroes joined the manifest at M9 — one per category, not per post —
+    // so this counts the `service-` prefix rather than the whole file.
+    const serviceImages = images.filter((i) => i.id.startsWith('service-'));
+    expect(serviceImages).toHaveLength(services.length);
     for (const service of services) {
       expect(images.some((i) => i.id === service.heroImageId)).toBe(true);
     }

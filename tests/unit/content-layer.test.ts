@@ -65,6 +65,8 @@ const post = (over: Partial<Post> = {}): Post => ({
   keyword: 'k',
   intent: 'informational',
   draft: false,
+  keyPoints: [],
+  faq: [],
   seo: { title: null, description: null },
   body: '',
   file: 'content/blog/ornek-yazi.mdx',
@@ -382,6 +384,8 @@ describe('frontmatter validation', () => {
       heroImageId: 'img',
       keyword: 'k',
       intent: 'informational',
+      keyPoints: [],
+      faq: [],
       seo: { title: null, description: null },
     };
     expect(() =>
@@ -408,6 +412,8 @@ describe('frontmatter validation', () => {
       heroImageId: 'img',
       keyword: 'k',
       intent: 'informational',
+      keyPoints: [],
+      faq: [],
       seo: { title: null, description: null },
     });
     expect(() =>
@@ -436,6 +442,8 @@ describe('frontmatter validation', () => {
           heroImageId: 'img',
           keyword: 'k',
           intent: 'informational',
+          keyPoints: [],
+          faq: [],
           seo: { title: null, description: null },
         }),
       ),

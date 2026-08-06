@@ -74,6 +74,21 @@ const serviceHero = (slug: string): ManagedImage => ({
   ...PLACEHOLDER,
 });
 
+/**
+ * Blog heroes are **per category, not per post** (added at M9).
+ *
+ * Fifty posts across six categories do not need fifty pieces of artwork. One
+ * image per category keeps the visual family narrow, gives each cluster its own
+ * tone, and means writing a post at M10 — or post forty at M14 — never requires
+ * inventing a new image or a new manifest entry. Real photography, when it
+ * arrives, can still be per post: only this file changes.
+ */
+const blogHero = (category: string): ManagedImage => ({
+  id: `blog-${category}`,
+  src: `/images/blog/${category}.webp`,
+  ...PLACEHOLDER,
+});
+
 export const images: readonly ManagedImage[] = [
   serviceHero('cilt-bakimi'),
   serviceHero('akne-bakimi'),
@@ -95,6 +110,13 @@ export const images: readonly ManagedImage[] = [
   serviceHero('kirpik-lifting'),
   serviceHero('kas-tasarimi'),
   serviceHero('gelin-bakim-paketi'),
+
+  blogHero('cilt-bakimi-rehberi'),
+  blogHero('cilt-yenileme-rehberi'),
+  blogHero('epilasyon-rehberi'),
+  blogHero('cilt-ihtiyaclari'),
+  blogHero('kas-kirpik-rehberi'),
+  blogHero('ozel-gun-ve-mevsim'),
 ];
 
 const byId = new Map(images.map((image) => [image.id, image]));

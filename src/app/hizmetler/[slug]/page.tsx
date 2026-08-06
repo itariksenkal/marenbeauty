@@ -216,7 +216,7 @@ export default async function ServiceDetailPage({
 
       <Section tone="raised" rhythm="tight">
         <Container>
-          <Faq items={service.faq} />
+          <Faq items={service.faq} title={servicePage.detail.faq} />
         </Container>
       </Section>
 
@@ -224,7 +224,10 @@ export default async function ServiceDetailPage({
         <Container>
           <div className="grid gap-16 lg:grid-cols-2">
             <RelatedServices services={related} />
-            <RelatedPosts posts={posts} />
+            <RelatedPosts
+              posts={posts}
+              title={servicePage.detail.relatedPosts}
+            />
           </div>
           <p className="mt-16 max-w-reading text-sm text-text-muted">
             {servicePage.disclaimer}

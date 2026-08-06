@@ -40,3 +40,5 @@ export {
 export function getAllSlugs(kind: 'services' | 'blog'): readonly string[] {
   return kind === 'services' ? getAllServiceSlugs() : getAllPostSlugs();
 }
+
+export type { PostFrontmatter, ServiceFrontmatter } from './schemas';

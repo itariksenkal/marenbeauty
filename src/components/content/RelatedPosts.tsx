@@ -1,28 +1,39 @@
 import Link from 'next/link';
 
-import { servicePage } from '@/config/services';
 import type { Post } from '@/content-layer';
 import { formatDateLong } from '@/lib/date';
 
 /**
- * The "down" half of the linking map — a service hub lists its posts, newest
- * first (docs/CONTENT-PLAN.md §5).
+ * A short list of posts, used in two places: the "down" half of the linking map
+ * on a service hub, and "İlgili yazılar" at the foot of a post
+ * (docs/CONTENT-PLAN.md §5).
  *
- * Renders NOTHING while there are no posts. There are none today: the blog is
- * written at M10, and a heading over an empty list would announce content that
- * does not exist. The moment the first post maps to a service this appears, with
- * no page change — the same pattern as `testimonials` and `channelHref`.
+ * The heading is a prop rather than a config lookup, because the two callers
+ * label it from their own copy files and a component should not have to know
+ * which page it is on.
+ *
+ * Renders NOTHING while there are no posts. A heading over an empty list
+ * announces content that does not exist — the same rule `testimonials` and
+ * `channelHref` follow.
  */
-export function RelatedPosts({ posts }: { posts: readonly Post[] }) {
+export function RelatedPosts({
+  posts,
+  title,
+  headingId = 'ilgili-yazilar',
+}: {
+  posts: readonly Post[];
+  title: string;
+  headingId?: string;
+}) {
   if (posts.length === 0) return null;
 
   return (
-    <nav aria-labelledby="ilgili-yazilar">
+    <nav aria-labelledby={headingId}>
       <h2
-        id="ilgili-yazilar"
+        id={headingId}
         className="font-display text-2xl tracking-display text-text-primary"
       >
-        {servicePage.detail.relatedPosts}
+        {title}
       </h2>
       <ul className="mt-6 max-w-reading">
         {posts.map((post) => (

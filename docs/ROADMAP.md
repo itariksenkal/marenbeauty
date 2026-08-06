@@ -829,34 +829,104 @@ npm run verify
 
 ---
 
-## M9 — Blog system ☐
+## M9 — Blog system ☑ **DONE 2026-08-06**
 
 **Goal.** Index, categories, pagination, post template. No posts yet.
 
-**Files touched**
+**Files touched** — as planned, plus the additions noted below.
 
 ```
 src/app/blog/page.tsx
 src/app/blog/[slug]/page.tsx
 src/app/blog/kategori/[slug]/page.tsx
 src/app/blog/sayfa/[page]/page.tsx
-src/components/content/{PostCard,PostGrid,CategoryPills,RelatedPosts}.tsx
+src/app/blog/kategori/[slug]/sayfa/[page]/page.tsx  ← added, see G18
+src/components/content/{PostCard,PostGrid,CategoryPills,RelatedPosts,
+                        Pagination,PostListing}.tsx
+src/config/blog.ts        src/lib/pagination.ts     ← added
+src/config/images.ts      src/content-layer/{schemas,posts,index}.ts
+next.config.ts            scripts/generate-placeholders.mjs
+content/blog/sablon-onizleme.mdx                    ← added, see G17
 ```
 
 **Acceptance criteria**
 
-- [ ] Six categories from `docs/CONTENT-PLAN.md` §3, each with an archive route.
-- [ ] Pagination at 12 per page; **`/blog/sayfa/1` does not exist**; `/blog` is
-      page 1 and pages 2+ are self-canonical.
-- [ ] Post template implements the §6 structure.
-- [ ] No byline rendered while `author` is `'PENDING'` — no "Admin", no
-      "Editör", no empty avatar.
-- [ ] `draft: true` posts are absent from `generateStaticParams`, the sitemap
-      and every listing.
-- [ ] Related posts follow the linking rules; zero orphans.
-- [ ] Empty states are real sentences, not placeholders.
+- [x] Six categories from `docs/CONTENT-PLAN.md` §3, each with an archive route.
+      All six exist from the start, empty or not — they are the confirmed
+      taxonomy, not a reflection of what happens to be published. A unit test
+      asserts the config covers exactly the six schema categories.
+- [x] Pagination at 12 per page; **`/blog/sayfa/1` does not exist**; `/blog` is
+      page 1 and pages 2+ are self-canonical. Proven at 0, 12, 13, 25 and 50
+      items against the pure function, and asserted in the browser: every
+      `…/sayfa/<n>` currently 404s, and `…/sayfa/1` **redirects** to the bare
+      path rather than 404ing (see below).
+- [x] Post template implements the §6 structure — `h1`, lead, hero, body,
+      "Kısaca", SSS, mapped service, related posts, one CTA. Driven in a real
+      browser, which needed G17 below.
+- [x] No byline while `author` is `'PENDING'`. The template **never reads the
+      field**, so a byline cannot appear by accident; asserted in the source and
+      in the rendered page, along with the absence of "Admin", "Editör" and an
+      empty avatar element.
+- [x] `draft: true` posts are absent from `generateStaticParams` and every
+      listing — now provable, because there is a draft to prove it against. The
+      production build generates **zero** post pages, `/blog/sablon-onizleme`
+      404s, and no build artefact contains its title. The **sitemap** arrives at
+      M13 and will consume `getAllPosts()`, which excludes drafts by default.
+- [x] Related posts follow the linking rules; zero orphans. `getRelatedPosts`
+      scores same-service above same-category and always excludes the post
+      itself; every post links up to its mapped service hub, and the block
+      renders nothing while a post is alone.
+- [x] Empty states are real sentences, not placeholders. Two of them — "no posts
+      at all" and "none in this category" — each ending with a link to the pages
+      that do exist. Asserted: no skeleton, no `aria-busy`, no "yükleniyor", and
+      no "yakında" inside `<main>`.
 
-**Verify**
+**Additions and deviations, all deliberate**
+
+**G17 — a template with nothing to render is a template nobody has seen.** With
+no published posts, `/blog/[slug]` generates **zero pages**, so no production
+test can load it and `npm run verify` would have stayed green over a completely
+broken post template. The same class of hole as `/styleguide` at M5 (G13).
+Closed with a single `draft: true` preview post, visible under `next dev` and
+absent from the production build, driven by ten tests in the `development`
+Playwright project. It states nothing about the business — it describes the
+template — and **it is deleted at M10**, when twelve real posts make it
+redundant. If the owner would rather ship the milestone with the template
+unexercised, deleting the file is the only change needed.
+
+**G18 — category archives are paginated now, not later.** Fourteen of the fifty
+planned posts (`docs/CONTENT-PLAN.md` §4) map to `cilt-yenileme-rehberi`, which
+is more than one page of twelve. Adding `/blog/kategori/[slug]/sayfa/[page]`
+after those posts were published would have changed live archive URLs — exactly
+the retrofit "twelve now, fifty later" is meant to avoid. It shares the same
+`src/lib/pagination.ts` primitive, so it cost one route file.
+
+**`…/sayfa/1` redirects rather than 404s.** The criterion is that the page does
+not exist, and it does not — it is never generated. But it is the first URL a
+visitor types after seeing `…/sayfa/2`, so `next.config.ts` resolves it
+permanently to the bare path. The duplicate stays unreachable either way.
+
+**Empty listings are `noindex, follow`.** Seven thin pages offered for indexing
+would be a real defect, and the flag flips by itself the moment a post
+publishes — nothing to remember. Full canonical and robots handling is still
+M13's; this is here because M9's own criteria are about page-1 canonicals.
+
+**The post schema gained `keyPoints` and `faq`.** §6 specifies a "Kısaca" block
+and 2–4 questions, and neither existed in the frontmatter. Structured rather
+than written into the body, so the template places them consistently and M13's
+`FAQPage` JSON-LD has pairs to work from.
+
+**Blog heroes are one per category, not one per post.** Fifty posts do not need
+fifty pieces of artwork, and a per-post image would mean inventing one every
+time a post is written. Six entries, same generated family as the services.
+
+**`Faq` and `RelatedPosts` now take their heading as a prop** rather than
+reading the service-page config, because both are shared by service pages and
+posts and a component should not have to know which page it is on.
+
+**Verify** — `npm run verify` exits **0**. 393 unit tests, 86 browser tests.
+Guard: **0 blocking, 0 percentage claims**, 105 advisory — unchanged, all still
+the required `tıbbi` disclaimer on the service pages.
 
 ```bash
 npm run verify

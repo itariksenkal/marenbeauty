@@ -1,5 +1,3 @@
-import { servicePage } from '@/config/services';
-
 /**
  * Frequently asked questions.
  *
@@ -24,18 +22,24 @@ import { servicePage } from '@/config/services';
  */
 export function Faq({
   items,
+  title,
+  headingId = 'sss',
 }: {
   items: readonly { readonly question: string; readonly answer: string }[];
+  /** A prop, not a config lookup — service pages and posts label it from
+      their own copy files, and this component need not know which it is on. */
+  title: string;
+  headingId?: string;
 }) {
   if (items.length === 0) return null;
 
   return (
-    <section aria-labelledby="sss">
+    <section aria-labelledby={headingId}>
       <h2
-        id="sss"
+        id={headingId}
         className="font-display text-2xl tracking-display text-text-primary"
       >
-        {servicePage.detail.faq}
+        {title}
       </h2>
 
       <ul className="mt-6 max-w-reading">

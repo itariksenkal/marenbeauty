@@ -150,7 +150,17 @@ per post. Seed set: `cilt-tipi`, `rutin`, `sonrasi-bakim`, `oncesi-hazirlik`,
 `kolajen`, `hassasiyet`, `planlama`.
 
 No `author` byline until the owner supplies a real name — the schema enforces
-`'PENDING'` (`docs/ARCHITECTURE.md` §3.3).
+`'PENDING'` (`docs/ARCHITECTURE.md` §3.3). The post template never reads the
+field at all, so a byline cannot appear by accident; adding one is a deliberate
+edit.
+
+**Built at M9.** All six archives exist from the start, even while every one is
+empty — they are the confirmed taxonomy, not a reflection of what happens to be
+published. Each category's Turkish label and one-line scope description live in
+`src/config/blog.ts`, along with the empty states. **Hero images are one per
+category, not one per post**: fifty posts across six categories do not need
+fifty pieces of artwork, and a per-post image would mean inventing one every
+time a post is written.
 
 ---
 
@@ -298,6 +308,12 @@ in `ozel-gun-ve-mevsim`.
 | İlgili hizmet  | 1 link         | To the mapped hub                                         |
 | İlgili yazılar | 2–3 links      | Same cluster                                              |
 | CTA            | 1              | To `/iletisim`                                            |
+
+**"Kısaca" and SSS are frontmatter, not prose** (added at M9). The template
+places them from `keyPoints` and `faq`, so they cannot drift into a second,
+longer conclusion, and M13's `FAQPage` JSON-LD has question/answer pairs rather
+than headings parsed back out of the body. Both may be empty; an empty list
+renders nothing.
 
 ### Non-negotiables per post
 

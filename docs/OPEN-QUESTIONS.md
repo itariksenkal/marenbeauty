@@ -753,7 +753,52 @@ Two tests now hold the line: a unit test asserting the component's props type,
 and a browser test asserting body copy never appears in the home page payload.
 
 **Applies to every future client component that takes content** — `PostCard` and
-the blog teaser at M9/M10 have the same shape.
+the blog teaser at M9/M10 have the same shape. **Checked at M9:** `PostCard`,
+`PostGrid`, `CategoryPills`, `Pagination` and `PostListing` are all Server
+Components, so no post crosses the boundary at all.
+
+### G17 — A post template with no posts is untestable 🟢 → closed at M9
+
+**The hole.** M9 builds the post template; M10 writes the posts. In between,
+`/blog/[slug]` generates **zero pages**. No production test can load a route
+that does not exist, so `npm run verify` would have gone green over a template
+nobody had rendered once — the same shape as the `/styleguide` gap at G13, and
+the same reason it matters: the gate would have been reporting on nothing.
+
+**Closed with one `draft: true` preview post**,
+`content/blog/sablon-onizleme.mdx`. `visible()` honours `includeDrafts` only
+outside production, so the post has a route under `next dev` and none in the
+build that ships. Ten tests in the `development` project drive it: the §6
+blocks, heading order, the FAQ opening without JavaScript, exactly one CTA
+inside `<main>`, no byline, `noindex`, and 320px. The production project asserts
+the other half — 404, and no build artefact containing its title.
+
+**It states nothing about the business.** It describes the template, in Turkish,
+and says in its own body that it is not a real post.
+
+**Scheduled for deletion at M10**, like the M4 fixtures before it — and this
+time the removal milestone is in the roadmap rather than only in a comment.
+
+**If the owner prefers not to ship a fixture at all**, deleting the file is the
+only change required; the milestone still passes, with the post template
+unexercised until M10.
+
+### G18 — Pagination that would need retrofitting 🟢 → decided at M9
+
+The roadmap specified pagination for `/blog` only. But `docs/CONTENT-PLAN.md`
+§4 puts **fourteen** of the fifty planned posts in `cilt-yenileme-rehberi`,
+which is more than one page of twelve — so a category archive will overflow, and
+adding `/blog/kategori/[slug]/sayfa/[page]` after those posts were published
+would change archive URLs that already existed.
+
+Built now instead. It shares `src/lib/pagination.ts` with the blog index, so it
+cost one route file and no new concepts. The same primitive owns the page-1 rule
+for both, which is what makes `…/sayfa/1` structurally impossible to emit rather
+than a convention someone has to remember.
+
+**Open for M13:** empty listings currently declare `noindex, follow`, flipping
+by themselves once a post publishes. Confirm that is the wanted behaviour when
+the full robots/canonical pass happens.
 
 ---
 

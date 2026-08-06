@@ -84,6 +84,22 @@ export const postFrontmatterSchema = z
     /** Slug of the service this post maps to. Every post maps to exactly one. */
     service: z.string().min(1),
     /**
+     * The "Kısaca" block — docs/CONTENT-PLAN.md §6. 3–5 scannable bullets.
+     *
+     * Structured rather than written into the body so the template places it
+     * consistently, and so it cannot drift into a second, longer conclusion.
+     * May be empty; an empty list renders nothing at all.
+     */
+    keyPoints: z.array(z.string()).max(5),
+    /**
+     * SSS — up to 4 genuine questions. Structured for the same reason the
+     * service `faq` is: `FAQPage` JSON-LD at M13 needs question/answer pairs,
+     * not headings parsed back out of prose.
+     */
+    faq: z
+      .array(z.object({ question: z.string(), answer: z.string() }).strict())
+      .max(4),
+    /**
      * The literal 'PENDING' until the owner supplies a real name
      * (docs/OPEN-QUESTIONS.md). This makes a fabricated byline a TYPE ERROR
      * rather than something review has to catch.
