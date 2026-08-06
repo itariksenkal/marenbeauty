@@ -99,7 +99,9 @@ test.describe('the contact page', () => {
     await page.goto('/iletisim');
     const consent = page.locator('input[name="onay"]');
     await expect(consent).not.toBeChecked();
-    await expect(page.locator('a[href="/kvkk"]')).toBeVisible();
+    // Scoped to the form: from M12 the footer links to /kvkk on every page, and
+    // a consent notice that relies on the footer is not a consent notice.
+    await expect(page.locator('form a[href="/kvkk"]')).toBeVisible();
   });
 
   test('the honeypot is hidden from people and from assistive tech', async ({

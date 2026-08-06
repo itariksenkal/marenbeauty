@@ -1130,37 +1130,78 @@ exists.
 
 ---
 
-## M12 — Legal pages ☐
+## M12 — Legal pages ☑ **DONE 2026-08-07**
 
 **Goal.** KVKK aydınlatma metni, cookie policy, terms — with the legal entity
-unresolved and the build enforcing that it cannot ship unresolved.
+unresolved and a gate enforcing that it cannot ship unresolved.
 
-**Files touched**
+**Files touched** — as planned, plus the additions noted below.
 
 ```
-src/app/{kvkk,cerez-politikasi,kullanim-kosullari}/page.tsx
-src/config/legal.ts  content/legal/*.mdx  scripts/guard.mjs
+src/app/{kvkk,cerez-politikasi,kullanim-kosullari,lisanslar}/page.tsx
+src/config/legal.ts  src/config/legal-entity.ts     ← added, see G24
+content/legal/*.mdx  src/content-layer/legal.ts     ← added
+src/components/content/LegalDocumentPage.tsx        ← added
+scripts/guard.mjs  scripts/guard.allow.json  scripts/preflight.mjs ← added
+src/components/layout/SiteFooter.tsx  src/config/navigation.ts
+.env.example  package.json
+tests/unit/legal-pages.test.ts  tests/e2e/production/legal.spec.ts
 ```
 
 **Acceptance criteria**
 
-- [ ] `{{LEGAL_ENTITY}}` used literally wherever the entity is named. **No
-      plausible-sounding name is invented anywhere.**
-- [ ] Guard rule 2 proven: a page containing `{{LEGAL_ENTITY}}` **fails the
-      production build**. Demonstrated, not assumed.
-- [ ] KVKK text states what the contact form collects, that it is emailed and
-      not stored, and the data-subject rights under KVKK Art. 11.
-- [ ] Cookie policy is accurate for a cookieless analytics setup — it does not
-      describe cookies the site does not set.
-- [ ] Footer links to all three; the form's consent checkbox links to `/kvkk`.
-- [ ] **`/lisanslar`** renders the generated `NOTICE` — third-party attribution,
-      `noindex`. Satisfies the CC-BY condition from `docs/OPEN-QUESTIONS.md` E4
-      as a public surface; the generated file already satisfies it on disk.
-- [ ] `docs/OPEN-QUESTIONS.md` records that the wording needs the owner's legal
-      review, and flags the disclaimer-wording question (an "…tıbbi tedavi
-      değildir" sentence would need a guard allow-list entry with a reason).
+- [x] **No plausible-sounding name is invented anywhere.** The pages name no
+      entity while it is unresolved: they say the ünvan is pending and when it
+      lands. A test asserts no company-form suffix appears in any body or in the
+      page copy, and a browser test asserts the same on the rendered page.
+- [x] Guard rule 2 proven, **demonstrated twice**: a test runs the real
+      `scripts/guard.mjs` against a fixture build tree containing
+      `{{LEGAL_ENTITY}}` and asserts exit 1 with `[unresolved-token]` and the
+      file named; and the token was injected into a real production build's
+      `kvkk.html`, which produced
+      `.next/server/app/kvkk.html:93:25231 [unresolved-token]` and exit 1, then
+      exit 0 on restore.
+- [x] KVKK text states what the form collects (four fields, named), that it is
+      emailed and **not stored** by the site, and all nine Art. 11 rights — a
+      test counts them.
+- [x] Cookie policy is accurate for a cookieless setup: it says the site sets no
+      cookies and describes none it does not set. A test asserts
+      `activeProviders()` is empty alongside the sentence, so the two cannot
+      drift.
+- [x] Footer links to all three from every page; the form's consent checkbox
+      links to `/kvkk` — asserted **scoped to the form**, since the footer now
+      links there too and a consent notice that relies on the footer is not one.
+- [x] **`/lisanslar`** renders the generated `NOTICE`, read at build time from
+      the file rather than transcribed, `noindex`, with the OFL texts linked.
+      Asserted to contain the CC-BY attributions and not to scroll the page body
+      at 320px.
+- [x] `docs/OPEN-QUESTIONS.md` records the pending legal review (C8, and the
+      draft notice renders from `legal.isLawyerReviewed`), plus **G24** and
+      **G25** below.
 
-**Verify**
+**The one deviation, and it is a real one — G24**
+
+The criterion as written ("a page containing `{{LEGAL_ENTITY}}` fails the
+production build") and the standing rule that `npm run verify` exits 0 at every
+commit cannot both hold while B2 is open: the guard is inside `verify`.
+
+The gate therefore **moved from the build to the deploy, and got stronger**.
+`npm run preflight` refuses a production deployment while the ünvan is
+unresolved, the legal text is unreviewed, the SMTP credential is missing, or the
+signing key is absent — four blockers where there was one, wired into
+`vercel.json`'s build command. Guard rule 2 is unchanged and is now proven
+rather than assumed. Full reasoning in `docs/OPEN-QUESTIONS.md` G24.
+
+**G25 — the allow file has its first entry.** KVKK m. 11/1-e says "silinmesini
+veya **yok edilmesini** isteme", and `yok ed` is a blocking term. Quoting
+statute is exactly what the exception mechanism is for; the entry is scoped to
+that phrase and a test asserts "Lekeleri yok eder." still blocks.
+
+**Guard on the M12 build:** 311 artefacts scanned, **0 blocking**, 165 advisory
+— unchanged, all still the required `tıbbi` disclaimer. The four new pages
+contribute **zero** advisories.
+
+**Verify** — `npm run verify` exits **0**. 616 unit tests, 127 browser tests.
 
 ```bash
 npm run verify

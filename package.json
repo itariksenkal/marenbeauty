@@ -15,6 +15,7 @@
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "guard": "node scripts/guard.mjs",
+    "preflight": "node scripts/preflight.mjs",
     "test": "vitest run",
     "test:a11y": "node scripts/stub.mjs test:a11y \"axe + Playwright arrive at M15\"",
     "licenses": "node scripts/licenses.mjs",

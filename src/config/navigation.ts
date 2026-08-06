@@ -53,6 +53,7 @@ export const mainContentId = 'main';
 export const chrome = {
   skipToContent: 'İçeriğe geç',
   allRightsReserved: 'Tüm hakları saklıdır.',
+  legalNavLabel: 'Yasal metinler',
 } as const;
 
 export const siteName = site.name;

@@ -359,11 +359,48 @@ describe('allowances', () => {
     ).not.toThrow();
   });
 
-  it('ships empty — the C9 disclaimer was reworded, not excepted', () => {
+  /**
+   * The list stayed empty through M11 — the C9 disclaimer was reworded rather
+   * than excepted. M12 added exactly one entry, and it is a verbatim quotation
+   * of KVKK m. 11, which cannot be reworded without misstating the law.
+   *
+   * The assertion is deliberately an exact list rather than a count: a new
+   * entry has to be added here, by name, with a human deciding it belongs.
+   */
+  it('holds only the statutory quotation, and every entry says why', () => {
     const config = JSON.parse(
       readFileSync(join(process.cwd(), 'scripts', 'guard.allow.json'), 'utf8'),
     );
-    expect(config.allow).toEqual([]);
+    expect(config.allow.map((a: { phrase: string }) => a.phrase)).toEqual([
+      'silinmesini veya yok edilmesini isteme',
+    ]);
+    for (const entry of config.allow) {
+      expect(entry.reason.length).toBeGreaterThan(40);
+    }
+  });
+
+  it('scopes the statutory allowance to that phrase alone', () => {
+    const config = JSON.parse(
+      readFileSync(join(process.cwd(), 'scripts', 'guard.allow.json'), 'utf8'),
+    );
+    const allowances = config.allow;
+
+    // The quoted right passes …
+    expect(
+      scanText(
+        '<li>Kanunun 7. maddesindeki şartlar çerçevesinde silinmesini veya yok edilmesini isteme</li>',
+        { file: 'fixture', ext: '.html', allowances },
+      ).filter((v) => v.tier === 'error'),
+    ).toEqual([]);
+
+    // … and the claim the rule exists for still does not.
+    expect(
+      scanText('<p>Lekeleri yok eder.</p>', {
+        file: 'fixture',
+        ext: '.html',
+        allowances,
+      }).filter((v) => v.tier === 'error').length,
+    ).toBeGreaterThan(0);
   });
 });
 

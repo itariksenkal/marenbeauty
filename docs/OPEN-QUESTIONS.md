@@ -918,6 +918,63 @@ Two fixes, and the second matters more than the first:
 Caught by a browser test that filled the form and waited for the live region —
 no unit test would have seen it, because every piece worked in isolation.
 
+### G24 — The legal-entity gate had to move to survive `verify` 🟡 → decided at M12
+
+**The conflict.** `docs/ROADMAP.md` M12 asks for two things that cannot both be
+true while B2 is open:
+
+1. `{{LEGAL_ENTITY}}` reaches build output, so `npm run guard` refuses the
+   build — the site cannot ship without the ünvan.
+2. `npm run verify` exits 0 at every commit, and CI stays green.
+
+A page that prints the token fails the guard, and the guard is inside `verify`.
+So either the gate is real and no commit is ever green, or `verify` is green and
+the token is not in output. The roadmap wrote (1) before there was a `verify`
+that included the guard.
+
+**Decided:** the gate moves from the build to the **deploy**, and gets stronger.
+
+- The legal pages print **no entity at all** while it is unresolved. Not a
+  guess, not the token, not a plausible placeholder — a sentence saying the
+  ünvan is pending and when it lands. Nothing was invented.
+- `{{LEGAL_ENTITY}}` is still the sentinel value in `src/config/legal-entity.ts`,
+  and **guard rule 2 is unchanged**. It is now proven end to end rather than
+  assumed: a test runs the real `scripts/guard.mjs` against a fixture build tree
+  containing the token and asserts exit 1, and the same was demonstrated by hand
+  against a real production build.
+- `npm run preflight` refuses a production deployment while the ünvan is
+  unresolved — and additionally while the legal text is unreviewed, the SMTP
+  credential is missing, or the signing key is absent. It is wired into
+  `vercel.json`'s build command, so the failure lands between "pushed" and
+  "live". Deliberately **not** in `verify`, where these values are legitimately
+  absent.
+
+**Net effect.** The site still cannot go live with an unresolved entity. Four
+things now block a deploy where one blocked a build, and every commit can be
+green. `scripts/guard.mjs` gained a `--root=` flag so the gate can be
+demonstrated against a fixture tree; it changes which directory is walked and
+nothing about what the rules match.
+
+**Owner action:** set `LEGAL_ENTITY` in the deployment environment. One value,
+no code change. See `docs/STATUS.md`.
+
+### G25 — The guard's first allowance is a quotation of statute 🟢 → M12
+
+`scripts/guard.allow.json` shipped empty through M11, which was the better
+outcome and is recorded as such (C9).
+
+M12 added exactly one entry. KVKK m. 11/1-e reads "…silinmesini veya **yok
+edilmesini** isteme", and `yok ed` is a blocking term — it exists to stop
+"lekeleri yok eder". Paraphrasing a data-subject right in an aydınlatma metni
+would misstate the law, so this is the case the exception mechanism was built
+for (`CLAUDE.md` §9: false positives go in the allow file with a justification,
+never by weakening the pattern).
+
+The allowance is scoped to that exact phrase. A test asserts both directions:
+the quoted right passes, and "Lekeleri yok eder." still blocks. The
+"ships empty" test became an exact-list test, so a second entry has to be added
+by name with a human deciding it belongs.
+
 ---
 
 ## H. Content posture — standing rule

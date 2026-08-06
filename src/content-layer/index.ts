@@ -24,6 +24,14 @@ export {
   type PostQuery,
 } from './posts';
 
+export {
+  getAllLegalDocuments,
+  getLegalDocument,
+  getAllLegalSlugs,
+  type LegalDocument,
+  type LegalFrontmatter,
+} from './legal';
+
 export { compileMdxBody } from './mdx';
 
 export {

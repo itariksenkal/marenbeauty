@@ -22,6 +22,21 @@ import { dirname, join, relative, sep } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
+/**
+ * Where the build output being scanned lives. Defaults to this repository.
+ *
+ * `--root=<dir>` exists so the gate itself can be DEMONSTRATED rather than
+ * assumed: a test builds a fixture `.next/` tree containing, say, an unresolved
+ * `{{LEGAL_ENTITY}}`, runs this exact script against it, and asserts a non-zero
+ * exit (docs/ROADMAP.md M12). It changes nothing about what the rules match —
+ * only which directory is walked — so it cannot be used to soften the guard on
+ * a real build.
+ */
+function scanRoot() {
+  const flag = process.argv.find((arg) => arg.startsWith('--root='));
+  return flag ? flag.slice('--root='.length) : root;
+}
+
 /* ── Turkish-aware word boundaries ────────────────────────────────────────────
  *
  * JavaScript's \b is ASCII-only: it treats "ü" as a NON-word character, so
@@ -395,10 +410,11 @@ function walk(dir, exts, out = []) {
 }
 
 function main() {
-  const appDir = join(root, '.next', 'server', 'app');
-  const chunkDir = join(root, '.next', 'static', 'chunks');
+  const target = scanRoot();
+  const appDir = join(target, '.next', 'server', 'app');
+  const chunkDir = join(target, '.next', 'static', 'chunks');
 
-  if (!existsSync(join(root, '.next'))) {
+  if (!existsSync(join(target, '.next'))) {
     console.error(
       '\n  ✗ guard: no .next directory. The guard inspects BUILD OUTPUT —\n' +
         '    run `npm run build` first.\n',
@@ -418,7 +434,7 @@ function main() {
     const text = readFileSync(file, 'utf8');
     violations.push(
       ...scanText(text, {
-        file: relative(root, file).split(sep).join('/'),
+        file: relative(target, file).split(sep).join('/'),
         ext,
         allowances,
       }),

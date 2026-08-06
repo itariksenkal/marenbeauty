@@ -1,5 +1,5 @@
 {
-  "$comment": "Exact-phrase exceptions to the content guard (CLAUDE.md §9, §12). Every entry MUST carry a `reason` — the guard exits 1 on an entry without one. Ships EMPTY and should stay that way: the C9 disclaimer was reworded rather than excepted (docs/OPEN-QUESTIONS.md C9), which is the better outcome. Adding an entry here means a banned term is shipping to visitors, so it needs the owner's agreement, not a developer's convenience.",
+  "$comment": "Exact-phrase exceptions to the content guard (CLAUDE.md §9, §12). Every entry MUST carry a `reason` — the guard exits 1 on an entry without one. Adding an entry means a banned term is shipping to visitors, so it needs the owner's agreement, not a developer's convenience. The list stayed EMPTY through M11: the C9 disclaimer was reworded rather than excepted (docs/OPEN-QUESTIONS.md C9). The single entry below is a verbatim quotation of statute, which cannot be reworded without changing what a legal notice says.",
 
   "$schema": {
     "phrase": "Exact text that may contain a banned term. Case-insensitive. A violation is suppressed only when the match falls INSIDE an occurrence of this phrase — an allowance never disables a rule globally.",
@@ -7,5 +7,11 @@
     "rule": "Optional. Which rule id this relates to, for readers."
   },
 
-  "allow": []
+  "allow": [
+    {
+      "phrase": "silinmesini veya yok edilmesini isteme",
+      "rule": "blocking:yok ed",
+      "reason": "Verbatim KVKK m. 11/1-e — the statutory wording of a data-subject right, quoted in /kvkk. The blocking term exists to stop efficacy claims (\"lekeleri yok eder\"); paraphrasing a right in an aydınlatma metni would misstate the law. Scoped to this exact phrase, so any other use of the term still blocks. Recorded at M12, docs/OPEN-QUESTIONS.md G25."
+    }
+  ]
 }

@@ -45,6 +45,7 @@ English because it is not user-facing.
 | `/kvkk`                              | `app/kvkk/page.tsx`                              | Static           | KVKK Aydınlatma Metni.                                                |
 | `/cerez-politikasi`                  | `app/cerez-politikasi/page.tsx`                  | Static           | Cookie policy.                                                        |
 | `/kullanim-kosullari`                | `app/kullanim-kosullari/page.tsx`                | Static           | Terms of use.                                                         |
+| `/lisanslar`                         | `app/lisanslar/page.tsx`                         | Static           | Third-party attribution, read from the generated `NOTICE`. `noindex`. |
 | `/api/contact`                       | `app/api/contact/route.ts`                       | **Node runtime** | `POST` → Altcha verify → Zod → Nodemailer. Persists nothing.          |
 | `/api/altcha`                        | `app/api/altcha/route.ts`                        | **Node runtime** | `GET` → signed proof-of-work challenge.                               |
 
@@ -278,6 +279,19 @@ Two clarifications made when this was built:
 `assertIntegrity()` reports **every** problem in one error, not just the first.
 
 Dangling references are build failures, not 404s in production.
+
+### 3.4b Legal document — `content/legal/*.mdx` (M12)
+
+Three files, deliberately the smallest schema in the project: `title`,
+`summary`, `order`. No taxonomy, no relations, no drafts. Legal text is prose
+with a title and a description, and a richer schema would be scaffolding nobody
+uses.
+
+The **body never names the legal entity.** The data-controller block is rendered
+by `LegalDocumentPage` from `src/config/legal-entity.ts`, so the unresolved
+state (`docs/OPEN-QUESTIONS.md` B2) is expressed in one place instead of three,
+and no MDX file carries a `{{…}}` token that would then have to reach output for
+the guard to see it.
 
 ### 3.5 Image manifest — `src/config/images.ts`
 
