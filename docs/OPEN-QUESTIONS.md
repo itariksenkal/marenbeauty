@@ -454,6 +454,52 @@ call sites, with a comment saying why. Do not refactor them into a variable.
 
 ---
 
+### G7 — `env.ts` parses secrets lazily 🟢 → resolved at M2
+
+`docs/ROADMAP.md` M2 asked for env parsed "once, throwing at startup on a
+missing required variable". Implemented as two tiers, because the literal
+reading breaks the build:
+
+`next build` evaluates route modules during route collection. An eager
+module-scope parse of required secrets would therefore make **`npm run build`
+impossible without a populated `.env.local`** — a worse failure than the one
+the check exists to prevent, and one that would land the moment M11 adds a
+route importing it.
+
+**Resolved:** public/non-secret env is parsed eagerly at module load. Secrets
+(`SMTP_*`, `ALTCHA_HMAC_KEY`) are parsed on first access and memoised — still
+exactly once. `assertServerEnv()` is available for eager validation, and M11's
+contact route calls it at module scope so a misconfigured deployment fails
+immediately rather than accepting submissions it cannot deliver.
+
+Verified by running `serverEnv()` with an empty environment: it throws, naming
+every missing variable.
+
+### G8 — Skip link depended on the stylesheet 🟢 → fixed 2026-08-06
+
+Reported as "visible at rest, above the header in normal flow". Reproduced in
+**dev only**: Turbopack injects the stylesheet via JS, so for the first few
+hundred milliseconds no utility class applied and the link — the first element
+in `<body>` — rendered `position: static` at `y: 8, height: 17`. Production was
+never affected; its stylesheet is a render-blocking `<link>` in `<head>`.
+
+The underlying problem was the guarantee, not the symptom: `sr-only` hides an
+element _only once the stylesheet loads_. That is the wrong guarantee for the
+first control a keyboard user meets, and it fails outright if the stylesheet
+404s.
+
+**Fixed:** position and visibility now come from inline critical CSS hoisted
+into `<head>`, so the link is out of the viewport from the first paint.
+Appearance still comes from tokens. Four browser tests cover it, including one
+that loads the page **with the stylesheet blocked** — that test fails on the
+old implementation with exactly the reported symptom.
+
+Also found and fixed while investigating: the M0 placeholder page rendered its
+own `<main id="main">` inside the layout's, giving two landmarks and a
+duplicate id.
+
+---
+
 ## H. Content posture — standing rule
 
 **Recorded 2026-08-06. This is a working rule, not a question.** Also written

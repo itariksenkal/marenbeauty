@@ -4,7 +4,8 @@ import type { ReactNode } from 'react';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SkipLink } from '@/components/layout/SkipLink';
-import { ui } from '@/config/ui';
+import { mainContentId } from '@/config/navigation';
+import { site } from '@/config/site';
 
 import { fontVariables } from './fonts';
 import '@/styles/globals.css';
@@ -15,7 +16,7 @@ import '@/styles/globals.css';
  * (M13) land later.
  */
 export const metadata: Metadata = {
-  title: ui.brand,
+  title: site.name,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -24,7 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="min-h-dvh">
         <SkipLink />
         <SiteHeader />
-        <main id="main" tabIndex={-1}>
+        <main id={mainContentId} tabIndex={-1}>
           {children}
         </main>
         <SiteFooter />

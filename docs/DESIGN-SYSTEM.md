@@ -204,6 +204,47 @@ Per-section overrides shift `--aurora-b` / `--aurora-c` only. `--aurora-a`
 stays `cream` for the whole page so there is never a hard boundary. No section
 may push the wash dark enough to break rule 8 above.
 
+### 1.7 Where rose carries the brand
+
+**Direction recorded at M2. No token values change. Flagged for review at M7,
+when real sections exist to judge it on.**
+
+The observation from the M1 review: the cream and Fraunces read well, but the
+page currently reads **nearly neutral**. That is a direct consequence of §1.5 —
+the rose family fails text and control-boundary contrast, so it is barred from
+almost everything a bare layout shell contains. A header, a footer and body
+copy are exactly the surfaces rose may not touch.
+
+**The constraint stays. Rose never becomes text and never becomes a control
+border.** That is not a stylistic preference; `muted-rose` at 2.85:1 on ivory
+and `rose-beige` at 1.55:1 are unusable for either, and no amount of brand
+intent changes the arithmetic.
+
+Rose carries the brand through **area**, not through detail. Where it belongs,
+once sections exist:
+
+| Where                             | Token                                                     | Notes                                                                                                                         |
+| --------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Large fill areas**              | `surface-accent` (`nude`), `surface-decor` (`rose-beige`) | Whole-section backgrounds. Only `ink`, `espresso` or `cocoa` may sit on them (§1.5 rule 4). This is the single biggest lever. |
+| **Aurora gradient stops**         | `--aurora-b`, `--aurora-c`                                | Per-section overrides (§1.6). The wash is the main continuous carrier of rose down the page.                                  |
+| **Section dividers**              | `border-decor` (`rose-beige`)                             | Decorative hairlines between bands. Never around a control.                                                                   |
+| **Low-opacity card surfaces**     | `blush` / `muted-rose` at 8–20% over `ivory`              | Tints a card without dropping the text contrast underneath it. Verify the resulting pairing, not the base token.              |
+| **Image overlays**                | `blush` / `muted-rose` at 15–30%                          | Warms photography and unifies a mixed stock set into one visual family.                                                       |
+| **Hover states on large targets** | `surface-accent` fill, `blush` at low opacity             | Cards, panels, nav rows — targets big enough that the fill is the signal. Never the only signal on small controls.            |
+
+Two rules that follow from this:
+
+1. **Judge rose by area, not by swatch.** A 6% tint across a full-bleed section
+   changes the page more than a saturated accent on a button ever would.
+2. **Any tinted surface must be re-checked as a pairing.** `blush` at 12% over
+   `ivory` is a new background colour; the text on it needs its own contrast
+   check, not the base token's.
+
+**M7 review.** `ServicesPanels`, `ExperienceProcess` and `ContactCta` are the
+first sections with enough area to carry this. Judge the palette then — with
+sections on screen — and adjust _usage_, not values. If the page still reads
+neutral at that point, the answer is more rose **area**, not rose text.
+
 ---
 
 ## 2. Typography

@@ -109,6 +109,7 @@ npm run format:check   # prettier --check .
 npm run fonts          # F1 — Turkish glyph coverage, read from the woff2 cmap
 npm run guard          # repo guard rules — see §9, §12
 npm run test           # vitest run (unit)
+npm run test:e2e       # playwright — browser tests against the production build
 npm run test:a11y      # playwright + axe on every static route
 npm run licenses       # licence audit + regenerates NOTICE
 npm run verify         # everything above, in order — THE gate
@@ -130,10 +131,13 @@ npm run verify
 Defined as:
 
 ```
-typecheck && lint && format:check && fonts && build && guard && test && test:a11y && licenses
+typecheck && lint && format:check && fonts && build && guard && test && test:e2e && test:a11y && licenses
 ```
 
-`guard` runs **after** `build` because it inspects build output, not source.
+`guard` and `test:e2e` run **after** `build`: the first inspects build output,
+the second drives the built site in a real browser. `test:e2e` never reuses a
+running server — a stale one keeps serving the previous build, and a regression
+that passes against stale output is worse than no test at all.
 A task is not done until `npm run verify` exits 0. Do not report completion on
 a partial run, and do not weaken a rule to make it pass — fix the code or raise
 the conflict.
@@ -575,3 +579,13 @@ A task is done when **all** are true:
 - [ ] Anything uncertain is written into `docs/OPEN-QUESTIONS.md` rather than
       guessed.
 - [ ] The roadmap milestone's acceptance criteria are met — all of them.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

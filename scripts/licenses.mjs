@@ -325,8 +325,10 @@ if (exceptionRecords.length) {
   for (const r of exceptionRecords.sort((a, b) =>
     a.name.localeCompare(b.name),
   )) {
+    // Version included: the same package can legitimately appear more than once
+    // at different versions, and without it that reads as an error.
     console.log(
-      `      ${r.licence.padEnd(40)} ${r.name}  (${r.exception.scope})`,
+      `      ${r.licence.padEnd(40)} ${r.name}@${r.version}  (${r.exception.scope})`,
     );
   }
   console.log('');

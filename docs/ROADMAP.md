@@ -159,6 +159,23 @@ NOTICE  licenses.exceptions.json  scripts/licenses.mjs   ← E4 rulings
   Pinning `opsz` measures at 122 KB but costs optical sizing over a 30–240px
   range. Not taken silently — recorded as an M15 performance decision.
 
+**Follow-up applied 2026-08-06 (carried into M2's session)**
+
+- **Skip link rewritten.** It was hidden with `sr-only`, which depends entirely
+  on the stylesheet. In dev, Turbopack injects CSS via JS, so for the first
+  few hundred ms the link rendered `position: static` in normal flow — a stray
+  visible link above the header, measured at `y: 8, height: 17`. Now positioned
+  and hidden by **inline critical CSS hoisted into `<head>`**, so it is out of
+  the viewport from the first paint and would stay hidden even if the
+  stylesheet 404'd. Appearance still comes from tokens.
+- **Duplicate `<main id="main">` removed.** The M0 placeholder page rendered its
+  own `<main>` inside the layout's, producing two landmarks and a duplicate id.
+  The layout owns it.
+- **Four browser tests added** (`tests/e2e/skip-link.spec.ts`), including one
+  that loads the page **with the stylesheet blocked**. That one fails on the
+  old implementation with exactly the reported symptom, and is what makes this
+  a regression test rather than a snapshot of current behaviour.
+
 **Verify** — `npm run verify` exits **0**.
 
 ```bash
@@ -167,7 +184,7 @@ npm run verify
 
 ---
 
-## M2 — Config layer ☐
+## M2 — Config layer ☑ **DONE 2026-08-06**
 
 **Goal.** Every tunable value has a typed home. No component yet reads a literal.
 
@@ -176,25 +193,57 @@ npm run verify
 ```
 src/config/{site,contact,navigation,images,legal,analytics,motion,env,testimonials}.ts
 src/lib/slug.ts
+src/lib/slug.test.ts       ← added: the 20-name slug table
+src/config/motion.test.ts  ← added: motion.ts vs theme.css drift guard
+vitest.config.mts          ← added: unit test runner
 ```
 
 **Acceptance criteria**
 
-- [ ] `site.ts` matches `docs/ARCHITECTURE.md` §3.8, `isPreLaunch: true`, and
-      `address` has **no** `streetAddress` field at all.
-- [ ] `contact.ts` — all four channels `null`. `ContactChannel` type as
-      specified in `CLAUDE.md` §7.
-- [ ] `images.ts` exports a typed, empty-but-valid manifest with the
-      `ManagedImage` shape including `licence` and `replaceable`.
-- [ ] `testimonials.ts` exports `[]` with the full `Testimonial` type declared.
-- [ ] `env.ts` parses `process.env` with Zod **once** and throws at startup on a
-      missing required variable.
-- [ ] `motion.ts` re-exports the CSS motion tokens; no duration literal appears
-      anywhere else.
-- [ ] `slugify()` folds `ı İ ş ğ ü ö ç` correctly and is unit-tested against all
-      20 service names.
+- [x] `site.ts` matches `docs/ARCHITECTURE.md` §3.8, `isPreLaunch: true`, and
+      `address` has **no** `streetAddress` field at all — verified at runtime:
+      keys are exactly `["locality","region","country"]`.
+- [x] `contact.ts` — all four channels `null`, `ContactChannel` exactly as
+      `CLAUDE.md` §7. Typed as `Record<Key, ContactChannel>` rather than
+      inferred from the literals, so consumers stay nullable-typed instead of
+      narrowing to `null` and making every guard look like dead code.
+      `channelHref()` returns `string | null` — **never a bare scheme**, so a
+      caller cannot accidentally emit `href="tel:"`.
+- [x] `images.ts` exports a typed, empty-but-valid manifest with the
+      `ManagedImage` shape including `licence` and `replaceable`. `getImage()`
+      throws on an unknown id so a bad reference fails static generation rather
+      than rendering a broken box.
+- [x] `testimonials.ts` exports `[]` with the full `Testimonial` type declared,
+      including a required `consentGiven: true` — publishing someone's words
+      without recorded consent is a KVKK problem, so the type will not allow it.
+- [x] `env.ts` parses `process.env` with Zod and throws with every missing
+      variable named — verified by running it with an empty environment.
+- [x] `motion.ts` re-exports the CSS motion tokens; **no duration literal
+      appears anywhere else** — grep clean across `src/**` outside `motion.ts`
+      and its test.
+- [x] `slugify()` folds `ı İ ş ğ ü ö ç` correctly and is unit-tested against all
+      20 service names. **71 unit tests pass.**
+- [x] **M1's `src/config/ui.ts` folded in and deleted, as promised.** The brand
+      name is `site.name`; the two shell labels are `chrome` in
+      `navigation.ts`. No component imports a strings file of its own.
 
-**Verify**
+**Two things worth carrying forward**
+
+- **`env.ts` is split into eager public / lazy server tiers.** Secrets are
+  parsed on first access and memoised — still exactly once — because
+  `next build` evaluates route modules during route collection, so an eager
+  parse of required secrets would make a local build impossible without a
+  populated `.env.local`. That is a worse failure than the one it prevents.
+  M11's contact route calls `assertServerEnv()` at module scope, so a
+  misconfigured deployment still fails immediately rather than silently
+  accepting submissions it cannot deliver. Recorded as G7.
+- **`motion.ts` and `theme.css` hold the same values twice** — CSS cannot be
+  read by the `motion` library, and vice versa. The drift risk is closed rather
+  than tolerated: `motion.test.ts` parses `theme.css` and asserts every
+  duration, easing, stagger and transform matches. Change one without the other
+  and the test fails.
+
+**Verify** — `npm run verify` exits **0**.
 
 ```bash
 npm run verify
@@ -400,6 +449,12 @@ src/app/page.tsx
       unchanged, so no hard boundaries.
 - [ ] Text over the aurora checked for contrast at its **worst-case** scroll
       position.
+- [ ] **Palette review — carried from M1** (`docs/DESIGN-SYSTEM.md` §1.7). These
+      are the first sections with enough area to carry rose. Judge the palette
+      with real sections on screen and adjust **usage, not token values**. If
+      the page still reads neutral, the answer is more rose _area_ — large
+      fills, aurora stops, tinted surfaces, image overlays — never rose text or
+      rose control borders, which fail contrast.
 
 **Verify**
 
