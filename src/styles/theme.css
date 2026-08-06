@@ -291,3 +291,109 @@
 @utility z-toast {
   z-index: var(--z-toast);
 }
+
+/* ── Grain overlay — docs/MOTION.md §3.6 ────────────────────────────────────
+   A pre-rendered tile, not a live SVG filter: a full-viewport feTurbulence
+   re-rasterises on scroll. No mix-blend-mode either — a full-screen blend
+   forces the whole page into one composited group. */
+@utility grain-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-grain);
+  pointer-events: none;
+  background-image: url('/grain.png');
+  background-repeat: repeat;
+  background-size: 160px 160px;
+  opacity: var(--grain-opacity);
+  contain: layout paint style;
+}
+
+/* Dropped on the `static` tier only — grain is texture, not motion, so it
+   stays under prefers-reduced-motion. */
+[data-motion-tier='static'] .grain-layer {
+  display: none;
+}
+
+/* ── Aurora — docs/MOTION.md §3.1 ───────────────────────────────────────────
+   Blur is set ONCE and never animated; animating a blur radius re-rasterises
+   every frame. Only transform moves. */
+@utility aurora-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-aurora);
+  pointer-events: none;
+  overflow: hidden;
+  background-color: var(--aurora-a);
+  contain: layout paint style;
+}
+
+@utility aurora-blob {
+  position: absolute;
+  width: 60vmax;
+  height: 60vmax;
+  border-radius: var(--radius-full);
+  filter: blur(var(--aurora-blur));
+  opacity: var(--aurora-alpha);
+}
+
+/* `static` replaces the whole thing with a flat gradient — no blur, no JS,
+   no compositing layers. */
+[data-motion-tier='static'] .aurora-blob {
+  display: none;
+}
+[data-motion-tier='static'] .aurora-layer {
+  background-image: linear-gradient(
+    180deg,
+    var(--aurora-a) 0%,
+    var(--color-surface-sunken) 100%
+  );
+}
+
+/* ── Pinned sequence — docs/MOTION.md §5 ────────────────────────────────────
+   Height drives the scroll distance; the stage inside is sticky. `svh` rather
+   than `vh` so mobile browser chrome resizing does not jump the stage. */
+[data-pinned-sequence] {
+  height: var(--pinned-distance, 300svh);
+}
+
+@media (width < 48rem) {
+  [data-pinned-sequence] {
+    height: var(--pinned-distance-mobile, 180svh);
+  }
+}
+
+/* ── Bounded specimens, for the dev review surface only ─────────────────────
+   The real grain and aurora are full-viewport fixed layers, which cannot be
+   compared side by side. These reproduce them inside a box at the SAME opacity
+   and blur so the weight being judged is the weight that ships. */
+@utility grain-sample {
+  position: relative;
+  isolation: isolate;
+}
+
+.grain-sample[data-grain='on']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url('/grain.png');
+  background-repeat: repeat;
+  background-size: 160px 160px;
+  opacity: var(--grain-opacity);
+}
+
+@utility aurora-specimen {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--aurora-a);
+  contain: layout paint style;
+}
+
+.aurora-specimen > span {
+  position: absolute;
+  width: 90%;
+  height: 90%;
+  border-radius: var(--radius-full);
+  filter: blur(var(--aurora-blur));
+  opacity: var(--aurora-alpha);
+}

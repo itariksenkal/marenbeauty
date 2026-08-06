@@ -1,37 +1,52 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Browser tests. These exist for assertions that only a real layout engine can
- * make — "is this element inside the viewport?" cannot be answered by jsdom,
- * which has no layout at all.
+ * Browser tests, in two projects.
  *
- * Runs against the production build, not `next dev`: the dev overlay injects
- * its own fixed-position elements, and we want to test what ships.
+ * `production` drives the real build — what visitors get.
  *
- * M15 adds axe accessibility assertions on top of this same harness.
+ * `development` exists because dev-only routes (/styleguide, and the motion
+ * demo) 404 in production, so the production build never exercises them and no
+ * other gate can see them. A broken review surface would otherwise sit broken
+ * while `npm run verify` stayed green. Dev also catches failures that only
+ * appear before the stylesheet lands, which is how the skip-link bug hid.
  */
 export default defineConfig({
-  testDir: './tests/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
 
-  use: {
-    baseURL: 'http://127.0.0.1:3100',
-    trace: 'on-first-retry',
-  },
+  use: { trace: 'on-first-retry' },
 
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'production',
+      testDir: './tests/e2e/production',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://127.0.0.1:3100' },
+    },
+    {
+      name: 'development',
+      testDir: './tests/e2e/development',
+      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:3101' },
+    },
+  ],
 
-  webServer: {
-    command: 'npm run start -- --port 3100',
-    url: 'http://127.0.0.1:3100',
-    // Never reuse. A left-over server from a previous run keeps serving the
-    // PREVIOUS build, so a regression can pass against stale output — which is
-    // exactly the false confidence a test suite must not give. Costs a few
-    // seconds per run; worth it.
-    reuseExistingServer: false,
-    timeout: 120_000,
-  },
+  // Never reuse. A left-over server keeps serving a PREVIOUS build — or, worse,
+  // a module graph it compiled while a file was momentarily broken, which then
+  // survives the fix. That has already cost this project a debugging session.
+  webServer: [
+    {
+      command: 'npm run start -- --port 3100',
+      url: 'http://127.0.0.1:3100',
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+    {
+      command: 'npm run dev -- --port 3101',
+      url: 'http://localhost:3101',
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+  ],
 });

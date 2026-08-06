@@ -415,6 +415,29 @@ checked for "does it still work".
 
 ---
 
+## 8b. Review surface
+
+`npm run dev` → **`/motion`**. Dev-only, `noindex`, 404 in production, and
+covered by the `development` Playwright project so it cannot quietly break.
+
+It exists to be judged by eye, at shipping values:
+
+| Section         | What to judge                                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------------ |
+| Grain weight    | On/off pairs over ivory, rose beige, nude and espresso at the real 4%. Grain reads strongest on dark.  |
+| Aurora          | Frozen at four scroll positions for side-by-side comparison, plus live behind the page.                |
+| Rose in use     | §1.7 applied — large fill, tinted card, divider, image overlay.                                        |
+| Three tiers     | `full` / `reduced` / `static` side by side. Review `reduced` for composition, not merely for function. |
+| Pinned sequence | The sticky stage, at 250svh.                                                                           |
+| Sticky panels   | 40px radius, 0.96 scale, 0.55 dim.                                                                     |
+| Budget          | The numbers, from `src/config/motion.ts`.                                                              |
+
+Force a tier with `?motion=full|reduced|static`. The override is
+development-only: the flag is substituted at build time, so in production the
+branch is a literal `false` and disappears from the bundle.
+
+---
+
 ## 9. QA checklist
 
 Run before any motion work is marked done:

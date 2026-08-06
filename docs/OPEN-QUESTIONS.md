@@ -576,6 +576,54 @@ a hole rather than a sequencing detail.
 
 ---
 
+### G13 — A stale dev server survived a fix 🟢 → gate closed 2026-08-06
+
+**What happened.** During M4 the content fixture was deliberately broken to
+prove that invalid frontmatter fails the build, and a route temporarily
+imported the content layer. Both were reverted and committed correctly — the
+repository was never in a bad state, and `git show HEAD` confirms it.
+
+But a `next dev` server started hours earlier was still running. It had
+hot-reloaded through the broken window, and a module-scope throw in the dev
+module registry does not recover on HMR. It kept serving the error long after
+the files were fixed. `npm run verify` was correctly green; `localhost:3000`
+was throwing. Nothing was wrong with the code, and nothing could have been
+detected by inspecting it.
+
+**Two real causes:**
+
+1. **Process hygiene.** Background dev servers were launched and not reliably
+   stopped — `pkill` does not match them on Windows. Recorded in `CLAUDE.md`
+   §4 with a command that does work.
+2. **A genuine coverage hole.** `/styleguide` is dev-only: it 404s in
+   production, so the production build never exercises it and **no gate loaded
+   it at all**. A broken design-review surface would have sat broken with a
+   green `verify`. M5's motion demo is dev-only too, so the hole was about to
+   get bigger.
+
+**Closed by** a second Playwright project, `development`, running against
+`next dev` and asserting on each dev-only route: HTTP 200, no page error, no
+console error, no Next error overlay, and real content present. Plus a
+`production` health check asserting `/styleguide` and `/motion` 404 there.
+
+**And by `scripts/free-ports.mjs`**, wired as `pretest:e2e`. The hygiene
+problem recurred twice more while building M5, so it is now automated rather
+than remembered: it stops anything holding 3000/3100/3101 and any stray
+`next dev` for this project. Next refuses a second dev server in the same
+directory **whatever port it is given**, so a leftover on :3000 breaks a test
+run on :3101 — and `next dev` spawns children that outlive a SIGTERM on
+Windows.
+
+Verified by breaking `/styleguide` on purpose — the dev project failed with the
+underlying error; the production build was, correctly, unaffected.
+
+**What did NOT need fixing:** the content gate. Breaking the fixture and running
+`npm run test` fails with exit 1, naming the file and both offending fields, so
+`npm run verify` would not have gone green on a genuinely bad commit. That was
+confirmed rather than assumed.
+
+---
+
 ## H. Content posture — standing rule
 
 **Recorded 2026-08-06. This is a working rule, not a question.** Also written

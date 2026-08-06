@@ -135,9 +135,28 @@ typecheck && lint && format:check && fonts && build && guard && test && test:e2e
 ```
 
 `guard` and `test:e2e` run **after** `build`: the first inspects build output,
-the second drives the built site in a real browser. `test:e2e` never reuses a
-running server — a stale one keeps serving the previous build, and a regression
-that passes against stale output is worse than no test at all.
+the second drives the site in a real browser.
+
+`test:e2e` has **two projects**, and both matter:
+
+| Project       | Server       | Covers                                                                                    |
+| ------------- | ------------ | ----------------------------------------------------------------------------------------- |
+| `production`  | `next start` | What visitors get. Also asserts `/styleguide` 404s.                                       |
+| `development` | `next dev`   | Dev-only routes, which 404 in production and are therefore invisible to every other gate. |
+
+The `development` project exists because `/styleguide` — and the motion demo —
+are dev-only. Without it, a broken design-review surface sits broken while
+`npm run verify` stays green. It also catches failures that only appear before
+the stylesheet lands, which is how the skip-link bug hid.
+
+**Neither project ever reuses a running server.** A left-over server keeps
+serving the previous build — or worse, a module graph it compiled while a file
+was momentarily broken, which then survives the fix. That has already cost this
+project a debugging session (`docs/OPEN-QUESTIONS.md` G13).
+
+**Kill background servers when you are done with them.** On Windows `pkill` does
+not reliably match them; use
+`Get-CimInstance Win32_Process -Filter "Name='node.exe'" | Where-Object { $_.CommandLine -match 'next|turbopack' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`.
 A task is not done until `npm run verify` exits 0. Do not report completion on
 a partial run, and do not weaken a rule to make it pass — fix the code or raise
 the conflict.
