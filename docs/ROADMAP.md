@@ -1295,6 +1295,83 @@ npm run verify
 
 ---
 
+## M18 — Photography ☑ **DONE 2026-08-07**
+
+**Not in the original plan.** M8 ruled that no stock photograph would ship (C7);
+the owner reversed that and asked for real photography everywhere, plus a
+gallery. This milestone does that without giving up the reason the rule existed.
+
+**Files touched**
+
+```
+scripts/{research-images,contact-sheet,fetch-images,image-set}.mjs   ← added
+src/config/images.ts                        ← now GENERATED, 48 entries
+src/config/{gallery,services}.ts
+src/components/content/ImageFigure.tsx      ← added
+src/app/galeri/page.tsx                     ← added
+src/app/{page,hakkimizda/page,hizmetler/[slug]/page}.tsx
+content/pages/hakkimizda.mdx  src/config/navigation.ts
+public/images/**                            ← 48 WebP, 4.8 MB
+tests/unit/imagery.test.ts  tests/e2e/production/gallery.spec.ts
+```
+
+**Acceptance criteria**
+
+- [x] **Both catalogues searched.** 20 queries against Unsplash and Pexels →
+      450 mechanically-filtered candidates (110 Unsplash, 340 Pexels), reviewed
+      as contact sheets. The first run returned an Unsplash-only set because
+      Pexels reports its dominant colour as `[r,g,b]` and Unsplash as a hex
+      string — every Pexels record failed a `typeof === 'string'` check and was
+      dropped in silence. Fixed before selection, not after.
+- [x] **48 images, self-hosted**, WebP at 1600×1200, 4.8 MB total. Nothing is
+      hotlinked: a unit test greps `src/` for an image-CDN host and a browser
+      test asserts `/galeri` issues **zero** off-origin requests — which is what
+      keeps the cookie policy's "no third-party request" true.
+- [x] **The abstract gradient set is gone** — all 20 service heroes replaced,
+      and a test fails on any orphan file under `public/images`.
+- [x] Every service page carries a **hero plus two supporting frames**, drawn
+      deterministically from a shared pool so a rebuild is not a redesign and no
+      page repeats an image or shows its own hero twice.
+- [x] Home, about, all six blog categories and the gallery are covered.
+- [x] **One narrow warm family, measured on the shipped pixels.** Every image
+      has mean red exceeding mean blue by ≥ 12 (the real minimum is 18.7) and
+      luminance between 0.22 and 0.88 — so no cool frame, no black frame, no
+      blown-out clinical white. That is a test, not a claim.
+- [x] `licence` and `sourceUrl` recorded per image, every photographer credited.
+      Only the two free licences are used, and a test asserts **no Unsplash+**
+      photograph is in the set — `premium_photo-…` looks identical in a search
+      result and carries different terms.
+- [x] `/galeri` is a real page: 48 images in four groups, every one with real
+      Turkish alt, a deduped credit list, no horizontal scroll at 320px.
+- [x] The whole set swaps in one file. `src/config/images.ts` is now GENERATED
+      from `scripts/image-set.mjs`; a test asserts the two agree, so a
+      hand-edited manifest fails rather than being silently reverted.
+
+**What the selection rejected, and why it took contact sheets**
+
+Most stock "spa" photography is a model on a treatment couch. Every one of those
+is a person presented as a client of this centre, which `CLAUDE.md` §8 bans
+outright — and no keyword filter finds them. Also rejected: legible English
+product packaging (a product claim the business has not made), anything reading
+as a device or a clinic, and colourful outliers. That judgement was made by
+looking at 450 images as numbered sheets.
+
+**The line a gallery makes it easy to cross.** A gallery is read as
+"photographs of this place", and none of these is. `/galeri`'s first paragraph
+says so, above the images, and a browser test asserts the sentence appears
+_higher on the page_ than the first frame. Alt text describes the photograph;
+a test rejects any alt containing "merkez".
+
+**Guard:** 329 artefacts, **0 blocking**, 189 advisory (unchanged in kind).
+
+**Verify** — `npm run verify` exits **0**. 663 unit tests, 160 browser tests.
+
+```bash
+npm run verify
+```
+
+---
+
 ## M13 — SEO ☐
 
 **Goal.** `docs/SEO.md` implemented end to end.

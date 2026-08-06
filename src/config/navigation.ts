@@ -12,10 +12,11 @@ export type NavItem = {
 };
 
 export const primaryNav: readonly NavItem[] = [
-  { href: '/hizmetler', label: 'Hizmetler' },
+  { href: '/hizmetler', label: 'Hizmetlerimiz' },
   { href: '/hakkimizda', label: 'Hakkımızda' },
   { href: '/blog', label: 'Blog' },
-  { href: '/sss', label: 'Sık Sorulan Sorular' },
+  { href: '/galeri', label: 'Galeri' },
+  { href: '/sss', label: 'SSS' },
   { href: '/iletisim', label: 'İletişim' },
 ];
 

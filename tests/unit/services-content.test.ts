@@ -355,13 +355,34 @@ describe('the image manifest', () => {
     }
   });
 
-  it('attributes nothing to a photographer who does not exist', () => {
-    // The launch set is our own generated artwork. A fabricated credit or
-    // source URL would be an invented fact like any other.
+  /**
+   * The launch set became real photography at M18. Attribution is now REQUIRED
+   * rather than forbidden: every frame is somebody's work, and the credit is
+   * also the only route back to the original file.
+   */
+  it('credits every photograph, with a real licence and a resolvable source', () => {
+    expect(images.length).toBeGreaterThan(0);
     for (const image of images) {
-      expect(image.credit, image.id).toBeNull();
-      expect(image.sourceUrl, image.id).toBeNull();
-      expect(image.licence, image.id).toBe('CC0-1.0');
+      expect(image.credit, image.id).toBeTruthy();
+      expect(image.sourceUrl, image.id).toMatch(/^https:\/\//);
+      expect(['Unsplash Licence', 'Pexels Licence']).toContain(image.licence);
+    }
+  });
+
+  it('gives every image real Turkish alt text', () => {
+    // No empty alt anywhere: these carry information now, unlike the abstract
+    // artwork they replaced (CLAUDE.md §8).
+    for (const image of images) {
+      expect(image.alt.length, image.id).toBeGreaterThan(15);
+      expect(image.alt, image.id).toMatch(/[a-zçğıöşü]/i);
+    }
+  });
+
+  it('never presents a photograph as the premises', () => {
+    // Alt text describes the photograph. "merkezimizin…" would be a claim
+    // about a room that has not been photographed.
+    for (const image of images) {
+      expect(image.alt, image.id).not.toMatch(/merkez|salonumuz|odamız/i);
     }
   });
 

@@ -108,18 +108,26 @@ test.describe('service index', () => {
     expect(await first.getAttribute('src')).toContain('/_next/image');
   });
 
-  test('the hero artwork is decorative, so it is not announced', async ({
-    page,
-  }) => {
+  /**
+   * The launch set became real photography at M18, so the answer flipped:
+   * empty alt was correct for abstract artwork that carried no information,
+   * and is wrong for a photograph that does. Every card image now announces
+   * itself, and none of them is `aria-hidden`.
+   */
+  test('every card image announces itself in Turkish', async ({ page }) => {
     await page.goto('/hizmetler');
-    const alts = await page
-      .locator('img')
-      .evaluateAll((images) =>
-        images.map((img) => (img as HTMLImageElement).alt),
-      );
-    // Abstract artwork carries no information; empty alt is the correct
-    // answer, and it means no alt text had to be invented either.
-    expect(alts.every((alt) => alt === '')).toBe(true);
+    const images = await page.locator('img').evaluateAll((els) =>
+      els.map((el) => ({
+        alt: (el as HTMLImageElement).alt,
+        hidden: el.getAttribute('aria-hidden'),
+      })),
+    );
+
+    expect(images.length).toBe(20);
+    for (const image of images) {
+      expect(image.alt.length).toBeGreaterThan(15);
+      expect(image.hidden).toBeNull();
+    }
   });
 });
 

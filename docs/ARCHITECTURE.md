@@ -46,6 +46,7 @@ English because it is not user-facing.
 | `/cerez-politikasi`                  | `app/cerez-politikasi/page.tsx`                  | Static           | Cookie policy.                                                        |
 | `/kullanim-kosullari`                | `app/kullanim-kosullari/page.tsx`                | Static           | Terms of use.                                                         |
 | `/lisanslar`                         | `app/lisanslar/page.tsx`                         | Static           | Third-party attribution, read from the generated `NOTICE`. `noindex`. |
+| `/galeri`                            | `app/galeri/page.tsx`                            | Static           | The launch image set, grouped, with credits. See §3.5.                |
 | `/api/contact`                       | `app/api/contact/route.ts`                       | **Node runtime** | `POST` → Altcha verify → Zod → Nodemailer. Persists nothing.          |
 | `/api/altcha`                        | `app/api/altcha/route.ts`                        | **Node runtime** | `GET` → signed proof-of-work challenge.                               |
 
@@ -296,6 +297,19 @@ the guard to see it.
 ### 3.5 Image manifest — `src/config/images.ts`
 
 The only place a path under `public/images/` may appear (`CLAUDE.md` §8).
+
+**GENERATED from M18.** `node scripts/fetch-images.mjs` reads
+`scripts/image-set.mjs` — the committed record of which 48 photographs were
+chosen — downloads them, converts to WebP at 1600×1200, and writes this file.
+Hand-editing it is a mistake the next run silently reverts, so a unit test
+asserts the two agree. `ManagedImage` gained a `group` field
+(`service | blog | page | gallery`), which is what `/galeri` groups by and what
+`supportingImageIds()` draws from.
+
+Everything is **self-hosted**. Nothing is hotlinked, which is what keeps
+`content/legal/cerez-politikasi.mdx`'s "no third-party request" true; a unit
+test greps `src/` for an image-CDN host and a browser test asserts `/galeri`
+issues zero off-origin requests.
 
 ```ts
 type ManagedImage = {

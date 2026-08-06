@@ -247,6 +247,37 @@ worth a look on screen at `/hizmetler`. If the pages read too abstract, the
 alternative is real photography of the actual space once it exists — not stock.
 Swapping the set is one edit to `src/config/images.ts`; no component moves.
 
+**REVERSED AT M18, on instruction.** The owner asked for real photography
+everywhere: several images per service page, plus home, blog, about and a
+gallery. The abstract set was replaced entirely.
+
+What did NOT change is the reason the abstract set existed. The constraint that
+a picture must not make a claim the copy would not is now enforced by
+**selection** rather than by abstraction:
+
+- 450 candidates were gathered from Unsplash and Pexels and filtered
+  mechanically for warm dominant colour, mid luminance and landscape
+  orientation (`scripts/research-images.mjs`);
+- the survivors were reviewed as contact sheets, by eye, and rejected for:
+  an identifiable face, legible foreign-language product packaging, a device or
+  anything reading as clinical, cool tone, or a colourful outlier;
+- 48 were selected and are recorded in `scripts/image-set.mjs`.
+
+Everything is **self-hosted** as WebP; nothing is hotlinked, so the cookie
+policy's "no third-party request" stays true and a browser test asserts it.
+
+**Two things a reader must not be allowed to assume**, and both are handled on
+screen rather than in a note here: no photograph is the premises, and
+`/galeri`'s first paragraph says so, above the images. Alt text describes the
+photograph, never the room.
+
+`generate-placeholders.mjs` is kept — it is how the set is regenerated if the
+owner ever wants the abstract treatment back.
+
+Still open, and now more so: **real photography of the actual space.** All 48
+are `replaceable: true`, and the swap is `scripts/image-set.mjs` plus one run of
+`node scripts/fetch-images.mjs`.
+
 ### C8 — KVKK review and VERBİS 🟡 → M12
 
 **Answered 2026-08-06:** the owner's lawyer reviews pre-launch, including the

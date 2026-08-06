@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 
 import { Faq } from '@/components/content/Faq';
 import { ImageCredit } from '@/components/content/ImageCredit';
+import { ImageFigure } from '@/components/content/ImageFigure';
 import { ManagedImage } from '@/components/content/ManagedImage';
 import { Mdx } from '@/components/content/Mdx';
 import { RelatedPosts } from '@/components/content/RelatedPosts';
@@ -16,6 +17,7 @@ import {
   serviceGroupLabel,
   serviceGroups,
   servicePage,
+  supportingImageIds,
 } from '@/config/services';
 import {
   getAllServiceSlugs,
@@ -82,6 +84,7 @@ export default async function ServiceDetailPage({
     .map((relatedSlug) => getServiceBySlug(relatedSlug))
     .filter((entry): entry is Service => entry !== null);
   const posts = getPostsByService(service.slug);
+  const supporting = supportingImageIds(service.slug);
 
   return (
     <>
@@ -136,6 +139,26 @@ export default async function ServiceDetailPage({
             {/* `service.file`, not a path built here — CLAUDE.md §5. */}
             <Mdx source={service.body} file={service.file} />
           </div>
+
+          {/*
+            Supporting photography, two frames, from the shared pool
+            (`supportingImageIds`). Deterministic per slug, so a rebuild is not
+            a redesign, and never `priority` — they sit below the fold and
+            competing with the hero for the first bytes is exactly how a hero
+            gets slower.
+          */}
+          {supporting.length > 0 && (
+            <div className="mt-16 grid gap-6 sm:grid-cols-2">
+              {supporting.map((imageId) => (
+                <ImageFigure
+                  key={imageId}
+                  id={imageId}
+                  ratio="landscape"
+                  sizes="(min-width: 640px) 50vw, 100vw"
+                />
+              ))}
+            </div>
+          )}
         </Container>
       </Section>
 

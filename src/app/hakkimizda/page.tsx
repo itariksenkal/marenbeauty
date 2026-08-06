@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { ImageFigure } from '@/components/content/ImageFigure';
 import { Mdx } from '@/components/content/Mdx';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
@@ -45,12 +46,34 @@ export default function AboutPage() {
           <p className="mt-6 max-w-lead text-lg text-text-secondary">
             {page.lead}
           </p>
+
+          {page.heroImageId && (
+            <ImageFigure
+              id={page.heroImageId}
+              ratio="wide"
+              priority
+              rounded="rounded-2xl"
+              className="mt-12"
+              sizes="(min-width: 1200px) 1200px, 100vw"
+            />
+          )}
         </Container>
       </Section>
 
       <Section tone="transparent" rhythm="tight">
         <Container>
           <Mdx source={page.body} file={page.file} />
+
+          <div className="mt-16 grid gap-6 sm:grid-cols-2">
+            <ImageFigure
+              id="page-about-space"
+              sizes="(min-width: 640px) 50vw, 100vw"
+            />
+            <ImageFigure
+              id="page-about-detail"
+              sizes="(min-width: 640px) 50vw, 100vw"
+            />
+          </div>
         </Container>
       </Section>
 

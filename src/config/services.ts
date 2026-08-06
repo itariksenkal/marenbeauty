@@ -1,3 +1,4 @@
+import { imagesInGroup } from '@/config/images';
 import { COSMETIC_DISCLAIMER } from '@/config/legal';
 import type { ServiceGroup } from '@/content-layer/schemas';
 
@@ -130,3 +131,38 @@ export const servicePage = {
    */
   disclaimer: COSMETIC_DISCLAIMER,
 } as const;
+
+/**
+ * Supporting photography for a service page body.
+ *
+ * Each service has ONE hero of its own; the images that break up the body come
+ * from the shared gallery pool. That is deliberate rather than a shortcut:
+ * twenty services × three unique photographs would be sixty pieces of stock
+ * standing in for a room nobody has photographed, and the more stock a
+ * pre-launch site carries the more it looks like somebody else's business.
+ *
+ * The assignment is DETERMINISTIC — an FNV-1a hash of the slug picks a start
+ * offset and the images are taken consecutively from there. Two consequences:
+ * a given service always shows the same photographs (so a rebuild is not a
+ * redesign), and no page repeats one, because the pool is far larger than the
+ * count taken.
+ */
+function hashSlug(slug: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < slug.length; i++) {
+    hash ^= slug.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash;
+}
+
+export function supportingImageIds(slug: string, count = 2): readonly string[] {
+  const pool = imagesInGroup('gallery');
+  if (pool.length === 0) return [];
+
+  const start = hashSlug(slug) % pool.length;
+  return Array.from(
+    { length: Math.min(count, pool.length) },
+    (_, index) => pool[(start + index) % pool.length]!.id,
+  );
+}
