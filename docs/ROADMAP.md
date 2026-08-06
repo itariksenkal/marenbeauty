@@ -1021,49 +1021,112 @@ npm run verify
 
 ---
 
-## M11 — Contact form ☐
+## M11 — Contact form ◐ **BUILT 2026-08-06 — blocked on the SMTP credential**
 
 **Goal.** The only live conversion path. Altcha + Nodemailer, nothing persisted.
 
-**Files touched**
+**Files touched** — as planned, plus the additions noted below.
 
 ```
-src/app/api/contact/route.ts  src/app/api/altcha/route.ts
+src/app/api/contact/route.ts   src/app/api/altcha/route.ts
+src/app/api/dev/outbox/route.ts        ← added, dev-only capture reader
 src/app/iletisim/page.tsx
-src/components/forms/{ContactForm,AltchaField,FormField,FormStatus}.tsx
-src/lib/mail/{transport,templates}.ts  src/config/env.ts
+src/components/forms/{ContactForm,FormField,FormStatus}.tsx
+src/components/forms/{useAltcha.ts,altcha-worker.ts}   ← instead of AltchaField
+src/components/sections/ContactChannels.tsx            ← added
+src/lib/mail/{transport,templates,outbox}.ts
+src/lib/spam/{challenge,form-token,single-use,rate-limit}.ts   ← added
+src/lib/contact/schema.ts   src/config/{env,forms,contact}.ts
+next.config.ts  playwright.config.ts  .env.example
 ```
 
 **Acceptance criteria**
 
-- [ ] Both handlers `export const runtime = 'nodejs'`. Edge cannot open SMTP.
-- [ ] Altcha challenge is HMAC-signed, short-TTL, single-use; verified
-      server-side. Solving happens in a Web Worker and needs no user interaction.
-- [ ] Zod validation rejects unknown keys; honeypot must be empty; best-effort
-      per-IP rate limit.
-- [ ] Nodemailer over Google Workspace SMTP, port 587, STARTTLS, credentials
-      from `env.ts`.
-- [ ] **Nothing is persisted** — no database, no file, no log line containing
-      the message body or email address.
-- [ ] Consent checkbox is required, unchecked by default, links to `/kvkk`.
-- [ ] Every channel link carries `data-channel="whatsapp|phone|email|instagram"`
-      so guard rule 3 can catch a dead channel button (`CLAUDE.md` §12).
-- [ ] Works **without JavaScript** via a plain form POST.
-- [ ] Errors, success and pending states announced via `role="status"` /
-      `aria-live="polite"`. Not a toast.
-- [ ] Field errors wired with `aria-describedby`; never colour-only.
-- [ ] SMTP details never reach the client; generic Turkish error only.
-- [ ] Destination inbox comes from env — **blocked on the owner supplying it**
-      (`docs/OPEN-QUESTIONS.md`). Until then, verified against a test mailbox
-      and the blocker is reported, not worked around.
+- [x] Both handlers `export const runtime = 'nodejs'`. Asserted at the source.
+- [x] Altcha challenge is HMAC-signed, short-TTL, single-use; verified
+      server-side. Proven by solving a real challenge and replaying it: the
+      second attempt is refused. Solving happens in a Web Worker with no user
+      interaction — a browser test confirms `/api/altcha` is fetched and the
+      submission carries a solved payload.
+- [x] Zod validation rejects unknown keys; honeypot must be empty; best-effort
+      per-address rate limit. All three exercised over HTTP against the real
+      build, not only in unit tests.
+- [x] Nodemailer over Google Workspace SMTP, port 587, **STARTTLS with
+      `requireTLS`** so the connection fails rather than falling back to
+      plaintext. Credentials from `env.ts`.
+- [x] **Nothing is persisted.** No database, no file, no log line carrying the
+      body, the name or the address — asserted by reading the handler's own
+      `console.*` calls. The single-use store, the rate limiter and the
+      development capture are all in memory.
+- [x] Consent checkbox is required, unchecked by default, links to `/kvkk`.
+      `z.literal(true)` — an unticked box is a validation failure, not a silent
+      default.
+- [x] Every channel link carries `data-channel`. No channel is configured, so
+      none renders; a browser test asserts zero `[data-channel]`, zero dead
+      hrefs and zero disabled controls on `/iletisim`.
+- [x] **Works without JavaScript.** A real `action`/`method`, a 303 back to the
+      page, and the outcome rendered server-side from the query string. Driven
+      in a browser context with JavaScript disabled, and it delivers.
+- [x] Errors, success and pending announced via `role="status"` /
+      `aria-live="polite"`. The region is in the DOM from first paint, empty —
+      a live region added at the same moment as its message is frequently not
+      announced at all.
+- [x] Field errors wired with `aria-describedby` and `aria-invalid`, with a `✕`
+      glyph so the state is never colour-only. Every control has a real
+      `<label>`, asserted by walking `HTMLInputElement.labels` in the browser.
+- [x] SMTP detail never reaches the client. A failed delivery returns one
+      generic message; the response body is checked for `SMTP`, `ECONN`,
+      `auth`, `password` and `gmail`.
+- [x] Destination inbox comes from env — **still blocked on the owner**
+      (`docs/OPEN-QUESTIONS.md` B1/B3). Verified against a **local capture**
+      rather than a test mailbox, on instruction. Nothing was weakened and no
+      fallback address was invented.
 
-**Verify**
+**How the missing credential was handled**
+
+`MAIL_TRANSPORT=capture` composes the identical message with nodemailer's own
+stream transport and hands the bytes to an in-memory outbox, read back by a
+dev-only `/api/dev/outbox`. The development browser suite fills the real form —
+with and without JavaScript — and asserts the resulting RFC822 message: headers,
+`Reply-To`, and the decoded Turkish body.
+
+Two independent guards stop that reaching production: `env.ts` refuses the
+capture transport when `NODE_ENV` is production, and the outbox route 404s
+there. Both are asserted, the second by the production suite.
+
+**What is left: set the six SMTP variables.** No code changes with them.
+
+**Additions and deviations**
+
+**A signed page token, for the no-JavaScript path.** Proof of work needs a Web
+Worker, so a visitor with JavaScript off cannot produce one — and the form must
+work anyway. Accepting those submissions with no server-side check would have
+made Altcha decorative: a spammer only has to switch JavaScript off. The page
+issues a short-lived, single-use HMAC token instead, which proves the submission
+came from a page we served, recently, once. Not a cookie; nothing is stored.
+
+**`AltchaField.tsx` became `useAltcha.ts` + `altcha-worker.ts`.** There is no
+field to render — the solved payload is attached to the FormData at submit — so
+a component would have been an empty wrapper around a hook.
+
+**`/iletisim` is rendered per request**, not static as `docs/ARCHITECTURE.md` §2
+originally listed. It issues a per-visitor token and reads `searchParams`; both
+force it. §2 updated, with the consequence for the guard recorded as G21.
+
+**Three bugs found by running it, not by reading it** — G20, G22, G23 in
+`docs/OPEN-QUESTIONS.md`. The one worth naming here: the contact page returned
+**500 with no mailbox configured**, because one env schema coupled the signing
+key to the SMTP credential. A page that sends nothing must not need a mail
+credential to render.
+
+**Verify** — `npm run verify` exits **0**. 596 unit tests, 114 browser tests.
 
 ```bash
 npm run verify
 ```
 
-Plus a real send to a test mailbox, and a no-JS submission.
+Still outstanding for this milestone: a real send to the live mailbox, once B3
+exists.
 
 ---
 

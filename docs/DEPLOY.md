@@ -35,7 +35,19 @@ the DNS provider. That export is the rollback.
 - [ ] Every `{{LEGAL_ENTITY}}` resolved; `npm run guard` passes on a production
       build. **The build will fail if any remain.**
 - [ ] Destination inbox confirmed (`docs/OPEN-QUESTIONS.md` B1).
-- [ ] SMTP credential in hand (B3).
+- [ ] SMTP credential in hand (B3). **This is the last remaining step on the
+      contact form.** Everything else in M11 is built and tested; without the
+      credential the form renders, validates, passes its spam checks and then
+      fails delivery with the generic Turkish message, logging exactly which
+      variables are missing. Set them and it works — no code change.
+- [ ] `ALTCHA_HMAC_KEY` generated and set (`openssl rand -hex 32`). **The
+      contact page returns 500 without it**, because it issues a signed token
+      per request. One key across every instance; not per-instance.
+- [ ] `MAIL_TRANSPORT` unset or `smtp`. Setting it to `capture` in production
+      is refused at startup, which is the intended failure — but do not rely on
+      that as a review step.
+- [ ] After the first real send: check that the notification arrives, that
+      `Reply-To` is the visitor's address, and that replying reaches them.
 - [x] Canonical host decided: **apex, `https://marenbeauty.com`**; `www` 301s
       to it (C2).
 - [ ] Current zone file exported and saved.

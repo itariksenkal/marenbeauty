@@ -51,6 +51,24 @@ export function channelHref(key: ContactChannelKey): string | null {
   }
 }
 
+/**
+ * What each channel's link says.
+ *
+ * Separate from `ContactChannel.label`, which is the value the owner supplies
+ * (a number, a handle). These are the ACTIONS, and they are fixed copy — a
+ * component may not contain a Turkish sentence (CLAUDE.md §7).
+ *
+ * Present for every key even though every channel is currently `null`: the
+ * labels are not the thing that is missing. When a channel is configured, its
+ * link appears with the right words and no further edit.
+ */
+export const channelLabels: Readonly<Record<ContactChannelKey, string>> = {
+  whatsapp: "WhatsApp'tan yazın",
+  phone: 'Telefonla arayın',
+  email: 'E-posta gönderin',
+  instagram: "Instagram'da bakın",
+};
+
 /** True when at least one channel is configured — for "or reach us at" blocks. */
 export function hasAnyChannel(): boolean {
   return (Object.keys(contact) as ContactChannelKey[]).some(

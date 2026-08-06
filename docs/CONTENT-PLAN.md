@@ -186,7 +186,19 @@ Intent key: **I** = informational · **C** = commercial · **S** = seasonal.
 | 9   | Cilt Lekesi Görünümü: Yaygın Nedenler ve Bakım         | `leke-gorunumu-nedenler-ve-bakim` | cilt lekesi nedenleri  | I      | `leke-bakimi`        | `cilt-ihtiyaclari`      |
 | 10  | Kirpik Lifting Nedir? Uygulama ve Kalıcılık            | `kirpik-lifting-nedir`            | kirpik lifting nedir   | I      | `kirpik-lifting`     | `kas-kirpik-rehberi`    |
 | 11  | Kaş Tasarımı Nedir? Yüz Hatlarına Göre Kaş             | `kas-tasarimi-nedir`              | kaş tasarımı           | I      | `kas-tasarimi`       | `kas-kirpik-rehberi`    |
-| 12  | Gelin Bakım Takvimi: Düğüne Kaç Ay Kala Ne Planlanır   | `gelin-bakim-takvimi`             | gelin bakım takvimi    | C      | `gelin-bakim-paketi` | `ozel-gun-ve-mevsim`    |
+| 12  | Gelin Bakım Takvimi: Hazırlık Hangi Sırayla Planlanır  | `gelin-bakim-takvimi`             | gelin bakım takvimi    | C      | `gelin-bakim-paketi` | `ozel-gun-ve-mevsim`    |
+
+**Plan deviation, ruled 2026-08-06 — post 12 retitled.** The planned title was
+"Gelin Bakım Takvimi: Düğüne **Kaç Ay Kala** Ne Planlanır". It promises a number
+the content posture forbids publishing, so a reader arriving from search would
+leave without the answer the title offered. Retitled to
+**"Gelin Bakım Takvimi: Hazırlık Hangi Sırayla Planlanır"** — what the post
+actually delivers. The slug, keyword, category and service mapping are
+unchanged, so nothing downstream moves.
+
+The general rule this sets: **a title may not promise something the posture
+forbids the body from giving.** Batch 2 titles are checked against it before
+writing — 14, 18 and 48 are the ones to watch.
 
 **Batch 1 was written at M10.** All twelve landed at 909–1119 words. The spread
 is deliberate: the broad topics run long, the ones answering a single narrow

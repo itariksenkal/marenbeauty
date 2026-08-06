@@ -137,26 +137,32 @@ Version notes recorded at M0 (`docs/OPEN-QUESTIONS.md` G1, G3):
 
 ### 3.1 Runtime — planned, not yet installed
 
-| Package                    | Expected licence                               | Purpose                                 |
-| -------------------------- | ---------------------------------------------- | --------------------------------------- |
-| `next`                     | MIT                                            | Framework, App Router                   |
-| `react`, `react-dom`       | MIT                                            | UI runtime                              |
-| `motion`                   | MIT                                            | Animation (`motion/react`)              |
-| `lucide-react`             | ISC                                            | Icons — the only icon set               |
-| `@radix-ui/react-*`        | MIT                                            | Accessible primitives under shadcn/ui   |
-| `class-variance-authority` | Apache-2.0                                     | Component variants                      |
-| `clsx`                     | MIT                                            | Class composition                       |
-| `tailwind-merge`           | MIT                                            | Class conflict resolution               |
-| `zod`                      | MIT                                            | Validation at every boundary            |
-| `gray-matter`              | MIT                                            | Frontmatter parsing                     |
-| `@mdx-js/mdx`              | MIT                                            | MDX compilation via `evaluate()` in RSC |
-| `remark-gfm`               | MIT                                            | GFM support                             |
-| `rehype-slug`              | MIT                                            | Heading ids                             |
-| `rehype-autolink-headings` | MIT                                            | Anchor links                            |
-| `nodemailer`               | MIT-0 _(verify — has varied by major version)_ | SMTP to Google Workspace                |
-| `altcha`                   | MIT                                            | Proof-of-work widget                    |
-| `altcha-lib`               | MIT                                            | Server-side challenge and verification  |
-| `sharp`                    | Apache-2.0                                     | Image optimisation (`next/image`)       |
+| Package                    | Expected licence                        | Purpose                                 |
+| -------------------------- | --------------------------------------- | --------------------------------------- |
+| `next`                     | MIT                                     | Framework, App Router                   |
+| `react`, `react-dom`       | MIT                                     | UI runtime                              |
+| `motion`                   | MIT                                     | Animation (`motion/react`)              |
+| `lucide-react`             | ISC                                     | Icons — the only icon set               |
+| `@radix-ui/react-*`        | MIT                                     | Accessible primitives under shadcn/ui   |
+| `class-variance-authority` | Apache-2.0                              | Component variants                      |
+| `clsx`                     | MIT                                     | Class composition                       |
+| `tailwind-merge`           | MIT                                     | Class conflict resolution               |
+| `zod`                      | MIT                                     | Validation at every boundary            |
+| `gray-matter`              | MIT                                     | Frontmatter parsing                     |
+| `@mdx-js/mdx`              | MIT                                     | MDX compilation via `evaluate()` in RSC |
+| `remark-gfm`               | MIT                                     | GFM support                             |
+| `rehype-slug`              | MIT                                     | Heading ids                             |
+| `rehype-autolink-headings` | MIT                                     | Anchor links                            |
+| `nodemailer`               | **MIT-0** — verified at install, v9.0.4 | SMTP to Google Workspace                |
+| `altcha-lib`               | **MIT** — verified at install, v2.3.2   | Challenge, verification AND the solver  |
+
+**The `altcha` widget package was installed at M11 and then removed.** It is the
+web component, and it brings its own UI, its own localised strings and its own
+styling — all of which would fight the design system and `CLAUDE.md` §7. Only
+`altcha-lib` ships: it does the hashing, and the markup and the Turkish strings
+are ours. An unused runtime dependency is licence surface and bundle weight for
+nothing.
+| `sharp` | Apache-2.0 | Image optimisation (`next/image`) |
 
 ### 3.2 Development — planned, not yet installed
 

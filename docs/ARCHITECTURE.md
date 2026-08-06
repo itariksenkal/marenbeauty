@@ -41,7 +41,7 @@ English because it is not user-facing.
 | `/blog/kategori/[slug]`              | `app/blog/kategori/[slug]/page.tsx`              | SSG ×6           | Category archive, page 1.                                             |
 | `/blog/kategori/[slug]/sayfa/[page]` | `app/blog/kategori/[slug]/sayfa/[page]/page.tsx` | SSG              | Archive pages **2+**. See below.                                      |
 | `/sss`                               | `app/sss/page.tsx`                               | Static           | FAQ. `FAQPage` schema.                                                |
-| `/iletisim`                          | `app/iletisim/page.tsx`                          | Static           | Contact form, location, channels.                                     |
+| `/iletisim`                          | `app/iletisim/page.tsx`                          | **Dynamic**      | Contact form, location, channels. See below.                          |
 | `/kvkk`                              | `app/kvkk/page.tsx`                              | Static           | KVKK Aydınlatma Metni.                                                |
 | `/cerez-politikasi`                  | `app/cerez-politikasi/page.tsx`                  | Static           | Cookie policy.                                                        |
 | `/kullanim-kosullari`                | `app/kullanim-kosullari/page.tsx`                | Static           | Terms of use.                                                         |
@@ -92,6 +92,23 @@ published.
 
 An empty collection is **one** page, not zero: `/blog` still renders, with its
 empty state.
+
+### Why `/iletisim` is rendered per request
+
+Every other page is prerendered. This one cannot be, for two independent
+reasons:
+
+1. **It issues a signed page token** (`src/lib/spam/form-token.ts`). Baked in at
+   build time it would be identical for every visitor and expire minutes after
+   the deploy.
+2. **It reads `searchParams`.** The no-JavaScript path posts the form and comes
+   back here with the outcome in the URL, and reading search params opts a route
+   out of static rendering anyway.
+
+**One consequence worth knowing:** `npm run guard` scans prerendered output, so
+a dynamic route emits no `.html` for it to read. The page's copy is scanned by a
+unit test running the real guard rules over `src/config/forms.ts` instead
+(`docs/OPEN-QUESTIONS.md` G21).
 
 ### Slug permanence
 
@@ -511,23 +528,39 @@ added, so the licence audit is unchanged.
 ## 7. Contact request flow
 
 ```
-ContactForm (C)
+/iletisim (SSR)                 → renders a signed, single-use page token
+ContactForm (C)  ── enhancement, on top of a form that already works ──
   └─ GET /api/altcha            → signed PoW challenge (HMAC, short TTL)
-  └─ solve in a Web Worker      → non-blocking, no user interaction
-  └─ POST /api/contact          → { name, email, message, service?, consent, altcha }
-       ├─ verify Altcha solution + HMAC + expiry + single-use
-       ├─ zod parse; reject unknown keys
-       ├─ honeypot field must be empty
-       ├─ in-memory rate limit per IP (best-effort; not the primary defence)
-       ├─ nodemailer → Google Workspace SMTP (587, STARTTLS, app password)
-       └─ 200 { ok: true } — nothing written to disk or database
+  └─ solve in a Web Worker      → no user interaction; 8s cap, then give up
+  └─ POST /api/contact          → { ad, eposta, mesaj, hizmet?, onay, altcha }
+POST /api/contact
+  ├─ 1 rate limit per address   → in-memory, best-effort, cheapest check first
+  ├─ 2 honeypot must be empty   → a hit answers 200, silently, and sends nothing
+  ├─ 3 spam gate                → PoW if JavaScript ran, else the page token.
+  │                               Both HMAC-signed, short-TTL and SINGLE-USE
+  ├─ 4 zod parse, .strict()     → unknown keys rejected; spam fields dropped
+  │                               here so they can never reach the template
+  ├─ 5 nodemailer               → Workspace SMTP (587, STARTTLS, app password)
+  └─ JSON to fetch, 303 to a plain form POST — nothing written anywhere
 ```
 
 - `export const runtime = 'nodejs'` on both handlers. **Edge cannot open SMTP.**
-- Credentials via `src/config/env.ts` (Zod-parsed, throws at startup if absent).
+- **Two spam paths, both verified server-side.** Proof of work needs a Web
+  Worker, so a visitor with JavaScript off cannot produce one — and the form has
+  to work anyway. The page therefore also issues a signed, expiring, single-use
+  token, which is the floor for that path. Accepting no-JS submissions with no
+  check at all would have made the whole Altcha layer decorative: a spammer only
+  has to switch JavaScript off.
+- **Secrets are split into two tiers** (`src/config/env.ts`): the signing key,
+  which the page needs to RENDER, and the mail credential, which is needed only
+  to SEND. They were one blob until `/iletisim` returned 500 on a server with no
+  mailbox configured (G22).
 - The consent checkbox is required, unchecked by default, and links to `/kvkk`.
-- Errors return a generic Turkish message. No SMTP detail reaches the client.
-- No personal data is persisted anywhere (`CLAUDE.md` §11).
+- Errors return a generic Turkish message, identical for every server-side
+  cause. No SMTP detail reaches the client.
+- No personal data is persisted anywhere (`CLAUDE.md` §11). The single-use store
+  and the rate limiter are in-memory and die with the process; the development
+  capture is in memory too, and refused in production.
 
 ---
 

@@ -122,6 +122,27 @@ Workspace account. Requires 2FA on that account.
 - Revisit if the mailbox changes hands (OAuth2 with domain-wide delegation is
   the fallback).
 
+**Status after M11 🔴 — this is the single remaining step on the contact form.**
+
+The decision is made; the value does not exist yet. Everything that does not
+need it is built and tested for real: validation, proof of work, the no-JS page
+token, replay protection, the rate limit, the composed RFC822 message, the
+error and success states, the `data-channel` contract. The send path is verified
+against a **local capture** — nodemailer's own stream transport composes the
+identical message and hands back the bytes — driven end to end through a real
+browser, with and without JavaScript.
+
+What that leaves untested, and cannot be tested without the value: **that Google
+Workspace accepts the credential.** Nothing else.
+
+Until then, in production: the page renders, the form validates, the spam gate
+runs, and delivery fails with the generic Turkish message while the server log
+names exactly which variables are missing. **No fallback address was invented**
+and nothing was weakened to make the milestone pass — the capture transport is
+refused in production, and the checklist item is in `docs/DEPLOY.md`.
+
+Setting the six variables is the whole change. There is no code to write.
+
 ---
 
 ## C. Pre-launch items
@@ -825,8 +846,77 @@ distinct section counts, and that no two posts share an opening sentence. None
 of them can detect good writing. All three fail on the specific failure mode
 that occurred, which is what a regression test is for.
 
-**Applies to Batch 2** (posts 13–50), which will be written in several passes
-rather than one — partly for this reason.
+**Ruled 2026-08-06 by the owner: accepted.** Batch 2 (posts 13–50) is written in
+**several passes, not one**. Recorded here rather than only in the roadmap
+because it binds every remaining content milestone, not just the next one.
+
+### G20 — The contact route cannot assert its env at startup 🟢 → M11
+
+`src/config/env.ts` used to promise that the contact route would read the server
+env **at module scope**, so a misconfigured deployment failed immediately rather
+than on the first enquiry. That is the better behaviour and it is not available:
+`next build` evaluates route modules during route collection, so an eager parse
+of required secrets makes a local build — and CI — impossible without a
+populated `.env.local`. A build that cannot run without production credentials
+is a worse failure than a late one.
+
+**What happens instead:** the route verifies on the first request, logs exactly
+which variables are missing, and returns the generic message. The gap between
+"deployed" and "known broken" is one enquiry, and `docs/DEPLOY.md` carries the
+check as a pre-flight item. The stale promise in `env.ts` was corrected.
+
+### G21 — A dynamic route escapes the content guard 🟡 → confirm at M13
+
+`npm run guard` scans **prerendered output**. `/iletisim` is rendered per
+request (it issues a signed token and reads `searchParams`), so it emits no
+`.html` for the guard to read, and its server-rendered copy is invisible to the
+gate that exists to catch banned language.
+
+**Closed for now** by a unit test that runs the real `scanText` rules over
+`src/config/forms.ts`, where every string on that page lives. Partial cover also
+comes free: the form is a client component, so its strings appear in
+`.next/static/chunks` and the guard does scan those.
+
+**Open:** whether the guard should additionally render dynamic routes and scan
+the result. That is a change to the gate itself and belongs with the SEO pass at
+M13, when `/iletisim` is not the only dynamic page.
+
+### G22 — One env blob coupled two unrelated secrets 🟢 → fixed at M11
+
+The contact page returned **500 with no mailbox configured** — which is the
+state the site is in today.
+
+`serverEnv()` parsed one schema containing both the challenge signing key and
+the six SMTP variables. Issuing a page token needs the key; it does not need a
+mailbox. But the single parse tripped over the missing SMTP values and took down
+a page that sends nothing.
+
+Split into `spamEnv()` and `mailEnv()`, parsed independently. The page renders,
+the form validates, the spam gate runs, and the failure is confined to delivery
+— which is exactly what "the credential is the last remaining step" should mean.
+
+**Found by serving the production build**, not by reading the code. Worth
+repeating for M12: a milestone that adds a required secret should be exercised
+against a server that does not have it.
+
+### G23 — A silent worker left the form stuck on "gönderiliyor" 🟢 → M11
+
+The proof-of-work solver was handed to `altcha-lib`'s `solveChallengeWorkers`,
+which speaks its own message protocol, while the worker implemented ours. No
+error was raised: the worker simply never answered, `ensure()` never resolved,
+and the submit handler waited forever. The status line sat at "Mesajınız
+gönderiliyor." and the form could not be sent at all.
+
+Two fixes, and the second matters more than the first:
+
+1. The worker is driven directly, with our protocol on both ends.
+2. **The solve is bounded.** Anything that does not answer within
+   `SPAM_LIMITS.powTimeoutMs` resolves to `null`, and the signed page token
+   carries the submission. A spam check that can block a legitimate send is a
+   worse bug than the spam it prevents.
+
+Caught by a browser test that filled the form and waited for the live region —
+no unit test would have seen it, because every piece worked in isolation.
 
 ---
 

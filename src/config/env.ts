@@ -1,24 +1,32 @@
+import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
 
 /**
- * Environment variables, parsed once with Zod, with a clear failure.
+ * Environment variables, parsed with Zod, with a clear failure.
  *
- * Split into two tiers on purpose:
+ * THREE TIERS, and the split between the last two is load-bearing:
  *
- *   PUBLIC  — parsed eagerly at module load. No secrets, everything optional
- *             with a sane default, so importing this can never break a build.
+ *   PUBLIC — parsed eagerly at module load. No secrets, everything optional
+ *            with a sane default, so importing this can never break a build.
  *
- *   SERVER  — secrets. Parsed on FIRST ACCESS and memoised, so the parse still
- *             happens exactly once, but a build that never sends mail does not
- *             require production mail credentials to be present. `next build`
- *             evaluates route modules during route collection; an eager parse
- *             of required secrets would make a local build impossible without
- *             a populated .env.local, which is a worse failure than the one it
- *             prevents.
+ *   SPAM   — the challenge signing key. Needed to RENDER the contact page,
+ *            because the page issues a signed token.
  *
- * The contact route (M11) reads `serverEnv()` at module scope, so a
- * misconfigured deployment fails immediately and loudly rather than silently
- * accepting submissions it cannot deliver.
+ *   MAIL   — the SMTP credential. Needed only to SEND.
+ *
+ * Those last two were one blob until the contact page was first served without
+ * a credential: `/iletisim` returned 500, because issuing a page token parsed
+ * the whole server schema and tripped over six missing SMTP variables. A page
+ * that sends nothing must not need a mail credential to render
+ * (docs/OPEN-QUESTIONS.md G22). They are now parsed independently, and the
+ * blocker is exactly one step: mail.
+ *
+ * Both secret tiers are parsed on FIRST ACCESS and memoised. `next build`
+ * evaluates route modules during route collection, so an eager parse would
+ * make a local build impossible without a populated `.env.local` — a worse
+ * failure than the one it prevents. That is also why the contact route does not
+ * assert at module scope: it verifies on the first request, logs precisely what
+ * is missing, and returns the generic error.
  */
 
 const publicSchema = z.object({
@@ -27,7 +35,16 @@ const publicSchema = z.object({
     .default('development'),
 });
 
-const serverSchema = z.object({
+const spamSchema = z.object({
+  /**
+   * Altcha proof-of-work signing key, also used for the no-JS page token.
+   * 32+ chars. Generate with `openssl rand -hex 32`.
+   */
+  ALTCHA_HMAC_KEY: z.string().min(32),
+});
+
+const smtpSchema = z.object({
+  MAIL_TRANSPORT: z.literal('smtp'),
   /** Google Workspace SMTP. Node runtime only — Edge cannot open SMTP. */
   SMTP_HOST: z.string().min(1),
   SMTP_PORT: z.coerce.number().int().positive(),
@@ -41,12 +58,23 @@ const serverSchema = z.object({
   SMTP_PASS: z.string().min(1),
   MAIL_FROM: z.email(),
   MAIL_TO: z.email(),
-  /** Altcha proof-of-work signing key. 32+ bytes, hex. */
-  ALTCHA_HMAC_KEY: z.string().min(32),
 });
 
+/**
+ * The development capture transport (docs/OPEN-QUESTIONS.md B1).
+ *
+ * Composes the message exactly as SMTP would and hands it to an in-memory
+ * outbox instead of opening a socket, so the send path can be driven end to
+ * end before the credential exists. **Refused outright in production** — a
+ * deployment that silently swallows every enquiry is worse than one that fails
+ * loudly.
+ */
+const captureSchema = z.object({ MAIL_TRANSPORT: z.literal('capture') });
+
 export type PublicEnv = z.infer<typeof publicSchema>;
-export type ServerEnv = z.infer<typeof serverSchema>;
+export type SpamEnv = z.infer<typeof spamSchema>;
+export type MailEnv =
+  z.infer<typeof smtpSchema> | z.infer<typeof captureSchema>;
 
 function fail(issues: z.core.$ZodIssue[], tier: string): never {
   const lines = issues.map(
@@ -63,27 +91,82 @@ if (!publicParsed.success) fail(publicParsed.error.issues, 'public');
 
 export const env: PublicEnv = publicParsed.data;
 
-let serverCache: ServerEnv | null = null;
+let spamCache: SpamEnv | null = null;
+let mailCache: MailEnv | null = null;
+let ephemeralKey: string | null = null;
 
 /**
- * Server-only secrets. Throws on the first access if anything is missing.
- * Never call this from a Client Component — it would leak SMTP credentials
- * into the browser bundle.
+ * Outside production, an absent signing key becomes a per-process random one.
+ *
+ * `npm run dev` and the test suite should not require a secret to boot, and a
+ * key that changes on restart is harmless when every challenge lives for
+ * minutes. In production the key is REQUIRED: a per-instance key would break
+ * verification the moment there are two instances.
  */
-export function serverEnv(): ServerEnv {
-  if (serverCache) return serverCache;
+function altchaKey(): string | undefined {
+  const configured = process.env.ALTCHA_HMAC_KEY;
+  if (configured) return configured;
+  if (env.NODE_ENV === 'production') return undefined;
 
-  const parsed = serverSchema.safeParse(process.env);
-  if (!parsed.success) fail(parsed.error.issues, 'server');
-
-  serverCache = parsed.data;
-  return serverCache;
+  if (!ephemeralKey) {
+    ephemeralKey = randomBytes(32).toString('hex');
+    console.warn(
+      '\n  ⚠ ALTCHA_HMAC_KEY is not set. Using a random per-process key.\n' +
+        '    Fine for development. Production requires a real one — see .env.example.\n',
+    );
+  }
+  return ephemeralKey;
 }
 
 /**
- * Eager validation for a server entry point that wants to fail at startup
- * rather than on first request. M11 calls this from the contact route module.
+ * The challenge signing key. Server only — never call this from a Client
+ * Component.
  */
-export function assertServerEnv(): void {
-  serverEnv();
+export function spamEnv(): SpamEnv {
+  if (spamCache) return spamCache;
+
+  const parsed = spamSchema.safeParse({ ALTCHA_HMAC_KEY: altchaKey() });
+  if (!parsed.success) fail(parsed.error.issues, 'spam');
+  spamCache = parsed.data;
+  return spamCache;
+}
+
+/**
+ * The mail credential. Throws on first access if anything is missing, naming
+ * every absent variable — which is what the contact route logs when a send
+ * cannot happen.
+ */
+export function mailEnv(): MailEnv {
+  if (mailCache) return mailCache;
+
+  const transport = process.env.MAIL_TRANSPORT ?? 'smtp';
+
+  if (transport === 'capture') {
+    if (env.NODE_ENV === 'production') {
+      throw new Error(
+        `MAIL_TRANSPORT=capture is refused in production. It captures mail to ` +
+          `memory instead of sending it, so a deployment using it would accept ` +
+          `every enquiry and deliver none. Set real SMTP credentials instead.`,
+      );
+    }
+    const parsed = captureSchema.safeParse({ MAIL_TRANSPORT: 'capture' });
+    if (!parsed.success) fail(parsed.error.issues, 'mail');
+    mailCache = parsed.data;
+    return mailCache;
+  }
+
+  const parsed = smtpSchema.safeParse({
+    ...process.env,
+    MAIL_TRANSPORT: 'smtp',
+  });
+  if (!parsed.success) fail(parsed.error.issues, 'mail');
+  mailCache = parsed.data;
+  return mailCache;
+}
+
+/** Visible for tests, which need a clean parse per case. */
+export function resetServerEnv(): void {
+  spamCache = null;
+  mailCache = null;
+  ephemeralKey = null;
 }
