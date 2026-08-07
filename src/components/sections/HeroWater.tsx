@@ -95,7 +95,7 @@ function resetHandoff() {
   root.dataset.heroHandoff = 'done';
 }
 
-function Stage() {
+function Stage({ venueImage }: { venueImage: React.ReactNode }) {
   const pinnedProgress = usePinnedProgress();
   const tier = useMotionTier();
   const isMobile = useIsMobileViewport();
@@ -184,10 +184,22 @@ function Stage() {
     [1, 0.35, 0],
     { clamp: true },
   );
+  /**
+   * The slogan leaves WITH the wordmark, not on its own schedule.
+   *
+   * It used to fade on a range of its own that ended after the wordmark had
+   * already scaled away, which left one line of text alone in the middle of an
+   * empty screen for most of stage 2 — the thing it is a caption for was gone.
+   * Tying the end of this ramp to `spread` means it can never outlive the word
+   * it sits under, whatever the stage boundaries are tuned to.
+   */
   const positioningOpacity = useTransform(
     progress,
-    [0, stages.still[1], stages.spread[0] + 0.06],
-    [1, 1, 0],
+    [
+      stages.still[1],
+      stages.still[1] + (stages.spread[1] - stages.still[1]) * 0.55,
+    ],
+    [1, 0],
     { clamp: true },
   );
 
@@ -253,19 +265,12 @@ function Stage() {
           >
             <ImageReveal className="mx-auto max-w-lead">
               {/*
-                Stands in for photography, which arrives after the venue opens
-                (docs/OPEN-QUESTIONS.md C7). role="img" + a label so it is
-                described rather than announced as an empty box.
+                The real photograph. This was a grey box with the word "görsel"
+                in it — a stand-in from before the launch image set existed,
+                left behind when the set landed. It was the emptiest thing on
+                the first screen and it said so out loud.
               */}
-              <div
-                role="img"
-                aria-label={home.venueImageAlt}
-                className="h-56 flex w-full items-center justify-center bg-surface-accent"
-              >
-                <span className="text-xs tracking-eyebrow text-text-secondary uppercase">
-                  görsel
-                </span>
-              </div>
+              {venueImage}
             </ImageReveal>
           </motion.div>
         </div>
@@ -274,10 +279,10 @@ function Stage() {
   );
 }
 
-export function HeroWater() {
+export function HeroWater({ venueImage }: { venueImage: React.ReactNode }) {
   return (
     <PinnedSequence distance="300svh" mobileDistance="180svh">
-      <Stage />
+      <Stage venueImage={venueImage} />
     </PinnedSequence>
   );
 }

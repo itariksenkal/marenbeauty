@@ -453,6 +453,30 @@ ${body}
 
 const PAD = 40;
 
+/**
+ * The chosen treatment (docs/OPEN-QUESTIONS.md G31, decided 2026-08-07).
+ *
+ * Its lockups are written to `public/brand/` as well as
+ * `public/brand/serif/`, so the site and anyone downloading a logo reference
+ * one canonical path. The other two stay on disk as the rejected options — a
+ * choice is easier to revisit when the alternatives are still there.
+ */
+const CHOSEN = 'serif';
+
+/**
+ * Fixed-colour exports, for the places `currentColor` cannot reach.
+ *
+ * A favicon and an Instagram avatar are rendered with no CSS around them, so
+ * `currentColor` resolves to black. These carry the palette instead: espresso
+ * ink for the favicon, and the owner's requested dusty rose and cream for the
+ * profile picture.
+ */
+const PALETTE = {
+  cream: '#faf4ec',
+  blush: '#d2b3a5',
+  espresso: '#3a241e',
+};
+
 function monogram(treatment, { small = false } = {}) {
   const { parts, ink } = treatment.mark({ small });
   const size = Math.max(ink.maxX - ink.minX, ink.maxY - ink.minY);
@@ -651,6 +675,75 @@ export type LogoTreatmentKey = keyof typeof logoTreatments;
 
 writeFileSync(join(ROOT, 'src', 'config', 'logo.ts'), ts, 'utf8');
 
+/* ── the chosen treatment, promoted and coloured ───────────────────────── */
+
+const chosen = generated[CHOSEN];
+
+/**
+ * A fixed-colour copy: `fill`/`stroke` resolved instead of inherited.
+ *
+ * `inset` is a fraction of the mark's width added as margin on every side.
+ * **Instagram crops a profile picture to a CIRCLE**, so a mark that fills its
+ * square loses its corners and, here, the engraver's rule along the bottom.
+ * At 0.3 the mark sits inside the inscribed circle with room to spare.
+ */
+function coloured(lockup, ink, background = null, inset = 0) {
+  const [, , boxWidth, boxHeight] = lockup.viewBox.split(' ').map(Number);
+  const margin = boxWidth * inset;
+  const width = boxWidth + margin * 2;
+  const height = boxHeight + margin * 2;
+  const viewBox = `${round(-margin)} ${round(-margin)} ${round(width)} ${round(height)}`;
+  const body = lockup.parts
+    .map((part) =>
+      part.mode === 'fill'
+        ? `  <path fill="${ink}"${part.rule ? ` fill-rule="${part.rule}"` : ''} d="${part.d}"/>`
+        : `  <path fill="none" stroke="${ink}" stroke-width="${part.width}" stroke-linecap="${part.cap}" stroke-linejoin="${part.join}" d="${part.d}"/>`,
+    )
+    .join('\n');
+
+  const plate = background
+    ? `  <rect x="${round(-margin)}" y="${round(-margin)}" width="${round(width)}" height="${round(height)}" fill="${background}"/>\n`
+    : '';
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" role="img" aria-label="Maren Beauty">
+  <title>Maren Beauty</title>
+${plate}${body}
+</svg>
+`;
+}
+
+for (const [name, lockup] of Object.entries(chosen.lockups)) {
+  writeFileSync(
+    join(BRAND_DIR, `${name}.svg`),
+    svgFor({
+      ...lockup,
+      title: name.startsWith('monogram')
+        ? 'Maren Beauty monogram'
+        : 'Maren Beauty',
+    }),
+    'utf8',
+  );
+}
+
+// Favicon: the 32px form, because that is the size it is actually used at, and
+// espresso rather than currentColor, because a favicon has no CSS around it.
+writeFileSync(
+  join(ROOT, 'public', 'icon.svg'),
+  coloured(chosen.lockups['monogram-32'], PALETTE.espresso),
+  'utf8',
+);
+
+// The Instagram avatar, as SVG here and rasterised to PNG by
+// `node scripts/build-avatar.mjs` — Instagram will not take an SVG.
+writeFileSync(
+  join(BRAND_DIR, 'instagram-avatar.svg'),
+  coloured(chosen.lockups.monogram, PALETTE.cream, PALETTE.blush, 0.3),
+  'utf8',
+);
+
 const count = Object.keys(TREATMENTS).length;
 console.log(`  logo: ${count} treatments × 4 lockups written to public/brand/`);
+console.log(
+  `  logo: '${CHOSEN}' promoted to public/brand/ and public/icon.svg`,
+);
 console.log('  logo: src/config/logo.ts regenerated');

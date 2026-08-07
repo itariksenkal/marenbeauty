@@ -1,34 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Maren Beauty">
-  <!--
-    The site mark.
-
-    Deliberately NOT a letterform: an SVG favicon carrying text depends on a
-    font the operating system happens to have, and Fraunces is not one of
-    those — the "M" would render in whatever serif the machine substitutes,
-    which is the same failure the Turkish glyph gate exists to prevent.
-
-    Two settling arcs on the cream surface instead. The sea reference in
-    docs/BRIEF.md §2 lives in behaviour and pacing, never in depiction — no
-    wave illustration, no shell, no anchor. This is the least literal form of
-    it that still reads as one shape at 16px.
-
-    Colours are the palette primitives from src/styles/theme.css:
-    --mb-cream, --mb-rosewood, --mb-clay. A unit test asserts they match.
-  -->
-  <rect width="64" height="64" rx="14" fill="#faf4ec" />
-  <path
-    d="M12 40c5-6 9-6 14 0s9 6 14 0 9-6 12-2"
-    fill="none"
-    stroke="#8a5d55"
-    stroke-width="3.5"
-    stroke-linecap="round"
-  />
-  <path
-    d="M12 28c5-6 9-6 14 0s9 6 14 0 9-6 12-2"
-    fill="none"
-    stroke="#7c564c"
-    stroke-width="2"
-    stroke-linecap="round"
-    opacity="0.45"
-  />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 828.43 828.43" role="img" aria-label="Maren Beauty">
+  <title>Maren Beauty</title>
+  <path fill="#3a241e" d="M435.02 578.51L399.15 595.34L582.94 135.65Q589.58 118.38 598.88 111.3Q608.18 104.21 624.57 104.21L729.97 104.21Q741.04 104.21 746.8 108.42Q752.55 112.62 752.55 120.15Q752.55 126.35 748.57 130.78Q744.58 135.21 735.28 137.42L709.6 144.07Q693.65 148.05 688.12 156.02Q682.58 164 683.91 183.04L720.22 654.68Q721.11 669.3 726.87 675.27Q732.62 681.25 747.24 684.8L771.6 691Q780.9 693.21 784.66 697.42Q788.42 701.62 788.42 707.38Q788.42 714.91 782.89 719.56Q777.35 724.21 766.28 724.21L570.54 724.21Q559.02 724.21 553.49 719.78Q547.95 715.35 547.95 708.27Q547.95 702.07 551.72 697.86Q555.48 693.65 565.22 691L590.02 684.8Q606.85 680.37 612.61 673.95Q618.37 667.52 617.48 654.68L578.95 176.4L612.61 174.62L418.2 664.87Q412 680.81 405.57 685.68Q399.15 690.55 390.74 690.55Q384.54 690.55 379.45 688.78Q374.35 687.01 369.92 681.25Q365.5 675.5 360.62 663.98L164 186.14L196.32 169.31L155.58 642.72Q153.81 660.88 162.67 669.74Q171.52 678.6 188.35 684.8L214.92 692.32Q221.57 694.98 225.55 698.3Q229.54 701.62 229.54 707.82Q229.54 714.91 224 719.56Q218.47 724.21 207.4 724.21L62.14 724.21Q51.07 724.21 45.53 719.78Q40 715.35 40 708.27Q40 700.74 44.87 696.97Q49.74 693.21 58.15 690.11L80.3 683.47Q96.24 679.04 104.43 669.74Q112.62 660.44 113.95 642.72L154.25 184.37Q155.58 166.65 149.16 157.13Q142.74 147.61 126.8 144.07L102.88 138.75Q93.14 136.1 88.71 131.89Q84.28 127.68 84.28 120.6Q84.28 104.21 107.31 104.21L210.94 104.21Q226.44 104.21 235.74 109.97Q245.04 115.72 252.12 133.44L435.02 578.51Z"/>
 </svg>

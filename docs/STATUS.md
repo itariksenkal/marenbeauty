@@ -3,7 +3,7 @@
 **What is shipping, what is a placeholder, what is missing, and what to do next.**
 
 Last updated: 2026-08-07. Every milestone through M19 is built and
-`npm run verify` exits 0: **775 unit tests, 210 browser tests, 102 accessibility
+`npm run verify` exits 0: **777 unit tests, 210 browser tests, 102 accessibility
 tests, 0 blocking guard violations.**
 
 The site is **feature-complete.** `npm run preflight` now passes two of its four

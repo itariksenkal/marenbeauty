@@ -53,7 +53,22 @@ export default function HomePage() {
           services,
         })}
       />
-      <HeroWater />
+      {/* The venue photograph is rendered HERE, on the server: HeroWater is a
+          client component, so resolving it there would pull the image manifest
+          into the browser bundle. */}
+      <HeroWater
+        venueImage={
+          <ImageFigure
+            // NOT `page-home-venue` — that is the wide frame further down the
+            // page, and the same photograph twice on one screen-and-a-half
+            // reads as a mistake rather than a motif.
+            id="page-home-detail"
+            ratio="landscape"
+            rounded="rounded-panel"
+            sizes="(min-width: 768px) 42rem, 92vw"
+          />
+        }
+      />
       {/* Narrowed here, on the server: the panel list is a client component,
           so anything passed whole is serialised into the RSC payload. The
           photographs are rendered here for the same reason — resolving them

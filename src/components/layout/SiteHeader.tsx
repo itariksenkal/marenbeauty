@@ -3,9 +3,10 @@ import Link from 'next/link';
 import { HeaderNav } from '@/components/layout/HeaderNav';
 import { HeaderScrollState } from '@/components/layout/HeaderScrollState';
 import { toListItems } from '@/components/sections/service-list-item';
+import { BrandGlyph } from '@/components/ui/BrandGlyph';
+import { Wordmark } from '@/components/ui/Wordmark';
 import { channelHref } from '@/config/contact';
 import { chrome, homeHref } from '@/config/navigation';
-import { site } from '@/config/site';
 import { getAllServices } from '@/content-layer';
 
 /**
@@ -57,9 +58,9 @@ export function SiteHeader() {
           <Link
             href={homeHref}
             data-header-wordmark=""
-            className="font-display text-xl tracking-display text-text-primary focus-visible:focus-ring"
+            className="text-text-primary focus-visible:focus-ring"
           >
-            {site.name}
+            <Wordmark className="h-7 sm:h-8" />
           </Link>
 
           <div className="flex items-center gap-3">
@@ -69,8 +70,9 @@ export function SiteHeader() {
               <a
                 data-channel="whatsapp"
                 href={whatsapp}
-                className="duration-fast hidden rounded-full bg-accent-solid px-5 py-2 text-sm text-text-on-accent transition-colors hover:bg-accent-solid-hover focus-visible:focus-ring sm:inline-block"
+                className="duration-fast hidden items-center gap-2 rounded-full bg-accent-solid px-5 py-2 text-sm text-text-on-accent transition-colors hover:bg-accent-solid-hover focus-visible:focus-ring sm:inline-flex"
               >
+                <BrandGlyph channel="whatsapp" className="size-4" />
                 {chrome.ctaWhatsapp}
               </a>
             ) : (

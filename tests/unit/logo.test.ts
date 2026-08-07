@@ -134,10 +134,19 @@ describe('the logo set', () => {
     }
   });
 
-  it('is not wired into the site yet', () => {
-    // The owner picks a treatment first. The only importer is the dev-only
-    // styleguide; when one is chosen this assertion is what needs updating,
-    // deliberately.
+  /**
+   * The owner chose `serif` on 2026-08-07 (docs/OPEN-QUESTIONS.md G31). The
+   * other two stay on disk as the rejected options — a choice is easier to
+   * revisit when the alternatives are still there — so what is pinned is that
+   * exactly ONE treatment is drawn by the site.
+   */
+  it('draws exactly one treatment, the chosen one', () => {
+    const wordmark = readFileSync(
+      join(ROOT, 'src', 'components', 'ui', 'Wordmark.tsx'),
+      'utf8',
+    );
+    expect(wordmark).toContain("const TREATMENT = 'serif'");
+
     const importers: string[] = [];
     const walk = (dir: string) => {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -145,14 +154,48 @@ describe('the logo set', () => {
         if (entry.isDirectory()) walk(full);
         else if (/\.tsx?$/.test(entry.name)) {
           if (/from '@\/config\/logo'/.test(readFileSync(full, 'utf8'))) {
-            importers.push(
-              full.replace(/.*src[\\/]/, 'src/').replace(/\\/g, '/'),
-            );
+            const parts = full.split(/[\\/]/);
+            importers.push(parts.slice(parts.lastIndexOf('src')).join('/'));
           }
         }
       }
     };
     walk(join(ROOT, 'src'));
-    expect(importers).toEqual(['src/app/styleguide/page.tsx']);
+    expect(importers.sort()).toEqual([
+      'src/app/styleguide/page.tsx',
+      'src/components/ui/Wordmark.tsx',
+    ]);
+  });
+
+  /**
+   * The favicon and the Instagram avatar carry REAL colours, not
+   * `currentColor` — there is no CSS around either of them, so an inherited
+   * colour resolves to black. This is the one place a hex is correct.
+   */
+  it('exports fixed-colour copies for the contexts that cannot inherit', () => {
+    const favicon = readFileSync(join(ROOT, 'public', 'icon.svg'), 'utf8');
+    expect(favicon).toContain('#3a241e'); // espresso
+    expect(favicon).not.toContain('currentColor');
+
+    const avatar = readFileSync(join(BRAND, 'instagram-avatar.svg'), 'utf8');
+    expect(avatar).toContain('#d2b3a5'); // blush — the owner's "toz pembe"
+    expect(avatar).toContain('#faf4ec'); // cream
+    expect(avatar).not.toContain('currentColor');
+
+    // Instagram crops to a circle: the mark has to clear the corners.
+    const [minX, , width] = avatar
+      .match(/viewBox="([^"]+)"/)![1]!
+      .split(' ')
+      .map(Number);
+    expect(Math.abs(minX!) / width!).toBeGreaterThan(0.1);
+  });
+
+  it('promotes the chosen lockups to public/brand/', () => {
+    for (const name of LOCKUPS) {
+      expect(
+        readFileSync(join(BRAND, `${name}.svg`), 'utf8'),
+        `public/brand/${name}.svg`,
+      ).toBe(readFileSync(join(BRAND, 'serif', `${name}.svg`), 'utf8'));
+    }
   });
 });
