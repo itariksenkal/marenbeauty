@@ -274,14 +274,60 @@ docker build -t marenbeauty .
 docker run --rm -p 3000:3000 --env-file .env.local marenbeauty
 ```
 
+### Two builds, on purpose
+
+**Read this before touching `output` in `next.config.ts`.**
+
+There are two build commands, and they are not interchangeable:
+
+| Command                    | `output`     | Used by                                  |
+| -------------------------- | ------------ | ---------------------------------------- |
+| `npm run build`            | unset        | Vercel, and `npm run verify`             |
+| `npm run build:standalone` | `standalone` | the `Dockerfile`, and CI's container job |
+
+`output: 'standalone'` was set unconditionally until 2026-08-07. **It broke
+every Vercel deploy.** The build compiled, generated all 89 static pages, and
+then died at the final step:
+
+```
+Error: ENOENT: no such file or directory, open
+  '/vercel/path0/.next/next-server.js.nft.json'
+```
+
+`copyTracedFiles()` is the only reader of that file, and it is reached only from
+the `output === 'standalone'` branch — which `next/dist/build/index.js` runs
+immediately after a deploy adapter's `handleBuildComplete()`. Vercel configures
+such an adapter, and Next's own comment on that branch says standalone "might
+not be allowed if an adapter with onBuildComplete is configured".
+
+Nothing on Vercel consumes the bundle in any case: the platform traces and
+packages the app itself, and `next start` prints a warning that it does not work
+with standalone. The bundle has exactly one consumer, the `Dockerfile`.
+
+**The plausible explanation is wrong, and it was checked rather than assumed.**
+"Turbopack does not emit the `.nft.json` trace files standalone needs" sounds
+right and is not: a Turbopack build writes 62 of them, `next-server.js.nft.json`
+included, produces a working `.next/standalone`, and `node server.js` serves
+200s from it. The CI container job has been building that exact combination
+since M16. **So neither build switches bundlers** — both use Turbopack, which is
+what lets `verify`'s 210 browser and 102 accessibility tests cover the same
+bundler the image ships. Forcing webpack for the container would buy nothing and
+would put code in the image that no gate had exercised.
+
+**If you re-add a bare `output: 'standalone'`, `npm run verify` will still pass**
+— it does not build the container shape — and the next deploy will fail at its
+last step. `tests/unit/build-targets.test.ts` fails instead, which is the point
+of it. Portability is unaffected: §3's rule is that the app runs under
+`docker run`, and it does; only the command that produces the bundle changed.
+
 **Run at M16 and confirmed:**
 
 - [x] Multi-stage build on `node:24-alpine`; runs as **uid 1001 (nextjs), gid
       1001 (nodejs)**. `--ingroup` matters — without it Alpine's `adduser` puts
       the user in `nogroup` while the files are chowned to `nodejs`.
-- [x] `output: 'standalone'`; only the standalone bundle, `public/` and
-      `.next/static` in the final image. **337 MB**, of which `node:24-alpine`
-      is most.
+- [x] `output: 'standalone'` (via `npm run build:standalone` — see above); only
+      the standalone bundle, `public/` and `.next/static` in the final image.
+      **337 MB**, of which `node:24-alpine` is most.
 - [x] **All 18 routes and generated files return 200** from the container:
       every page, `sitemap.xml`, `robots.txt`, `manifest.webmanifest`,
       `opengraph-image`, `icon.svg`. An unknown path returns a real **404**.

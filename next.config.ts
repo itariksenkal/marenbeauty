@@ -8,9 +8,37 @@ import type { NextConfig } from 'next';
 const CANONICAL_HOST = 'marenbeauty.com';
 
 const nextConfig: NextConfig = {
-  // Portability rule — CLAUDE.md §3. The app must run under `docker run`
-  // with no Vercel services.
-  output: 'standalone',
+  /**
+   * Portability rule — CLAUDE.md §3. The app must run under `docker run` with
+   * no Vercel services. That capability is NOT weakened by this being
+   * conditional; what changed is which builds ask for it.
+   *
+   * ⚠️ DO NOT SET THIS BACK TO A BARE `'standalone'`. It was unconditional
+   * until 2026-08-07, and it broke every Vercel deploy: compile fine, all 89
+   * static pages fine, then dead at the last step with
+   *
+   *     ENOENT: … open '/vercel/path0/.next/next-server.js.nft.json'
+   *
+   * `copyTracedFiles()` is the only reader of that file, and it is reached only
+   * from the `output === 'standalone'` branch — which `next/dist/build/index.js`
+   * runs directly after a deploy adapter's `handleBuildComplete()`. Vercel
+   * configures such an adapter, and Next's own comment on that branch says
+   * standalone "might not be allowed if an adapter with onBuildComplete is
+   * configured".
+   *
+   * Nothing on Vercel consumes the bundle anyway — the platform packages the
+   * app itself, and `next start` warns that it does not work with standalone.
+   * Only the Dockerfile reads `.next/standalone`. So only the container build
+   * asks for it:
+   *
+   *     npm run build             no standalone   Vercel, and `npm run verify`
+   *     npm run build:standalone  standalone      Dockerfile, and the CI job
+   *
+   * Both use Turbopack — see `scripts/build-standalone.mjs` for why the
+   * "Turbopack emits no trace files" theory is wrong. `docs/DEPLOY.md`
+   * §"Two builds, on purpose" records the trade.
+   */
+  output: process.env.BUILD_STANDALONE === '1' ? 'standalone' : undefined,
 
   reactStrictMode: true,
   poweredByHeader: false,

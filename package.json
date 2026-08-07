@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:standalone": "node scripts/build-standalone.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

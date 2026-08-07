@@ -29,7 +29,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ARG LEGAL_ENTITY=""
 ENV LEGAL_ENTITY=$LEGAL_ENTITY
 
-RUN npm run build
+# NOT `npm run build` — that is the Vercel-shaped build, which no longer emits
+# a standalone bundle for the runtime stage below to copy. Setting
+# `output: 'standalone'` unconditionally is what broke every Vercel deploy;
+# only this build asks for it (scripts/build-standalone.mjs).
+RUN npm run build:standalone
 
 # ── runtime ─────────────────────────────────────────────────────────────────
 FROM node:24-alpine AS runner
