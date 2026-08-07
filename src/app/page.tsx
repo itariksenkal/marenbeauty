@@ -65,7 +65,7 @@ export default function HomePage() {
             id="page-home-detail"
             ratio="landscape"
             rounded="rounded-panel"
-            sizes="(min-width: 768px) 42rem, 92vw"
+            sizes="(min-width: 1024px) 34vw, 92vw"
           />
         }
       />

@@ -9,7 +9,6 @@ import {
 import { useEffect, useRef, type RefObject } from 'react';
 
 import { Container } from '@/components/layout/Container';
-import { ImageReveal } from '@/components/motion/ImageReveal';
 import {
   PinnedSequence,
   usePinnedProgress,
@@ -82,9 +81,11 @@ function syncInert(
     'inert',
     animated && value < stages.story[0],
   );
+  // `story`, not `disperse`: the photograph now fades in alongside the brand
+  // lines, and content that is on screen must not be inert.
   refs.venue.current?.toggleAttribute(
     'inert',
-    animated && value < stages.disperse[0],
+    animated && value < stages.story[0],
   );
 }
 
@@ -184,29 +185,22 @@ function Stage({ venueImage }: { venueImage: React.ReactNode }) {
     [1, 0.35, 0],
     { clamp: true },
   );
-  /**
-   * The slogan leaves WITH the wordmark, not on its own schedule.
-   *
-   * It used to fade on a range of its own that ended after the wordmark had
-   * already scaled away, which left one line of text alone in the middle of an
-   * empty screen for most of stage 2 — the thing it is a caption for was gone.
-   * Tying the end of this ramp to `spread` means it can never outlive the word
-   * it sits under, whatever the stage boundaries are tuned to.
-   */
-  const positioningOpacity = useTransform(
-    progress,
-    [
-      stages.still[1],
-      stages.still[1] + (stages.spread[1] - stages.still[1]) * 0.55,
-    ],
-    [1, 0],
-    { clamp: true },
-  );
 
   // Stage 4.
+  /**
+   * The photograph arrives DURING the story, not after it.
+   *
+   * It used to ramp across `disperse`, which meant the right-hand half of the
+   * screen stayed empty for the whole of stage 3 while the brand lines read.
+   * Starting a quarter of the way into `story` means the image is settling in
+   * as the lines land, and the stage is never half-empty.
+   */
   const venueOpacity = useTransform(
     progress,
-    [stages.disperse[0], stages.disperse[1]],
+    [
+      stages.story[0] + (stages.story[1] - stages.story[0]) * 0.25,
+      stages.story[1],
+    ],
     [0, 1],
     { clamp: true },
   );
@@ -228,14 +222,25 @@ function Stage({ venueImage }: { venueImage: React.ReactNode }) {
           <h1 className="font-display text-hero tracking-hero text-text-primary">
             {site.wordmark}
           </h1>
-        </motion.div>
 
-        <motion.p
-          className="mt-4 text-center text-lg text-balance text-text-secondary"
-          style={animated ? { opacity: positioningOpacity } : undefined}
-        >
-          {home.slogan}
-        </motion.p>
+          {/*
+            INSIDE the wordmark group, not beside it.
+
+            The slogan used to be its own `motion.p` with its own scroll-driven
+            opacity ramp, and it kept outliving the word it captions: measured
+            against the real build, its computed opacity ran 1 → 0.18 → 0.83 → 1
+            as you scrolled, so it faded and then came BACK while the brand
+            story was on screen. Two elements reading the same progress through
+            two different ramps is a bug waiting to be re-tuned wrong.
+
+            Now it is one element with the wordmark. It cannot be visible when
+            the wordmark is not, because it is the same box — whatever the stage
+            boundaries are set to.
+          */}
+          <p className="mt-4 text-lg text-balance text-text-secondary">
+            {home.slogan}
+          </p>
+        </motion.div>
 
         {/*
           Stages 3 and 4 occupy the same space once the wordmark has gone. In
@@ -251,28 +256,47 @@ function Stage({ venueImage }: { venueImage: React.ReactNode }) {
               : 'mt-16 space-y-12'
           }
         >
-          <div ref={storyRef}>
-            <BrandStory
-              progress={progress}
-              range={[stages.story[0], stages.story[1]]}
-            />
-          </div>
+          {/*
+            Two columns from lg up: the story lines read down the left, the
+            photograph fills the right. Stacked, the right half of this screen
+            was empty for the whole story stage — the single emptiest area on
+            the site, and the thing the owner kept pointing at.
 
-          <motion.div
-            ref={venueRef}
-            className={animated ? 'mt-10' : undefined}
-            style={animated ? { opacity: venueOpacity } : undefined}
-          >
-            <ImageReveal className="mx-auto max-w-lead">
+            The text column is the wider of the two on purpose. These lines are
+            set at the display scale and the stage is exactly one viewport
+            tall; an even split makes them wrap an extra time and overflow the
+            pin.
+          */}
+          <div className="lg:gap-14 grid items-center gap-10 lg:grid-cols-[1.15fr_1fr]">
+            <div ref={storyRef}>
+              <BrandStory
+                progress={progress}
+                range={[stages.story[0], stages.story[1]]}
+              />
+            </div>
+
+            <motion.div
+              ref={venueRef}
+              style={animated ? { opacity: venueOpacity } : undefined}
+            >
               {/*
-                The real photograph. This was a grey box with the word "görsel"
-                in it — a stand-in from before the launch image set existed,
-                left behind when the set landed. It was the emptiest thing on
-                the first screen and it said so out loud.
+                NOT wrapped in `ImageReveal` — signature #4 stays on the
+                service pages, where it works.
+                
+                It starts at `clip-path: inset(100% 0 0 0)` and opens on
+                `whileInView` with `once: true`. Inside this pinned stage the
+                element is absolutely positioned and technically in the
+                viewport from first paint, so the observer resolves against a
+                box that is not yet the one the reader will see — and the
+                photograph stayed fully clipped at every scroll position.
+                Measured, not reasoned about: the element had opacity 1 and
+                correct bounds and still drew nothing.
+
+                The opacity ramp above IS the reveal here. One mechanism.
               */}
               {venueImage}
-            </ImageReveal>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       </Container>
     </div>
