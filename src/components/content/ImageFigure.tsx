@@ -1,4 +1,3 @@
-import { ImageCredit } from '@/components/content/ImageCredit';
 import { ManagedImage } from '@/components/content/ManagedImage';
 import { cn } from '@/lib/cn';
 
@@ -17,14 +16,13 @@ const RATIO: Record<Ratio, string> = {
 };
 
 /**
- * A managed image with its attribution underneath.
+ * A managed image, optionally captioned.
  *
- * The pairing matters: neither the Unsplash nor the Pexels licence requires
- * attribution, but every photograph in the launch set is somebody's work and is
- * standing in for photography that does not exist yet. Crediting it is both the
- * courteous reading of the licences and the only way the owner can find an
- * original later. `ImageCredit` renders nothing when a manifest entry has no
- * credit, so this stays correct when real photography lands.
+ * It renders NO photographer attribution. Neither the Unsplash Licence nor the
+ * Pexels Licence requires it, and the owner asked for it removed on 2026-08-07
+ * (docs/OPEN-QUESTIONS.md G30). The manifest still records `credit`, `licence`
+ * and `sourceUrl` for every entry — that is a provenance record, not a caption,
+ * and `CLAUDE.md` §8 requires it.
  */
 export function ImageFigure({
   id,
@@ -33,7 +31,6 @@ export function ImageFigure({
   priority = false,
   rounded = 'rounded-xl',
   className,
-  showCredit = true,
   captioned = false,
   caption,
 }: {
@@ -43,7 +40,6 @@ export function ImageFigure({
   priority?: boolean;
   rounded?: string;
   className?: string;
-  showCredit?: boolean;
   /**
    * Render the description as a visible `<figcaption>` and give the image an
    * EMPTY alt.
@@ -72,11 +68,6 @@ export function ImageFigure({
           {caption}
         </figcaption>
       ) : null}
-      {showCredit && (
-        <figcaption>
-          <ImageCredit id={id} className="mt-3" />
-        </figcaption>
-      )}
     </figure>
   );
 }

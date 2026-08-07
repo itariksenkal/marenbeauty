@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { Faq } from '@/components/content/Faq';
-import { ImageCredit } from '@/components/content/ImageCredit';
 import { ImageFigure } from '@/components/content/ImageFigure';
 import { ManagedImage } from '@/components/content/ManagedImage';
 import { Mdx } from '@/components/content/Mdx';
@@ -149,7 +148,6 @@ export default async function ServiceDetailPage({
             imageClassName="rounded-xl"
             viewTransitionName={viewTransitionNames.serviceHero}
           />
-          <ImageCredit id={service.heroImageId} className="mt-3" />
         </Container>
       </Section>
 

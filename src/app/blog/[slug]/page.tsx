@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { Faq } from '@/components/content/Faq';
-import { ImageCredit } from '@/components/content/ImageCredit';
 import { ManagedImage } from '@/components/content/ManagedImage';
 import { Mdx } from '@/components/content/Mdx';
 import { RelatedPosts } from '@/components/content/RelatedPosts';
@@ -171,7 +170,6 @@ export default async function BlogPostPage({
             className="mt-12 aspect-[16/9] rounded-xl"
             imageClassName="rounded-xl"
           />
-          <ImageCredit id={post.heroImageId} className="mt-3" />
         </Container>
       </Section>
 

@@ -6,11 +6,7 @@ import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
 import { ContactCta } from '@/components/sections/ContactCta';
 import { galleryPage } from '@/config/gallery';
-import {
-  imageCredits,
-  imagesInGroup,
-  type ManagedImage,
-} from '@/config/images';
+import { imagesInGroup, type ManagedImage } from '@/config/images';
 import { routeSeo } from '@/config/seo';
 import { standardGraph } from '@/lib/schema/graph';
 import { pageMetadata } from '@/lib/seo/metadata';
@@ -23,9 +19,11 @@ import { getAllServices } from '@/content-layer';
  * page's most important line: a gallery is read as "photographs of this place",
  * and these are not (`src/config/gallery.ts`).
  *
- * Credits are rendered once at the bottom rather than under all 48 frames —
- * `imageCredits()` dedupes by photographer, which turns 48 captions into a
- * readable list and keeps the grid from becoming a wall of small print.
+ * No photographer attribution is rendered. Neither the Unsplash Licence nor the
+ * Pexels Licence requires it, and the owner asked for it removed on 2026-08-07
+ * (docs/OPEN-QUESTIONS.md G30). `credit`, `licence` and `sourceUrl` stay
+ * recorded per entry in `src/config/images.ts`, which is what `CLAUDE.md` §8
+ * asks for and the only way to find an original later.
  */
 export const metadata: Metadata = pageMetadata({
   title: routeSeo.gallery.title,
@@ -36,8 +34,6 @@ export const metadata: Metadata = pageMetadata({
 const TONES = ['transparent', 'raised', 'transparent', 'sunken'] as const;
 
 export default function GalleryPage() {
-  const credits = imageCredits();
-
   return (
     <>
       <JsonLd
@@ -99,7 +95,6 @@ export default function GalleryPage() {
                       // priority would mean none of them is.
                       priority={index === 0 && position === 0}
                       sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                      showCredit={false}
                       // The caption below IS the description. Repeating it in
                       // alt makes a screen reader announce the same sentence
                       // twice per frame — 48 times on this page — which axe
@@ -115,34 +110,6 @@ export default function GalleryPage() {
           </Section>
         );
       })}
-
-      <Section tone="transparent" rhythm="tight">
-        <Container width="reading">
-          <h2 className="font-display text-xl tracking-display text-text-primary">
-            {galleryPage.creditsHeading}
-          </h2>
-          <p className="mt-3 text-text-secondary">{galleryPage.creditsBody}</p>
-          <ul className="mt-6 space-y-2">
-            {credits.map((credit) => (
-              <li
-                key={`${credit.credit}-${credit.licence}`}
-                className="text-sm"
-              >
-                <span className="text-text-primary">{credit.credit}</span>
-                <span className="text-text-muted"> · </span>
-                <a
-                  href={credit.sourceUrl}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  className="text-text-accent underline decoration-1 underline-offset-4 hover:decoration-2 focus-visible:focus-ring"
-                >
-                  {credit.licence}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </Container>
-      </Section>
 
       <ContactCta />
     </>

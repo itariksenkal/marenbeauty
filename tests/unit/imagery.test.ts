@@ -12,7 +12,6 @@ import {
 import { BLOG_CATEGORIES } from '@/content-layer';
 import {
   getImage,
-  imageCredits,
   images,
   imagesInGroup,
   replaceableImages,
@@ -154,11 +153,15 @@ describe('licensing', () => {
     }
   });
 
-  it('dedupes credits by photographer for the gallery block', () => {
-    const credits = imageCredits();
-    expect(credits.length).toBeGreaterThan(10);
-    expect(credits.length).toBeLessThan(images.length);
-    expect(new Set(credits.map((c) => c.credit)).size).toBe(credits.length);
+  /**
+   * The manifest keeps `credit`, `licence` and `sourceUrl`; the site renders
+   * none of them (G30). The assertion above pins the record, this one pins the
+   * absence of the machinery that used to publish it — an exported helper is
+   * how it would quietly come back.
+   */
+  it('exports no helper that formats credits for display', async () => {
+    const manifest = await import('@/config/images');
+    expect(Object.keys(manifest)).not.toContain('imageCredits');
   });
 
   it('marks the whole set replaceable', () => {

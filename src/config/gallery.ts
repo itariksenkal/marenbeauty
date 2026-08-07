@@ -9,9 +9,12 @@
  * site to become dishonest.
  *
  * So the page says what it is, in its own lead, above the images — not in a
- * footnote. Every frame is credited to its photographer, and the licence links
- * out. When the real shoot happens, this copy changes and `src/config/images.ts`
- * is regenerated; the page itself does not.
+ * footnote. When the real shoot happens, this copy changes and
+ * `src/config/images.ts` is regenerated; the page itself does not.
+ *
+ * No photographer attribution is rendered — neither licence requires it
+ * (docs/OPEN-QUESTIONS.md G30). The lead below is NOT attribution and must not
+ * be removed with it: it is the sentence that stops stock reading as the venue.
  */
 export const galleryPage = {
   eyebrow: 'Galeri',
@@ -52,8 +55,4 @@ export const galleryPage = {
       group: 'blog',
     },
   ],
-
-  creditsHeading: 'Fotoğraflar',
-  creditsBody:
-    'Unsplash ve Pexels lisansları atıf zorunluluğu getirmez. Yine de her fotoğrafın sahibi aşağıda yazılı; hem doğrusu bu, hem de asıl dosyaya ulaşmanın tek yolu.',
 } as const;

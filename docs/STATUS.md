@@ -74,8 +74,14 @@ the owner has read it, or replace the strings.
 ### Photography — `src/config/images.ts` (generated)
 
 48 stock photographs from Unsplash and Pexels, self-hosted as WebP, every one
-credited and `replaceable: true`. **None of them is the premises**, and
-`/galeri` says so in its first paragraph, above the images.
+`replaceable: true`. **None of them is the premises**, and `/galeri` says so in
+its first paragraph, above the images — that line is not a credit and does not
+come out with them.
+
+**No photographer attribution is rendered anywhere** (G30). Neither licence
+requires it. The manifest still records `credit`, `licence` and `sourceUrl` per
+entry, because that is the provenance record `CLAUDE.md` §8 asks for and the
+only way to find an original later.
 
 To replace: edit `scripts/image-set.mjs`, run `node scripts/fetch-images.mjs
 --force`. The manifest regenerates itself. **No component changes** — components

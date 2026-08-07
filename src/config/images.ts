@@ -688,34 +688,12 @@ export function imagesInGroup(
   return images.filter((image) => image.group === group);
 }
 
-/**
- * Every distinct credit line, for the gallery's attribution block.
+/*
+ * There is deliberately no `imageCredits()` any more.
  *
- * Neither the Unsplash nor the Pexels licence requires attribution. It is
- * given anyway: it costs one line, it is the courteous reading of both, and it
- * is the only way to find the original of an image later.
+ * It built the gallery's attribution block, which was removed on 2026-08-07:
+ * neither the Unsplash Licence nor the Pexels Licence requires attribution
+ * (docs/OPEN-QUESTIONS.md G30). `credit`, `licence` and `sourceUrl` remain on
+ * every entry above — as a provenance record, which `CLAUDE.md` §8 requires and
+ * which is the only way to find an original later. Recorded is not rendered.
  */
-export function imageCredits(): readonly {
-  readonly credit: string;
-  readonly licence: string;
-  readonly sourceUrl: string;
-}[] {
-  const seen = new Map<
-    string,
-    { credit: string; licence: string; sourceUrl: string }
-  >();
-  for (const image of images) {
-    if (!image.credit || !image.sourceUrl) continue;
-    const key = `${image.credit}|${image.licence}`;
-    if (!seen.has(key)) {
-      seen.set(key, {
-        credit: image.credit,
-        licence: image.licence,
-        sourceUrl: image.sourceUrl,
-      });
-    }
-  }
-  return [...seen.values()].sort((a, b) =>
-    a.credit.localeCompare(b.credit, 'tr'),
-  );
-}

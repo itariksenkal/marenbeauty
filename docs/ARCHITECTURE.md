@@ -509,7 +509,7 @@ marenbeauty/
 | `Mdx`                                     | S   | Compiled MDX + component map.                            |
 | `Prose`                                   | S   | Typographic rhythm for long form. 68ch.                  |
 | `ManagedImage`                            | S   | Takes a manifest `id`. **The only `next/image` caller.** |
-| `ImageCredit`                             | S   | Renders licence/credit when the manifest has one.        |
+| `ImageFigure`                             | S   | `ManagedImage` + optional `<figcaption>`. No credit.     |
 | `ServiceCard` / `ServiceGrid`             | S   | Card is the View Transition source.                      |
 | `PostCard` / `PostGrid` / `CategoryPills` | S   | No byline. Pills are plain links, so filtering is a URL. |
 | `Pagination` / `PostListing`              | S   | Shared by all four listing routes. Renders nothing at 1. |

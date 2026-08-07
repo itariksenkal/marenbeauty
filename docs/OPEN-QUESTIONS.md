@@ -1238,6 +1238,44 @@ file, and Next sets nothing for them.
 
 ---
 
+### G30 — Photographer attribution removed from the site 🟢 → owner's call, 2026-08-07
+
+The owner asked for the rendered photo credits removed: the "Fotoğraflar" block
+at the foot of `/galeri`, and the credit line under every hero and figure.
+
+**The reasoning given is correct, and it is worth recording because the previous
+code argued the opposite in three separate comments.** Neither the Unsplash
+Licence nor the Pexels Licence requires attribution. Both say it is appreciated;
+neither makes it a condition. Crediting was a courtesy, so removing it is the
+owner's call to make and costs no compliance.
+
+**What was removed:** the credits `<Section>` on `/galeri` with its heading and
+body copy, `ImageCredit.tsx` entirely, the `showCredit` prop on `ImageFigure`,
+the two hero usages on `/hizmetler/[slug]` and `/blog/[slug]`, and the
+`imageCredits()` helper that formatted the block.
+
+**What was deliberately kept, and the distinction matters:**
+
+1. **`credit`, `licence` and `sourceUrl` stay on all 48 manifest entries.**
+   `CLAUDE.md` §8 requires them, and they are the only way to find an original
+   later. Recorded is not rendered. Two tests still assert every entry carries
+   them.
+2. **`/lisanslar` and the generated `NOTICE` are untouched.** Those carry
+   dependency licences, and the CC-BY ones there **do** oblige attribution
+   (`CLAUDE.md` §2). Different obligation, different file — deleting them
+   because photo credits went would be a real licence breach.
+3. **The gallery's lead paragraph stays.** "Bu fotoğraflar merkeze ait değil" is
+   not attribution; it is the sentence that stops stock photography reading as
+   the venue, which is the whole point of §8. It sits above the images, and it
+   is the one line on that page that must never be removed as a tidy-up.
+
+Two tests were inverted rather than deleted, so the block cannot return by
+accident: `/galeri` must render **zero** outbound Unsplash or Pexels links and
+no "Fotoğraflar" heading, and `src/config/images.ts` must export no helper that
+formats credits for display.
+
+---
+
 ## H. Content posture — standing rule
 
 **Recorded 2026-08-06. This is a working rule, not a question.** Also written

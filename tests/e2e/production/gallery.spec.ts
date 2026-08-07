@@ -65,12 +65,20 @@ test.describe('the gallery', () => {
     }
   });
 
-  test('credits every photographer with a licence link', async ({ page }) => {
+  test('renders no photographer attribution', async ({ page }) => {
+    // The inverse of the assertion that used to be here. Neither licence
+    // requires attribution and the owner asked for it removed (G30), so this
+    // guards against the block returning — it was a whole <Section>, and the
+    // manifest still carries every credit, so restoring it is a two-line
+    // mistake rather than a deliberate act.
     await page.goto('/galeri');
     const credits = page.locator(
       'main a[href*="unsplash.com"], main a[href*="pexels.com"]',
     );
-    expect(await credits.count()).toBeGreaterThan(10);
+    expect(await credits.count()).toBe(0);
+    await expect(
+      page.getByRole('heading', { name: 'Fotoğraflar' }),
+    ).toHaveCount(0);
   });
 
   test('loads no image from a third-party host', async ({ page }) => {
