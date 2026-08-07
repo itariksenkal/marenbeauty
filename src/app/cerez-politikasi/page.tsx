@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { ConsentPreferences } from '@/components/analytics/ConsentPreferences';
 import { LegalDocumentPage } from '@/components/content/LegalDocumentPage';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { standardGraph } from '@/lib/schema/graph';
@@ -33,7 +34,11 @@ export default function CookiePolicyPage() {
           services: getAllServices(),
         })}
       />
-      <LegalDocumentPage document={document} others={others} />
+      <LegalDocumentPage
+        document={document}
+        others={others}
+        aside={<ConsentPreferences />}
+      />
     </>
   );
 }

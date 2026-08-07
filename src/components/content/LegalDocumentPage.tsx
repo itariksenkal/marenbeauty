@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 import { Mdx } from '@/components/content/Mdx';
 import { Container } from '@/components/layout/Container';
@@ -30,9 +31,16 @@ import type { LegalDocument } from '@/content-layer';
 export async function LegalDocumentPage({
   document,
   others,
+  aside,
 }: {
   document: LegalDocument;
   others: readonly LegalDocument[];
+  /**
+   * Optional interactive block, rendered after the body. Only the cookie
+   * policy uses it, for the consent preferences panel — which belongs on the
+   * page that explains what it controls, not in a floating widget.
+   */
+  aside?: ReactNode;
 }) {
   const entity = legalEntity();
 
@@ -96,6 +104,7 @@ export async function LegalDocumentPage({
       <Section tone="transparent" rhythm="tight">
         <Container width="reading">
           <Mdx source={document.body} file={document.file} />
+          {aside ? <div className="mt-12 max-w-reading">{aside}</div> : null}
         </Container>
       </Section>
 

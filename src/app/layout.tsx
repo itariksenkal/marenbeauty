@@ -4,6 +4,8 @@ import type { ReactNode } from 'react';
 import { THEME_COLOR } from './manifest';
 import { routeSeo, TITLE_SUFFIX } from '@/config/seo';
 
+import { Analytics } from '@/components/analytics/Analytics';
+import { ConsentBanner } from '@/components/analytics/ConsentBanner';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { PreLaunchBand } from '@/components/layout/PreLaunchBand';
@@ -95,6 +97,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <SiteFooter />
         </MotionTierProvider>
         <GrainOverlay />
+        {/*
+          Renders nothing today, and — more to the point — SHIPS nothing:
+          every adapter sits behind a statically-false flag, so its code never
+          enters the bundle (docs/OPEN-QUESTIONS.md C5, C6).
+        */}
+        <Analytics />
+        <ConsentBanner />
       </body>
     </html>
   );

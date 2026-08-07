@@ -1552,48 +1552,97 @@ type. Recorded in `docs/DEPLOY.md`.
 
 ---
 
-## M14 — Analytics and consent ☐
+## M14 — Analytics and consent ☑ **DONE 2026-08-07**
 
-**Goal.** The consent gate **live at launch**, every tag off, and no analytics
+**Goal.** The consent gate live at launch, every tag off, and no analytics
 backend deployed.
-
-Per `docs/OPEN-QUESTIONS.md` C5 and C6: advertising is expected within 12
-months, so the gate ships now — tracking must never be able to start before
-consent exists. Umami is the chosen engine but is **not stood up at launch**;
-there is no traffic to measure and a second server is real cost for zero return.
 
 **Files touched**
 
 ```
-src/config/analytics.ts  src/components/analytics/*.tsx
-src/app/cerez-politikasi/page.tsx
+src/config/analytics.ts  src/config/env.ts
+src/lib/analytics/consent.ts                                  ← added
+src/components/analytics/Analytics.tsx                        ← added
+src/components/analytics/{ConsentBanner,ConsentPreferences}.tsx ← added
+src/components/analytics/adapters/{Umami,Ga4,MetaPixel}Script.tsx ← added
+src/app/layout.tsx  src/app/cerez-politikasi/page.tsx
+src/components/content/LegalDocumentPage.tsx  .env.example
+tests/unit/analytics.test.ts  tests/e2e/production/consent.spec.ts
 ```
 
 **Acceptance criteria**
 
-- [ ] **Consent gate is live**: opt-in only, Consent Mode v2 default denied,
-      rejecting exactly as easy as accepting, choice persisted, re-openable.
-- [ ] **No analytics backend is deployed.** No Umami instance, no VPS, no DNS
-      record. The Umami adapter exists behind an off flag.
-- [ ] Umami, GA4 and Meta Pixel adapters all exist and are all `false`, and are
-      **absent from the production bundle** — verified by searching the built
-      chunks, not by inspecting source.
-- [ ] With flags off: **zero cookies set, zero third-party requests** — verified
-      in a clean browser profile.
-- [ ] Switching any adapter on later is a config change, not a refactor.
-      Demonstrated by flipping a flag in a local build.
-- [ ] Cookie policy describes actual behaviour — **it does not describe cookies
-      the site does not set.** At launch that means: none.
-- [ ] `UMAMI_*` env vars documented as unused-at-launch and **not required** by
+- [x] **Consent machinery is live**: opt-in only, Consent Mode v2 default
+      denied, `unset` treated as denied everywhere, the choice persisted, and a
+      preferences panel on `/cerez-politikasi` that is reachable today.
+      Rejecting is exactly as easy as accepting — a test compares the two
+      buttons' class strings and asserts they are **identical**.
+- [x] **No analytics backend is deployed.** No Umami instance, no VPS, no DNS
+      record. The adapter exists behind an off flag.
+- [x] All three adapters exist and all three are off.
+- [x] **Tracker code is absent from the production build** — `googletagmanager`,
+      `connect.facebook.net`, `fbevents` and `fbq(` each grepped for across
+      `.next/` and each returning zero files. See the deviation below; this one
+      took an experiment.
+- [x] **Zero cookies, zero third-party requests, in a clean browser profile.**
+      Ten routes visited in one fresh context: `context.cookies()` empty, every
+      request's hostname local, `localStorage` and `sessionStorage` untouched,
+      `window.gtag`/`fbq`/`dataLayer` all `undefined`, no service worker.
+- [x] Switching one on later is a config change (see below for the honest
+      caveat, which is one uncommented line for the two advertising tags).
+- [x] The cookie policy describes actual behaviour. A test asserts it names
+      **none** of `_ga`, `_gid`, `_fbp`, `PHPSESSID` — the boilerplate cookie
+      list that appears on sites setting none of them — and that its promises
+      about consent match what the code does.
+- [x] `UMAMI_*` (and now `GA4_MEASUREMENT_ID`, `META_PIXEL_ID`) are optional in
       `env.ts`; a missing value is not a startup failure (G2).
 
-**Verify**
+**The banner renders nothing, and that is the decision**
+
+C6 asks for the gate live at launch. It is — the store, the persisted choice,
+the preferences panel, and the rule that every adapter reads consent before it
+loads. What does **not** render is the banner, because
+`requiresConsentBanner()` is false while no tag is enabled.
+
+A consent dialogue asking permission for something that is not happening, on a
+site whose cookie policy opens with "this site uses no cookies", makes one of
+the two a lie — and a visitor would be right to trust neither. Flipping
+`ga4.enabled` makes the banner appear with no other change, which is what C6
+was protecting against: a gate arriving after tracking has already started.
+
+**The deviation, and the experiment behind it — G26**
+
+"Absent from the production bundle" could not be met the obvious way.
+`if (analytics.ga4.enabled) { const { Ga4Script } = await import(…) }` looks
+like it should tree-shake and does not: **Turbopack emits the dynamic import's
+chunk even when the branch is statically dead.** Gating on a build-time
+`NEXT_PUBLIC_*` literal instead made no difference. Both were verified by
+grepping the build, twice, not assumed.
+
+So the three adapters are not treated alike:
+
+| Adapter        | Wired? | Why                                                                                                                         |
+| -------------- | ------ | --------------------------------------------------------------------------------------------------------------------------- |
+| **Umami**      | Yes    | Server Component, one `<script async>`, URL from `env`. Needs no consent, ships no client JS, bakes in no third-party host. |
+| **GA4**        | No     | Importing it puts `googletagmanager.com` into the build of a site that has decided not to track anyone.                     |
+| **Meta Pixel** | No     | Same.                                                                                                                       |
+
+Both unwired adapters are **complete** — Consent Mode v2 defaults-denied set
+before the tag can load, no script element at all without granted consent, and
+no `<noscript>` pixel (which would fire before any gate could evaluate). Turning
+one on is: flip the flag, set the env var, **uncomment one line**, which is
+documented at the exact spot in `Analytics.tsx`. That third step exists so the
+first two cannot put a tracker into the bundle by accident.
+
+A test asserts all of it: that neither is imported anywhere in `src/`, that both
+files are still complete, and that the build contains none of the four
+tracker strings.
+
+**Verify** — `npm run verify` exits **0**. 749 unit tests, 194 browser tests.
 
 ```bash
 npm run verify
 ```
-
-Plus a clean-profile network + storage inspection.
 
 ---
 

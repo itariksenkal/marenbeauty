@@ -33,6 +33,20 @@ const publicSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
     .default('development'),
+
+  /*
+   * Analytics identifiers — ALL OPTIONAL, and unused at launch
+   * (docs/OPEN-QUESTIONS.md C5, G2). No analytics backend is deployed, so a
+   * missing value must never be a startup failure: requiring them would make
+   * the site refuse to boot over a measurement nobody has asked for.
+   *
+   * The adapter for each is behind a config flag that is `false`, so these are
+   * read only once somebody deliberately turns one on.
+   */
+  UMAMI_SCRIPT_URL: z.url().optional(),
+  UMAMI_WEBSITE_ID: z.string().min(1).optional(),
+  GA4_MEASUREMENT_ID: z.string().min(1).optional(),
+  META_PIXEL_ID: z.string().min(1).optional(),
 });
 
 const spamSchema = z.object({

@@ -1047,6 +1047,37 @@ the quoted right passes, and "Lekeleri yok eder." still blocks. The
 "ships empty" test became an exact-list test, so a second entry has to be added
 by name with a human deciding it belongs.
 
+### G26 — A dead branch still ships its dynamic import 🟢 → M14
+
+M14 requires that the analytics adapters be **absent from the production
+bundle**, not merely inactive.
+
+The obvious implementation does not achieve it:
+
+```ts
+if (analytics.ga4.enabled) {
+  // statically false
+  const { Ga4Script } = await import('./adapters/Ga4Script');
+}
+```
+
+**Turbopack emits the dynamic import's chunk anyway.** `googletagmanager.com`
+appeared in four build files. Gating on a build-time `NEXT_PUBLIC_*` literal
+instead — the technique M5 used successfully for the `?motion=` override —
+made no difference: two non-map files still contained it. Both were checked by
+grepping `.next/`, not reasoned about.
+
+**Resolution.** Umami is wired (Server Component, URL from `env`, no consent
+needed, no third-party host in the source). GA4 and the Meta Pixel are complete
+but **not imported by anything**, so their code cannot enter the graph. Turning
+one on adds an env var, a flag, and one uncommented line — documented at the
+import site.
+
+The third step is a feature rather than friction: it means the two config
+changes alone cannot put a tracker into the bundle of a site that has decided
+not to track anyone. A test greps the build for four tracker strings and fails
+on any of them.
+
 ---
 
 ## H. Content posture — standing rule
