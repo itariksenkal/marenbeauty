@@ -1276,6 +1276,109 @@ formats credits for display.
 
 ---
 
+### G31 — Three logo treatments, awaiting a choice 🟡 → owner decides
+
+Three M treatments are drawn and reviewable at `/styleguide` §10, at 32px, 128px
+and 512px, in both colourways. **Nothing is wired into the site** — the header
+and footer still use the type-set wordmark. A unit test asserts that, so wiring
+one in is a deliberate act rather than a drift.
+
+| Treatment | Idea                                                                                                              |
+| --------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Arch**  | Constructed and curved. Two half-circle arches on three legs — a doorway that reads as an M. Nothing typographic. |
+| **Serif** | The site's own display face: the Fraunces capital M, solid, over a fine engraver's rule.                          |
+| **Seal**  | A container rather than a letter. A geometric M knocked out of a rounded lozenge; avatar-shaped first.            |
+
+**To choose one:** move `public/brand/<treatment>/{stacked,monogram,horizontal}.svg`
+to `public/brand/`, delete the other two directories, and update the "not wired
+in" assertion in `tests/unit/logo.test.ts`.
+
+#### What the 32px test actually changed
+
+The instruction was to test the monogram at 32px and simplify rather than ship a
+smudge. Both halves of that happened, and neither was predictable from the
+drawing:
+
+- **The serif's engraver's rule is dropped at 32px.** At that size the rule is
+  under a pixel and antialiases into a grey smear under the letter, which reads
+  as a rendering fault rather than a device. The 32px form is the letter alone.
+- **A fourth treatment was cut.** "Chevron" — two angular chevrons meeting at a
+  diamond aperture — was drawn, rendered and rejected: its diagonals were offset
+  VERTICALLY, which tapers both strokes to needles and closes the middle notch
+  to a nick. At 32px it stopped being a letter. It was replaced by Seal rather
+  than nudged, because the geometry was wrong in kind. The M inside Seal is
+  built the way a type designer builds one — full-height stems, and each
+  diagonal a parallelogram whose inner edge is the outer edge shifted
+  HORIZONTALLY — which makes the inner vertex height fall out of the stem width
+  instead of being set by eye.
+
+#### Two decisions worth knowing before extending this
+
+**Every letter is outlined path data**, read out of `src/fonts/og/*.ttf` by
+`scripts/lib/truetype.mjs` — a small TrueType reader written for this rather
+than a new dependency. A logo has to render where no webfont is loaded: a
+favicon, an Instagram avatar, a print PDF, an `<img>` tag. `<text>` in those
+contexts silently falls back to something that is not Fraunces.
+
+**Colour is `currentColor`, with no default baked in.** A `color` attribute or
+an internal `<style>` on the root would win against an inherited value and make
+the inverse colourway impossible to set from CSS — which is the entire
+requirement, since the same file must sit on ivory and on espresso. The cost is
+real and is the owner's to weigh: **used as `<img src>` or as a favicon, the
+mark renders black**, because that is what `currentColor` resolves to with no
+context. Fixed-colour copies are worth cutting once a treatment is chosen, not
+before — three treatments × two colourways × three lockups is eighteen files
+nobody has picked yet.
+
+---
+
+### G32 — Brand glyphs are an owner-approved exception to the icon rule 🟢 → decided 2026-08-07
+
+`CLAUDE.md` §2 pins **Lucide as the only icon set**, and `SocialLinks` used to
+carry a comment explaining why the follow row was words rather than logos:
+Lucide has no TikTok or WhatsApp glyph and has been retiring brand marks, so
+logos meant either a second icon set (forbidden) or hand-drawn trademarks.
+
+**The owner asked for the logos.** That is theirs to decide, and it is recorded
+here rather than quietly done, because the code argued the other way in three
+places. What was actually built:
+
+- `src/components/ui/BrandGlyph.tsx` — five **simplified monochrome glyphs**
+  (Instagram, Facebook, X, TikTok, WhatsApp), drawn locally on a 24×24 grid,
+  one flat `currentColor` each. **No dependency was added**, so §2's licence
+  policy is untouched and there is no new entry in `docs/LICENSES.md`.
+- **They are not the official trademarks.** Using a platform's mark to link to
+  your own profile on it is ordinary nominative use; that is a reason to keep
+  the glyphs plain and recognisable rather than to reproduce brand artwork.
+- **The name is still rendered beside every glyph.** An icon-only row would
+  lean on `aria-label` for screen-reader users and on recognition for everyone
+  else — and these are simplified marks, so the word carries the meaning.
+
+Lucide is, incidentally, **not installed at all** — nothing in the tree imports
+it. §2 pins it for when an icon is first genuinely needed; that has not happened
+yet, and this row is not it.
+
+---
+
+### B4 — WhatsApp is assumed to be on the phone line 🟡 → needs one word from the owner
+
+The owner supplied **+90 501 007 79 54** on 2026-08-07 and asked for a WhatsApp
+link in the footer. Both `phone` and `whatsapp` are now set to that number.
+
+**The WhatsApp half is an inference, not something confirmed.** In Turkey a
+mobile is usually both, and it is strictly better than the alternative — leaving
+`wa.me/905000000000`, a link guaranteed to fail. But a `wa.me` link to a number
+with no WhatsApp account fails in the visitor's face, on the channel the brief
+names as the top of the conversion hierarchy.
+
+**Needed:** confirmation that WhatsApp is registered on this line. If it is not,
+set `whatsapp: null` in `src/config/contact.ts` and it disappears from the
+header CTA, the contact section, the footer row and the structured data with no
+other edit. The two keys are separate for exactly this reason, and a test
+asserts they still match so a future divergence has to be deliberate.
+
+---
+
 ## H. Content posture — standing rule
 
 **Recorded 2026-08-06. This is a working rule, not a question.** Also written

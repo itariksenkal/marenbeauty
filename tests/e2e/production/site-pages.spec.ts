@@ -105,7 +105,7 @@ test.describe('configured facts', () => {
   test('every social profile renders with a live target', async ({ page }) => {
     await page.goto('/iletisim');
     const socials = page.locator(
-      '[data-channel="instagram"], [data-channel="facebook"], [data-channel="tiktok"], [data-channel="googleBusiness"]',
+      '[data-channel="instagram"], [data-channel="facebook"], [data-channel="tiktok"], [data-channel="x"]',
     );
     // The footer carries them on every page from M19; /iletisim carries the
     // conversion channels. Either way, none may be dead.

@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { channelHref, contact, type ContactChannelKey } from '@/config/contact';
 import { experience } from '@/config/experience';
 import { home } from '@/config/home';
+import { footerBrand } from '@/config/navigation';
 import { serviceGroups } from '@/config/services';
 import { site } from '@/config/site';
 import { testimonials } from '@/config/testimonials';
@@ -268,9 +269,24 @@ describe('home copy', () => {
     expect(offenders).toEqual([]);
   });
 
+  /**
+   * The hero used to carry the district and now carries a slogan. The rule it
+   * was protecting has not changed: the district must reach the page from
+   * `site.address` rather than a retyped string, or moving the centre leaves a
+   * stale one behind. It now does that from the footer paragraph, which is on
+   * every page rather than only this one.
+   */
   it('interpolates the district so it cannot go stale', () => {
-    expect(home.positioningLine).toContain(site.address.locality);
-    expect(home.positioningLine).toContain(site.address.region);
+    expect(footerBrand.paragraph).toContain(site.address.locality);
+    expect(footerBrand.paragraph).toContain(site.address.region);
+  });
+
+  it('opens on a slogan rather than a second copy of the address', () => {
+    expect(home.slogan).not.toContain(site.address.locality);
+    expect(home.slogan).not.toContain(site.address.region);
+    // A slogan, not a sentence about the premises: one short line, because it
+    // sits under a 240px word and has to stay on one line at 320px.
+    expect(home.slogan.length).toBeLessThan(40);
   });
 
   it('states no duration, price or opening date', () => {

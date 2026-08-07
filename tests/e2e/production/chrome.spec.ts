@@ -267,15 +267,34 @@ test.describe('the mega footer', () => {
     page,
   }) => {
     await page.goto('/');
-    const hrefs = await page
+    const links = await page
       .locator('footer [data-channel]')
-      .evaluateAll((els) => els.map((el) => el.getAttribute('href') ?? ''));
+      .evaluateAll((els) =>
+        els.map((el) => ({
+          channel: el.getAttribute('data-channel') ?? '',
+          href: el.getAttribute('href') ?? '',
+        })),
+      );
 
-    // Three conversion channels + four social profiles.
-    expect(hrefs.length).toBe(7);
-    for (const href of hrefs) {
-      expect(href).toMatch(/^(?:tel:\+?\d|mailto:[^@]+@|https:\/\/)/);
+    expect(links.length).toBeGreaterThan(0);
+    for (const { channel, href } of links) {
+      expect(href, channel).toMatch(/^(?:tel:\+?\d|mailto:[^@]+@|https:\/\/)/);
     }
+
+    // The SET rather than a count: WhatsApp legitimately appears twice — once
+    // as a way to start a conversation and once in the follow row — and a
+    // hardcoded total turns that into a failure the next time the row changes.
+    expect(new Set(links.map((l) => l.channel))).toEqual(
+      new Set([
+        'whatsapp',
+        'phone',
+        'email',
+        'instagram',
+        'facebook',
+        'tiktok',
+        'x',
+      ]),
+    );
   });
 
   test('shows the address, hours and the wordmark', async ({ page }) => {

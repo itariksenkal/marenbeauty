@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
+import { logoTreatments, type LogoLockup } from '@/config/logo';
+import { cn } from '@/lib/cn';
 import { contrastRatio, wcagLevel } from '@/lib/contrast';
 
 import {
@@ -126,6 +128,81 @@ function Heading({ children, id }: { children: string; id: string }) {
 
 function Note({ children }: { children: React.ReactNode }) {
   return <p className="mb-8 max-w-lead text-sm text-text-muted">{children}</p>;
+}
+
+/* ── Logo review ──────────────────────────────────────────────────────────── */
+
+/**
+ * The 32px row deliberately renders the `monogram-32` lockup, not the full one
+ * scaled down. That is the whole point of the exercise: where a treatment
+ * carries a detail too fine to survive — the serif's engraver's rule — the
+ * small form drops it rather than shipping a grey smear
+ * (`docs/OPEN-QUESTIONS.md` G31).
+ */
+const LOGO_SIZES = [
+  { px: 32, lockup: 'monogram-32', label: '32px' },
+  { px: 128, lockup: 'monogram', label: '128px' },
+  { px: 512, lockup: 'monogram', label: '512px' },
+] as const;
+
+/**
+ * Both colourways, as flat surface + ink pairs. `currentColor` in the mark
+ * picks the ink up by inheritance, which is exactly how a real page would set
+ * it — so if a mark failed to invert, it would fail here too.
+ */
+const LOGO_WAYS = [
+  {
+    id: 'ivory',
+    label: 'on ivory',
+    surface: 'bg-surface-raised',
+    ink: 'text-text-primary',
+  },
+  {
+    id: 'espresso',
+    label: 'on espresso',
+    surface: 'bg-surface-inverse',
+    ink: 'text-text-on-inverse',
+  },
+] as const;
+
+function LogoMark({ lockup, px }: { lockup: LogoLockup; px: number }) {
+  return (
+    <svg
+      viewBox={lockup.viewBox}
+      width={px}
+      height={px * heightRatio(lockup.viewBox)}
+      role="img"
+      aria-label="Maren Beauty"
+      className="block"
+    >
+      {lockup.parts.map((part, index) =>
+        part.mode === 'fill' ? (
+          <path
+            key={index}
+            d={part.d}
+            fill="currentColor"
+            fillRule={part.rule}
+          />
+        ) : (
+          <path
+            key={index}
+            d={part.d}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={part.width}
+            strokeLinecap={part.cap as 'round' | 'butt'}
+            strokeLinejoin={part.join as 'round' | 'miter'}
+          />
+        ),
+      )}
+    </svg>
+  );
+}
+
+/** Height per unit width, read off the viewBox so nothing is hard-coded. */
+function heightRatio(viewBox: string): number {
+  const [, , width, height] = viewBox.split(' ').map(Number);
+  return (height ?? 1) / (width ?? 1);
 }
 
 export default function StyleguidePage() {
@@ -657,6 +734,80 @@ export default function StyleguidePage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </Container>
+      </Section>
+
+      {/* ── Logo ────────────────────────────────────────────────────────── */}
+      <Section tone="raised" rhythm="tight">
+        <Container>
+          <Heading id="logo">10 · Logo — three M treatments</Heading>
+          <Note>
+            Nothing is wired into the site: this is a choice to make, not a
+            change that has been applied (<code>docs/OPEN-QUESTIONS.md</code>{' '}
+            G31). Every letter is outlined path data, so these render with no
+            font loaded. Colour is <code>currentColor</code> — one flat colour,
+            which is what lets the same file sit on ivory and on espresso.
+            <strong> 32px is the test that matters</strong>: it is the favicon,
+            and it is where a mark stops being a letter and starts being a
+            smudge.
+          </Note>
+
+          <div className="grid gap-12">
+            {Object.entries(logoTreatments).map(([key, treatment]) => (
+              <div key={key}>
+                <h3 className="font-display text-2xl tracking-display text-text-primary">
+                  {treatment.label}
+                </h3>
+                <p className="mt-2 mb-6 max-w-lead text-sm text-text-muted">
+                  {treatment.note}
+                </p>
+
+                <div className="flex flex-wrap items-end gap-6">
+                  {LOGO_SIZES.map(({ px, lockup, label }) =>
+                    LOGO_WAYS.map((way) => (
+                      <div key={`${px}-${way.id}`}>
+                        <p className="mb-2 text-2xs text-text-muted">
+                          {label} · {way.label}
+                        </p>
+                        <div
+                          className={cn(
+                            'inline-flex items-center justify-center rounded-md p-4',
+                            way.surface,
+                            way.ink,
+                          )}
+                        >
+                          <LogoMark
+                            lockup={treatment.lockups[lockup]}
+                            px={px}
+                          />
+                        </div>
+                      </div>
+                    )),
+                  )}
+                </div>
+
+                <div className="mt-6 flex flex-wrap items-center gap-6">
+                  {(['stacked', 'horizontal'] as const).map((lockup) =>
+                    LOGO_WAYS.map((way) => (
+                      <div key={`${lockup}-${way.id}`}>
+                        <p className="mb-2 text-2xs text-text-muted">
+                          {lockup} · {way.label}
+                        </p>
+                        <div
+                          className={cn('rounded-md p-5', way.surface, way.ink)}
+                        >
+                          <LogoMark
+                            lockup={treatment.lockups[lockup]}
+                            px={lockup === 'stacked' ? 150 : 260}
+                          />
+                        </div>
+                      </div>
+                    )),
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </Container>
       </Section>

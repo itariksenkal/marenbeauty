@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { scanText } from '../../scripts/guard.mjs';
 import {
   channelHref,
+  configuredFollowChannels,
   configuredSocials,
   contact,
   CONVERSION_CHANNELS,
@@ -42,15 +43,13 @@ describe('contact channels', () => {
   });
 
   it('builds a complete href for every configured channel', () => {
-    expect(channelHref('whatsapp')).toBe('https://wa.me/905000000000');
-    expect(channelHref('phone')).toBe('tel:+905000000000');
+    expect(channelHref('whatsapp')).toBe('https://wa.me/905010077954');
+    expect(channelHref('phone')).toBe('tel:+905010077954');
     expect(channelHref('email')).toBe('mailto:info@marenbeauty.com');
     expect(channelHref('instagram')).toBe('https://instagram.com/marenbeauty');
     expect(channelHref('facebook')).toBe('https://facebook.com/marenbeauty');
     expect(channelHref('tiktok')).toBe('https://tiktok.com/@marenbeauty');
-    expect(channelHref('googleBusiness')).toMatch(
-      /^https:\/\/www\.google\.com\//,
-    );
+    expect(channelHref('x')).toBe('https://x.com/marenbeauty');
   });
 
   it('never emits a bare scheme, for any key', () => {
@@ -60,25 +59,35 @@ describe('contact channels', () => {
     }
   });
 
-  it('renders all four social profiles', () => {
+  it('renders every configured social profile', () => {
     expect(configuredSocials().map((s) => s.key)).toEqual([...SOCIAL_CHANNELS]);
   });
 
   /**
-   * The phone number is a placeholder and must stay obviously one. `0500` is
-   * not an allocated Turkish mobile prefix, so it cannot be dialled by mistake
-   * and cannot be read as a real number the owner forgot to change.
+   * The number is REAL from 2026-08-07 — it was `0500 000 00 00`, a deliberately
+   * undialable placeholder. What is pinned now is that the two representations
+   * cannot drift: `value` is E.164 for the link, `label` is what a human reads,
+   * and a mismatch between them sends a caller to a different number than the
+   * one on screen.
    */
-  it('uses a phone number that cannot be mistaken for a real one', () => {
-    expect(contact.phone?.label).toBe('0500 000 00 00');
-    expect(contact.phone?.value).toBe('+905000000000');
+  it('keeps the dialled number and the printed number the same', () => {
+    const digits = (v: string) => v.replace(/\D/g, '');
+    expect(contact.phone?.value).toMatch(/^\+90\d{10}$/);
+    // The national format carries a trunk 0 that E.164 drops — everything
+    // after it has to be the same ten digits.
+    expect(digits(contact.phone!.label).replace(/^0/, '')).toBe(
+      digits(contact.phone!.value).slice(2),
+    );
+    // WhatsApp is assumed to be the same line (docs/OPEN-QUESTIONS.md B4).
+    // Assumed, so asserted: if one is changed alone, this says so.
+    expect(contact.whatsapp?.value).toBe(contact.phone?.value);
   });
 
-  it('points Google at a search that works, not at a profile that does not exist', () => {
-    // A g.page link to a Business Profile that has not been created 404s on a
-    // visitor. A search resolves today and becomes the profile URL in one line.
-    expect(contact.googleBusiness?.value).not.toMatch(/g\.page|maps\.app/);
-    expect(contact.googleBusiness?.value).toContain('/maps/search/');
+  it('shows WhatsApp in the follow row but never in sameAs', () => {
+    // A wa.me link is a way to reach the centre, not a profile that represents
+    // it. Structured data that claims otherwise is wrong about the org.
+    expect(configuredFollowChannels().map((s) => s.key)).toContain('whatsapp');
+    expect(configuredSocials().map((s) => s.key)).not.toContain('whatsapp');
   });
 
   it('keeps the data-channel attribute on every channel link', () => {

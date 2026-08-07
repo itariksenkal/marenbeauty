@@ -1,5 +1,3 @@
-import { site } from '@/config/site';
-
 /**
  * Home page copy — the pinned opening.
  *
@@ -14,8 +12,12 @@ import { site } from '@/config/site';
  * What it does say is limited to:
  *   - the brand name and where it comes from (docs/BRIEF.md §2);
  *   - the category, which is confirmed;
- *   - the district, taken from `site.address` so the two cannot drift;
  *   - that it is not open yet.
+ *
+ * The district is deliberately NOT here any more. It was the whole of the
+ * opening line and it is already on every page — the header, the footer
+ * paragraph and the location card all carry it, each interpolated from
+ * `site.address`. The first screen now carries a slogan instead.
  *
  * Replacing it is an edit to this file. No component contains a sentence.
  *
@@ -28,11 +30,18 @@ export const home = {
    * Stage 1, beneath the oversized wordmark. One line, and it should stay one
    * line: it sits under a 240px word.
    *
-   * The locality is interpolated from `site.address` rather than retyped. A
-   * test asserts it still appears, so moving the centre cannot leave a stale
-   * district on the first screen anyone sees.
+   * A SLOGAN, not a description. This used to read
+   * "Konya Selçuklu’de güzellik merkezi." — accurate, and the same sentence the
+   * header, the footer and the location card already carry. The first screen is
+   * the one place that can say what the brand is FOR rather than where it is,
+   * so the locality now does its work lower down (the footer paragraph and the
+   * location card), where a test still pins it.
+   *
+   * It claims nothing. "Unhurried" is a description of how a visit feels, which
+   * is what `CLAUDE.md` §9 asks copy to describe, and it is the one thing about
+   * this business that is already true before it opens.
    */
-  positioningLine: `${site.address.region} ${site.address.locality}’de güzellik merkezi.`,
+  slogan: 'Güzelliğin acelesi yok.',
 
   /**
    * Stage 3. Revealed line by line, driven by scroll position rather than a

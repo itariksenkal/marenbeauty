@@ -32,8 +32,20 @@ import type { ServiceListItem } from './service-list-item';
  */
 export function ServicesPanels({
   services,
+  panelImages,
 }: {
   services: readonly ServiceListItem[];
+  /**
+   * One already-rendered `<ManagedImage>` per group, keyed by group id.
+   *
+   * Passed in as SERVER-RENDERED NODES rather than resolved here, for the same
+   * reason the list is narrowed to `ServiceListItem`: this module is
+   * `'use client'`, so importing `@/config/images` to call `getImage` would put
+   * the whole 48-entry manifest — every alt, credit, licence and source URL —
+   * into the browser bundle to draw five pictures. It also keeps
+   * `ManagedImage` the only caller of `next/image` (CLAUDE.md §8).
+   */
+  panelImages: Readonly<Record<string, React.ReactNode>>;
 }) {
   return (
     <section id="hizmetler">
@@ -68,34 +80,52 @@ export function ServicesPanels({
             >
               <div style={style}>
                 <Container>
-                  <div className="flex min-h-[70svh] flex-col justify-center py-16">
-                    <p className="text-xs tracking-eyebrow text-text-secondary uppercase">
-                      {index + 1} / {serviceGroups.length}
-                    </p>
-                    <h3 className="mt-4 font-display text-4xl tracking-display text-text-primary">
-                      {group.label}
-                    </h3>
+                  {/*
+                    Two columns from lg up, text first. A group with one
+                    service used to leave most of a full screen empty — the
+                    photograph fills that side rather than the list being
+                    stretched to pretend there is more of it.
+                  */}
+                  <div className="grid min-h-[70svh] items-center gap-12 py-16 lg:grid-cols-[3fr_2fr] lg:gap-16">
+                    <div>
+                      <p className="text-xs tracking-eyebrow text-text-secondary uppercase">
+                        {index + 1} / {serviceGroups.length}
+                      </p>
+                      <h3 className="mt-4 font-display text-4xl tracking-display text-text-primary">
+                        {group.label}
+                      </h3>
 
-                    {inGroup.length > 0 ? (
-                      <ul className="mt-8 grid gap-x-8 gap-y-3 sm:grid-cols-2">
-                        {inGroup.map((service) => (
-                          <li key={service.slug}>
-                            <Link
-                              href={`/hizmetler/${service.slug}`}
-                              className="group flex items-baseline justify-between gap-4 border-b border-border-decor py-3 text-text-primary transition-colors hover:bg-surface-decor/40"
-                            >
-                              <span>{service.title}</span>
-                              <span
-                                aria-hidden="true"
-                                className="text-text-accent"
+                      {inGroup.length > 0 ? (
+                        <ul className="mt-8 grid gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                          {inGroup.map((service) => (
+                            <li key={service.slug}>
+                              <Link
+                                href={`/hizmetler/${service.slug}`}
+                                // The hover fill is a rounded container like
+                                // every other surface on the site — a square
+                                // block of colour was the one control that
+                                // looked bolted on. The negative margin keeps
+                                // the text on the same optical line as the
+                                // heading while the fill gets its inset.
+                                className="group -mx-3 flex items-baseline justify-between gap-4 rounded-lg border-b border-border-decor px-3 py-3 text-text-primary transition-colors hover:bg-surface-decor/40"
                               >
-                                →
-                              </span>
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
+                                <span>{service.title}</span>
+                                <span
+                                  aria-hidden="true"
+                                  className="text-text-accent"
+                                >
+                                  →
+                                </span>
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+
+                    <div className="hidden lg:block">
+                      {panelImages[group.id]}
+                    </div>
                   </div>
                 </Container>
               </div>

@@ -222,7 +222,7 @@ function Stage() {
           className="mt-4 text-center text-lg text-balance text-text-secondary"
           style={animated ? { opacity: positioningOpacity } : undefined}
         >
-          {home.positioningLine}
+          {home.slogan}
         </motion.p>
 
         {/*

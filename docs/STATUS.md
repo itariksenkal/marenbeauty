@@ -3,7 +3,7 @@
 **What is shipping, what is a placeholder, what is missing, and what to do next.**
 
 Last updated: 2026-08-07. Every milestone through M19 is built and
-`npm run verify` exits 0: **766 unit tests, 210 browser tests, 102 accessibility
+`npm run verify` exits 0: **775 unit tests, 210 browser tests, 102 accessibility
 tests, 0 blocking guard violations.**
 
 The site is **feature-complete.** `npm run preflight` now passes two of its four
@@ -26,18 +26,28 @@ has confirmed. The right-hand column is the whole change.
 
 ### Contact channels — `src/config/contact.ts`
 
-| Placeholder     | Shows as                     | Replace with                                                      |
-| --------------- | ---------------------------- | ----------------------------------------------------------------- |
-| Phone           | `0500 000 00 00`             | `phone: { value: '+90…', label: '0… … .. ..' }`                   |
-| WhatsApp        | `0500 000 00 00`             | `whatsapp: { value: '+90…', label: '…' }` — may differ from phone |
-| Instagram       | `@marenbeauty`               | The real handle, or `instagram: null` to remove it everywhere     |
-| Facebook        | `marenbeauty`                | The real handle, or `facebook: null`                              |
-| TikTok          | `@marenbeauty`               | The real handle, or `tiktok: null`                                |
-| Google Business | a Google Maps **search** URL | The real profile URL once the GBP exists                          |
+| Placeholder | Shows as       | Replace with                                                  |
+| ----------- | -------------- | ------------------------------------------------------------- |
+| Instagram   | `@marenbeauty` | The real handle, or `instagram: null` to remove it everywhere |
+| Facebook    | `marenbeauty`  | The real handle, or `facebook: null`                          |
+| TikTok      | `@marenbeauty` | The real handle, or `tiktok: null`                            |
+| X           | `@marenbeauty` | The real handle, or `x: null`                                 |
 
-`0500` is not an allocated Turkish mobile prefix. That is on purpose: the
-number cannot be dialled by mistake and cannot be read as a real one somebody
-forgot to change. A test pins it.
+**The phone number is no longer a placeholder.** `0501 007 79 54` was supplied by
+the owner on 2026-08-07, replacing the deliberately undialable
+`0500 000 00 00`. A test pins the E.164 `value` and the printed `label` to the
+same ten digits, so the number a visitor reads and the number their phone dials
+cannot drift apart.
+
+**WhatsApp is set to the same number, and that is an assumption** — the owner
+gave one number and asked for a WhatsApp link. In Turkey a mobile usually is
+both, but nobody has confirmed WhatsApp is registered on this line, and an
+unregistered `wa.me` link fails in the visitor's face. `docs/OPEN-QUESTIONS.md`
+B4, and a test asserts the two keys still match so a divergence is deliberate.
+
+**Google Business was removed from the follow row** on 2026-08-07 at the owner's
+request and replaced by X. There is still no Google Business Profile (C1); it is
+now simply not linked, rather than linked to a search that stood in for one.
 
 **Setting a channel to `null` removes it from the header CTA, the location
 card, the footer and the structured data, with no other edit.** That mechanism

@@ -36,6 +36,15 @@ export const serviceGroups: readonly {
   readonly auroraB: string;
   readonly auroraC: string;
   readonly surface: PanelSurface;
+  /**
+   * Manifest id for the photograph shown beside the list on the home panel.
+   *
+   * An id, never a path (CLAUDE.md §8). A group with one service left most of
+   * the panel empty — Epilasyon in particular was a heading and a single row on
+   * a full screen — so each panel now carries one frame from the launch set.
+   * Swapping the photography stays a one-file change in `src/config/images.ts`.
+   */
+  readonly imageId: string;
 }[] = [
   {
     id: 'cilt-bakimi',
@@ -43,6 +52,7 @@ export const serviceGroups: readonly {
     auroraB: 'var(--mb-nude)',
     auroraC: 'var(--mb-rose-beige)',
     surface: 'bg-surface-raised',
+    imageId: 'service-cilt-bakimi',
   },
   {
     id: 'epilasyon',
@@ -50,6 +60,7 @@ export const serviceGroups: readonly {
     auroraB: 'var(--mb-rose-beige)',
     auroraC: 'var(--mb-blush)',
     surface: 'bg-surface-sunken',
+    imageId: 'service-lazer-epilasyon',
   },
   {
     id: 'cilt-yenileme',
@@ -57,6 +68,7 @@ export const serviceGroups: readonly {
     auroraB: 'var(--mb-blush)',
     auroraC: 'var(--mb-champagne)',
     surface: 'bg-surface-accent',
+    imageId: 'service-hydrafacial',
   },
   {
     id: 'kas-kirpik',
@@ -64,6 +76,7 @@ export const serviceGroups: readonly {
     auroraB: 'var(--mb-nude)',
     auroraC: 'var(--mb-blush)',
     surface: 'bg-surface-decor',
+    imageId: 'service-kalici-makyaj',
   },
   {
     id: 'ozel-paket',
@@ -71,6 +84,7 @@ export const serviceGroups: readonly {
     auroraB: 'var(--mb-champagne-light)',
     auroraC: 'var(--mb-rose-beige)',
     surface: 'bg-surface-accent',
+    imageId: 'service-gelin-bakim-paketi',
   },
 ];
 

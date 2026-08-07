@@ -1,15 +1,24 @@
-import { configuredSocials } from '@/config/contact';
+import { BrandGlyph } from '@/components/ui/BrandGlyph';
+import { configuredFollowChannels } from '@/config/contact';
 import { cn } from '@/lib/cn';
 
 /**
- * Social profiles, as words rather than logos.
+ * The follow row: platform glyph plus the name.
  *
- * Two reasons, and the first is the binding one. `CLAUDE.md` §2 pins Lucide as
- * the only icon set, and Lucide has no TikTok glyph and has been retiring brand
- * marks generally — so an icon row would mean either a second icon set, which
- * is forbidden, or hand-drawn trademarks, which is worse. The second reason is
- * that a typographic brand built on Fraunces and Manrope reads better as words
- * than as a row of borrowed logos.
+ * ⚠️ This used to be words only, and the comment here argued for it: `CLAUDE.md`
+ * §2 pins Lucide as the only icon set, Lucide has no TikTok or WhatsApp glyph,
+ * so logos meant either a second icon set or hand-drawn trademarks. **The owner
+ * asked for the logos on 2026-08-07** (docs/OPEN-QUESTIONS.md G32), so
+ * `BrandGlyph` draws simplified monochrome marks locally — no new dependency,
+ * no licence question.
+ *
+ * The NAME IS STILL RENDERED beside each glyph, not replaced by it. An icon-only
+ * row would rely on `aria-label` for anyone using a screen reader and on
+ * recognition for everyone else, and these are simplified marks rather than the
+ * official trademarks — so the word is what actually carries the meaning.
+ *
+ * WhatsApp appears here but not in `sameAs`: it is a way to reach the centre,
+ * not a profile that represents it (`configuredFollowChannels`).
  *
  * Every link carries `data-channel`, so guard rule 3 fails the build on a dead
  * one (CLAUDE.md §12). A profile that is not configured renders nothing, and
@@ -25,7 +34,7 @@ export function SocialLinks({
   className?: string;
   itemClassName?: string;
 }) {
-  const socials = configuredSocials();
+  const socials = configuredFollowChannels();
   if (socials.length === 0) return null;
 
   return (
@@ -38,11 +47,14 @@ export function SocialLinks({
             rel="me noopener noreferrer"
             target="_blank"
             className={cn(
-              'text-sm text-text-secondary underline decoration-1 underline-offset-4 transition-colors hover:text-text-accent hover:decoration-2 focus-visible:focus-ring',
+              'group inline-flex items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-accent focus-visible:focus-ring',
               itemClassName,
             )}
           >
-            {social.name}
+            <BrandGlyph channel={social.key} />
+            <span className="underline decoration-1 underline-offset-4 group-hover:decoration-2">
+              {social.name}
+            </span>
           </a>
         </li>
       ))}

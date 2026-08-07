@@ -11,6 +11,7 @@ import { ServicesPanels } from '@/components/sections/ServicesPanels';
 import { toListItems } from '@/components/sections/service-list-item';
 import { TestimonialsSection } from '@/components/sections/TestimonialsSection';
 import { routeSeo } from '@/config/seo';
+import { serviceGroups } from '@/config/services';
 import { standardGraph } from '@/lib/schema/graph';
 import { pageMetadata } from '@/lib/seo/metadata';
 import { getAllPosts, getAllServices } from '@/content-layer';
@@ -54,8 +55,29 @@ export default function HomePage() {
       />
       <HeroWater />
       {/* Narrowed here, on the server: the panel list is a client component,
-          so anything passed whole is serialised into the RSC payload. */}
-      <ServicesPanels services={toListItems(services)} />
+          so anything passed whole is serialised into the RSC payload. The
+          photographs are rendered here for the same reason — resolving them
+          inside the client component would ship the whole image manifest to
+          the browser, and `ManagedImage` is the only caller of `next/image`. */}
+      <ServicesPanels
+        services={toListItems(services)}
+        panelImages={Object.fromEntries(
+          serviceGroups.map((group) => [
+            group.id,
+            <ImageFigure
+              key={group.id}
+              id={group.imageId}
+              ratio="portrait"
+              rounded="rounded-panel"
+              // The column is `hidden lg:block`, and a display:none image is
+              // still fetched. `1px` below the breakpoint makes the browser
+              // pick the smallest candidate for a picture it will not show,
+              // instead of pulling a full-width one onto a phone.
+              sizes="(min-width: 1024px) 33vw, 1px"
+            />,
+          ]),
+        )}
+      />
 
       {/*
         One wide frame between the panel stack and the pinned process section.

@@ -29,8 +29,7 @@ export type ContactChannel = {
 export type ConversionChannelKey = 'whatsapp' | 'phone' | 'email';
 
 /** Profiles a visitor uses to look the centre up. */
-export type SocialChannelKey =
-  'instagram' | 'facebook' | 'tiktok' | 'googleBusiness';
+export type SocialChannelKey = 'instagram' | 'facebook' | 'tiktok' | 'x';
 
 export type ContactChannelKey = ConversionChannelKey | SocialChannelKey;
 
@@ -44,7 +43,24 @@ export const SOCIAL_CHANNELS: readonly SocialChannelKey[] = [
   'instagram',
   'facebook',
   'tiktok',
-  'googleBusiness',
+  'x',
+];
+
+/**
+ * What the footer's "Bizi takip edin" row shows.
+ *
+ * WhatsApp is in here and NOT in `SOCIAL_CHANNELS`, deliberately. It is a
+ * conversation channel rather than a profile, so it belongs beside the others
+ * where a visitor looks for a way to reach the centre — but it must never reach
+ * `sameAs` in the structured data, which is a list of profiles that represent
+ * the organisation. A `wa.me` link is not one.
+ */
+export const FOLLOW_CHANNELS: readonly ContactChannelKey[] = [
+  'instagram',
+  'facebook',
+  'tiktok',
+  'x',
+  'whatsapp',
 ];
 
 /**
@@ -54,10 +70,17 @@ export const SOCIAL_CHANNELS: readonly SocialChannelKey[] = [
  * goes back to `null`.
  */
 export const contact: Readonly<Record<ContactChannelKey, ContactChannel>> = {
-  /** PLACEHOLDER. E.164 for the link, national format for the eye. */
-  whatsapp: { value: '+905000000000', label: '0500 000 00 00' },
-  /** PLACEHOLDER. Same number; the two are separate keys because they need not be. */
-  phone: { value: '+905000000000', label: '0500 000 00 00' },
+  /**
+   * REAL, supplied by the owner on 2026-08-07.
+   *
+   * ⚠️ ASSUMED to be the same line as `phone`. The owner gave one number and
+   * asked for a WhatsApp link, and in Turkey a mobile is usually both — but
+   * nobody has confirmed that WhatsApp is registered on it. The keys stay
+   * separate precisely so they can diverge (docs/OPEN-QUESTIONS.md B4).
+   */
+  whatsapp: { value: '+905010077954', label: '0501 007 79 54' },
+  /** REAL, supplied by the owner on 2026-08-07. */
+  phone: { value: '+905010077954', label: '0501 007 79 54' },
   /** REAL — the mailbox decided in B1. */
   email: { value: 'info@marenbeauty.com', label: 'info@marenbeauty.com' },
 
@@ -67,16 +90,8 @@ export const contact: Readonly<Record<ContactChannelKey, ContactChannel>> = {
   facebook: { value: 'marenbeauty', label: 'Maren Beauty' },
   /** PLACEHOLDER handle. */
   tiktok: { value: '@marenbeauty', label: '@marenbeauty' },
-  /**
-   * PLACEHOLDER, and deliberately a *working search* rather than a fabricated
-   * profile URL. There is no Google Business Profile yet (C1) and a `g.page`
-   * link to one that does not exist would 404 on a visitor. This resolves to a
-   * real Google Maps search today and becomes the profile URL in one line.
-   */
-  googleBusiness: {
-    value: 'https://www.google.com/maps/search/?api=1&query=Maren+Beauty+Konya',
-    label: 'Google',
-  },
+  /** PLACEHOLDER handle. */
+  x: { value: '@marenbeauty', label: '@marenbeauty' },
 };
 
 /**
@@ -106,9 +121,8 @@ export function channelHref(key: ContactChannelKey): string | null {
       return `https://facebook.com/${handle}`;
     case 'tiktok':
       return `https://tiktok.com/@${handle}`;
-    case 'googleBusiness':
-      // Already a URL; anything else would be a guess about its shape.
-      return value.startsWith('https://') ? value : null;
+    case 'x':
+      return `https://x.com/${handle}`;
   }
 }
 
@@ -126,7 +140,7 @@ export const channelLabels: Readonly<Record<ContactChannelKey, string>> = {
   instagram: "Instagram'da bakın",
   facebook: "Facebook'ta bakın",
   tiktok: "TikTok'ta bakın",
-  googleBusiness: "Google'da bulun",
+  x: "X'te bakın",
 };
 
 /**
@@ -142,7 +156,7 @@ export const channelAccessibleNames: Readonly<
   instagram: 'Instagram',
   facebook: 'Facebook',
   tiktok: 'TikTok',
-  googleBusiness: 'Google',
+  x: 'X',
 };
 
 /** True when at least one channel is configured — for "or reach us at" blocks. */
@@ -152,14 +166,32 @@ export function hasAnyChannel(): boolean {
   );
 }
 
-/** Configured social profiles, in display order. Empty renders nothing. */
-export function configuredSocials(): readonly {
-  readonly key: SocialChannelKey;
+export type ConfiguredChannel = {
+  readonly key: ContactChannelKey;
   readonly href: string;
   readonly name: string;
   readonly label: string;
-}[] {
-  return SOCIAL_CHANNELS.flatMap((key) => {
+};
+
+/** Configured social PROFILES, in display order. Feeds `sameAs`. */
+export function configuredSocials(): readonly ConfiguredChannel[] {
+  return resolve(SOCIAL_CHANNELS);
+}
+
+/**
+ * What the footer's follow row shows: the profiles plus WhatsApp.
+ *
+ * Separate from `configuredSocials()` so WhatsApp can appear in the UI without
+ * ever reaching `sameAs`.
+ */
+export function configuredFollowChannels(): readonly ConfiguredChannel[] {
+  return resolve(FOLLOW_CHANNELS);
+}
+
+function resolve(
+  keys: readonly ContactChannelKey[],
+): readonly ConfiguredChannel[] {
+  return keys.flatMap((key) => {
     const href = channelHref(key);
     if (!href) return [];
     return [
