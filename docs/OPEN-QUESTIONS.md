@@ -95,22 +95,51 @@ no extra configuration.
 
 Recorded in `.env.example`. The password itself is B3 and is never committed.
 
-### B2 — Legal entity name 🔴 → M12
+### B2 — Legal entity name 🟡 → PROVISIONAL, must be replaced
 
-**Still unresolved. Confirmed 2026-08-06 that it stays unresolved, and that the
-build gate must not be softened.**
+**Updated 2026-08-07. No longer blocking a deploy; now blocking accuracy.**
 
-**Need:** the registered ünvan (and tax office / registration number, if the KVKK
-text should carry them).
+The owner supplied a value and set it in the deployment environment:
 
-**Why it matters:** KVKK aydınlatma metni, çerez politikası and kullanım
-koşulları must name the data controller. An invented name makes the notice
-legally worthless.
+> **Maren Beauty Center Limited Şirketi**
 
-**Meanwhile:** the literal token `{{LEGAL_ENTITY}}` appears in all three pages,
-and `npm run guard` **fails the production build** if any `{{…}}` reaches
-output. The site cannot ship with this unresolved. That is deliberate and is
-not to be relaxed for a deploy, a demo, or a preview.
+**It is provisional. The company is still being registered.** The legal pages
+now name it as the data controller — which means the KVKK aydınlatma metni
+currently identifies an entity that does not yet legally exist.
+
+That is the owner's decision, recorded here rather than argued with. What it
+changes:
+
+- `npm run preflight` passes its legal-entity check. The build gate no longer
+  stops a deploy.
+- The three legal pages print `Ticari ünvan: …` instead of "bu bölüme
+  eklenecektir".
+- Nothing was invented by the build team, then or now. The value came from the
+  owner and is read from the environment.
+
+**Still required:** the **registered** ünvan, once incorporation completes,
+plus the tax office / registration number and the VERBİS determination if the
+notice should carry them. One environment variable and a rebuild — see below.
+
+**⚠️ IT IS A BUILD-TIME VARIABLE.** The legal pages are statically prerendered,
+so `legalEntity()` runs during `next build` and the ünvan is baked into the
+HTML. Setting it only at run time does nothing and the pages will still say the
+ünvan is pending. Vercel exposes project environment variables to the build, so
+nothing extra is needed there; a container must be told:
+
+```bash
+docker build --build-arg LEGAL_ENTITY="…" -t marenbeauty .
+```
+
+Found the moment the value was first set — a browser test asserted the resolved
+name and got the unresolved copy, because the Playwright server env arrives long
+after the build. `Dockerfile`, `.env.example` and `docs/DEPLOY.md` all say so
+now.
+
+**Unchanged:** `{{LEGAL_ENTITY}}` is still the sentinel in
+`src/config/legal-entity.ts`, guard rule 2 still fails any build that prints a
+`{{…}}` token, and `preflight` still refuses a deploy if the variable is unset
+or still equal to the token.
 
 ### B3 — SMTP authentication ✅ → M11
 
@@ -278,17 +307,48 @@ Still open, and now more so: **real photography of the actual space.** All 48
 are `replaceable: true`, and the swap is `scripts/image-set.mjs` plus one run of
 `node scripts/fetch-images.mjs`.
 
-### C8 — KVKK review and VERBİS 🟡 → M12
+### C8 — KVKK review and VERBİS 🟡 → published without an external review
 
 **Answered 2026-08-06:** the owner's lawyer reviews pre-launch, including the
 VERBİS registration question.
 
-**Build-side obligation:** draft the pages accurately for what the site actually
-does — a form that emails and stores nothing, no cookies at launch — and **mark
-them unreviewed**. The unreviewed marker is removed only when the owner confirms
-the review has happened.
+**Updated 2026-08-07: the texts are now published, and the review has NOT
+happened.** The owner instructed both — approve the pages for publication, and
+record that no external review has taken place. So:
 
-Still outstanding: the review itself, and the VERBİS determination.
+| Flag                           | Value        | What it means                                                                                                      |
+| ------------------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `legal.isLawyerReviewed`       | `true`       | The **owner** approves publication. Removes the on-screen "Taslak metin" notice and satisfies `npm run preflight`. |
+| `legal.hasExternalLegalReview` | `false`      | **No lawyer has read these texts.** Nothing renders from it.                                                       |
+| `legal.effectiveDate`          | `2026-08-07` | The date of the owner's approval — not of a review.                                                                |
+
+**Two flags rather than one, deliberately.** A single boolean was fine while
+"the owner is content to publish" and "a lawyer has checked it" had the same
+answer. On 2026-08-07 they diverged, and one boolean would then have had to be
+wrong about one of them. The name `isLawyerReviewed` is kept because
+`preflight`, the page and three tests read it; its doc comment now says exactly
+what it does and does not mean.
+
+**`preflight` deliberately does not gate on `hasExternalLegalReview`.** When to
+publish is the owner's call, and a gate that overrides a decision the owner has
+already made is a gate that gets deleted rather than satisfied.
+
+**Still outstanding:**
+
+- an external legal review of all three texts;
+- the VERBİS determination;
+- a re-read of the KVKK notice once the **registered** ünvan replaces the
+  provisional one (B2) — the two are the same paragraph.
+
+When the review happens: set `hasExternalLegalReview: true`, update
+`effectiveDate`, and close this item.
+
+**A note for whoever does the review.** The texts describe what the site
+actually does rather than what such texts usually say: one form, four fields,
+emailed and not stored; no cookies at all; all nine KVKK Art. 11 rights quoted.
+Unit tests assert the policy names none of `_ga`, `_gid`, `_fbp` or
+`PHPSESSID`, and that its promises about consent match the implemented
+behaviour — so a review that changes the copy should check those still hold.
 
 ### C10 — Home opening copy 🟡 → owner approval
 

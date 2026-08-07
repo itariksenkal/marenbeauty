@@ -3,12 +3,19 @@
 **What is shipping, what is a placeholder, what is missing, and what to do next.**
 
 Last updated: 2026-08-07. Every milestone through M19 is built and
-`npm run verify` exits 0: **749 unit tests, 210 browser tests, 102 accessibility
+`npm run verify` exits 0: **752 unit tests, 210 browser tests, 102 accessibility
 tests, 0 blocking guard violations.**
 
-The site is **feature-complete and cannot go live yet.** Not because of code —
-`npm run preflight` refuses a production deployment while four owner-supplied
-values are missing, and that refusal is deliberate. §2 lists them in order.
+The site is **feature-complete.** `npm run preflight` now passes two of its four
+checks: the owner has supplied a legal entity and approved the legal texts for
+publication. **Two remain — the SMTP credential and the signing key** — and both
+are environment values. §2 lists everything in order.
+
+**Two things resolved on 2026-08-07 are resolved provisionally, not finally.**
+The ünvan is a placeholder for a company still being registered, and the legal
+texts have had no external review. Both are recorded as open (B2, C8) and both
+appear in §1 below, because a provisional answer that stops being tracked is
+indistinguishable from a wrong one.
 
 ---
 
@@ -74,11 +81,30 @@ To replace: edit `scripts/image-set.mjs`, run `node scripts/fetch-images.mjs
 --force`. The manifest regenerates itself. **No component changes** — components
 take an `id`.
 
-### Legal texts — `src/config/legal.ts`
+### The legal entity — environment, **provisional**
 
-`isLawyerReviewed: false` and `effectiveDate: null`. Every legal page renders a
-visible **"Taslak metin"** notice and says the ünvan is pending. Both disappear
-when the flag flips.
+`LEGAL_ENTITY` is set in the deployment environment to **"Maren Beauty Center
+Limited Şirketi"**, supplied by the owner on 2026-08-07. **The company is still
+being registered**, so the KVKK aydınlatma metni currently names a data
+controller that does not yet legally exist.
+
+Replace with the registered ünvan after incorporation — one environment
+variable. **It is read at BUILD time**, so a rebuild is required, and a
+container needs `--build-arg LEGAL_ENTITY="…"` rather than a run-time `-e`
+(B2).
+
+### Legal texts — `src/config/legal.ts`, **published without an external review**
+
+| Flag                     | Value        | Meaning                                                                                                     |
+| ------------------------ | ------------ | ----------------------------------------------------------------------------------------------------------- |
+| `isLawyerReviewed`       | `true`       | The **owner** approved publication on 2026-08-07. Removes the "Taslak metin" notice; satisfies `preflight`. |
+| `hasExternalLegalReview` | `false`      | **No lawyer has read these texts.**                                                                         |
+| `effectiveDate`          | `2026-08-07` | The date of the owner's approval.                                                                           |
+
+Two flags because one boolean cannot honestly carry both answers once they
+differ, and on 2026-08-07 they do (C8). Setting `isLawyerReviewed` back to
+`false` brings the on-screen draft notice back with no other edit — the copy and
+the conditional are both retained, and a test asserts it.
 
 ### Blog bylines
 
@@ -122,30 +148,29 @@ the no-JavaScript path, replay protection, the rate limit, the composed RFC822
 message. What is untested and cannot be tested without this: **that Workspace
 accepts the credential.** No code changes with it.
 
-### 2 · The registered ünvan — **blocks the deploy**
-
-B2. Set `LEGAL_ENTITY` in the deployment environment. It has never been
-invented, and `npm run preflight` refuses to build without it.
-
-While unset, the legal pages name no entity and say the ünvan is pending. They
-are readable and honest — they are simply not finished.
-
-### 3 · Lawyer review of the three legal texts — **blocks the deploy**
-
-C8. The texts describe what the site actually does: a form that emails and
-stores nothing, no cookies, all nine KVKK Art. 11 rights. They still need a
-lawyer, and the VERBİS registration question answered.
-
-Then set `isLawyerReviewed: true` and `legal.effectiveDate` in
-`src/config/legal.ts`.
-
-### 4 · A signing key — **blocks the deploy**
+### 2 · A signing key — **blocks the deploy**
 
 `ALTCHA_HMAC_KEY`, 32+ characters. Not the owner's to obtain, only to set:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
+
+### 3 · The **registered** ünvan — provisionally answered, still open
+
+B2. A provisional value is live. It must be replaced with the registered ünvan
+once incorporation completes, because the KVKK notice names it as the data
+controller. One environment variable and a **rebuild** — it is read at build
+time, not run time.
+
+### 4 · An external review of the three legal texts — still open
+
+C8. The owner has approved them for publication; no lawyer has read them. Also
+outstanding: the VERBİS determination, and a re-read of the KVKK notice once the
+registered ünvan lands — the two are the same paragraph.
+
+When it happens: set `hasExternalLegalReview: true` and update
+`effectiveDate`.
 
 ### 5 · The real phone and WhatsApp number
 
@@ -217,7 +242,9 @@ npm run verify                # the full gate; must exit 0
 
 ### Before the first deploy — the owner's part
 
-1. Resolve §2 items **1–4**. Nothing else blocks a deploy.
+1. Resolve §2 items **1–2** — the SMTP credential and the signing key. Items 3
+   and 4 are answered provisionally and do not block a deploy, but do not treat
+   them as finished.
 2. Set these in the Vercel project (or in `--env-file` for a container):
 
    | Variable          | Value                  |
@@ -234,9 +261,9 @@ npm run verify                # the full gate; must exit 0
    Leave `MAIL_TRANSPORT` unset. Leave every `UMAMI_*`, `GA4_*` and
    `META_*` blank.
 
-3. Set `isLawyerReviewed: true` and `effectiveDate` in `src/config/legal.ts`,
-   and commit.
-4. Run `npm run preflight` locally. It must print four ticks.
+3. `isLawyerReviewed` and `effectiveDate` are already set (2026-08-07).
+4. Run `npm run preflight` locally, with the environment loaded. It must print
+   four ticks.
 
 ### The deploy
 
@@ -258,9 +285,12 @@ npm run verify                # the full gate; must exit 0
 ### Self-hosting instead
 
 ```bash
-docker build -t marenbeauty .
+docker build --build-arg LEGAL_ENTITY="…" -t marenbeauty .
 docker run --rm -p 3000:3000 --env-file .env.local marenbeauty
 ```
+
+The `--build-arg` is not optional: the legal pages are prerendered, so the ünvan
+is baked in at build time and a run-time `-e` arrives too late.
 
 Verified at M16: all 18 routes, image optimisation, non-root user, dev-only
 routes absent. Put a TLS-terminating proxy in front and point the `A` record at

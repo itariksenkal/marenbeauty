@@ -77,10 +77,27 @@ test.describe('nothing is clipped or hidden by the sticky header', () => {
   test('an in-page anchor target is not covered by the header', async ({
     page,
   }) => {
-    // The classic sticky-header bug: a heading linked from elsewhere lands
-    // underneath it. `scroll-margin-top` on headings is what prevents it.
+    /*
+     * The classic sticky-header bug: a heading linked from elsewhere lands
+     * underneath it. `:target { scroll-margin-top }` in globals.css is what
+     * prevents it, and the site's most common navigation depends on it —
+     * `/sss` links to `/hizmetler/<slug>#sss`, and every MDX heading carries
+     * an autolink anchor.
+     *
+     * THE SCROLL MUST BE ALLOWED TO SETTLE FIRST. `scroll-behavior: smooth` is
+     * on, so measuring at `networkidle` samples whatever position the page is
+     * passing through — which is why an earlier version of this test passed
+     * three runs in a row while the bug was live.
+     */
     await page.goto('/hizmetler/hydrafacial#sss');
     await page.waitForLoadState('networkidle');
+    await page.waitForFunction(() => {
+      const w = window as unknown as { __lastY?: number; __still?: number };
+      const y = Math.round(window.scrollY);
+      w.__still = y === w.__lastY ? (w.__still ?? 0) + 1 : 0;
+      w.__lastY = y;
+      return (w.__still ?? 0) >= 3;
+    });
 
     const heading = page.locator('#sss');
     const box = await heading.boundingBox();

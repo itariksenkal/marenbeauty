@@ -1,9 +1,15 @@
 /**
  * Legal page configuration and copy.
  *
- * The registered entity is UNKNOWN and must not be invented
- * (docs/OPEN-QUESTIONS.md B2). It lives in `src/config/legal-entity.ts`, which
- * this file deliberately does not re-export — see the header there for why.
+ * The entity is supplied by the environment, never by this file, and lives in
+ * `src/config/legal-entity.ts` — which this file deliberately does not
+ * re-export; see the header there for why.
+ *
+ * ⚠️ As of 2026-08-07 the value in the deployment environment is
+ * **PROVISIONAL**: the company is still being registered
+ * (docs/OPEN-QUESTIONS.md B2). It was supplied by the owner and is not
+ * invented, but it is not yet a registered ünvan either, and the KVKK notice
+ * names it as the data controller.
  *
  * Everything below is text a reader sees, so it lives in config rather than in
  * a component (CLAUDE.md §7).
@@ -27,18 +33,41 @@ export const COSMETIC_DISCLAIMER =
 
 export const legal = {
   /**
-   * Marks the legal pages as not yet reviewed by a lawyer
-   * (docs/OPEN-QUESTIONS.md C8). Removed only when the owner confirms the
-   * review has happened — not when the text merely looks finished.
+   * The owner's approval to publish the three legal texts.
+   *
+   * ⚠️ READ THE NEXT FLAG BEFORE ASSUMING WHAT THIS MEANS. Set to `true` by the
+   * owner on 2026-08-07. It is what removes the on-screen "Taslak metin" notice
+   * and what lets `npm run preflight` pass, and the name is kept because
+   * `preflight`, the page and three tests all read it.
+   *
+   * What it does NOT mean, as of that date: that a lawyer has read them. The
+   * owner instructed both the approval and the recording of that gap
+   * (docs/OPEN-QUESTIONS.md C8).
    */
-  isLawyerReviewed: false,
+  isLawyerReviewed: true,
 
   /**
-   * Effective date shown on the legal pages. Null until the pages are reviewed
-   * and the site is live — a date on an unreviewed notice implies an authority
-   * it does not have.
+   * Whether an external legal review has actually happened.
+   *
+   * **`false`, and separate from the flag above on purpose.** One boolean
+   * cannot honestly carry both "the owner is content to publish this" and "a
+   * lawyer has checked it" once those two answers differ — and on 2026-08-07
+   * they do. Nothing renders from this; it exists so the codebase does not
+   * assert something untrue, and so the outstanding item is visible where the
+   * decision was made rather than only in a document.
+   *
+   * Set to `true` when the review has happened, at which point the two flags
+   * mean the same thing again.
    */
-  effectiveDate: null as string | null,
+  hasExternalLegalReview: false,
+
+  /**
+   * Effective date shown on the legal pages.
+   *
+   * The date the owner approved publication — not the date of a review that
+   * has not taken place. Update it whenever the texts change materially.
+   */
+  effectiveDate: '2026-08-07' as string | null,
 
   /**
    * What the contact form actually does, which the KVKK text must describe
@@ -77,18 +106,23 @@ export const legalPage = {
     /** Always true and always known — the brand, not the registered ünvan. */
     brandLine: 'Maren Beauty — Konya, Selçuklu.',
     /**
-     * Shown while the ünvan is unresolved. It names nothing and promises
-     * nothing; it tells the reader precisely what is missing and when it lands.
+     * Shown while the ünvan is unresolved — which, since the owner set
+     * `LEGAL_ENTITY` in the deployment environment, is only local development
+     * and CI. It names nothing and promises nothing.
      */
     unresolved:
-      'Merkezin ticari ünvanı ve varsa VERBİS kayıt bilgisi, bu metnin hukuki incelemesi tamamlandığında bu bölüme eklenecektir. Bu sayfa o ana kadar taslak olarak yayındadır.',
+      'Merkezin ticari ünvanı ve varsa VERBİS kayıt bilgisi bu bölüme eklenecektir.',
     /** Shown once the ünvan is supplied. */
     resolvedLabel: 'Ticari ünvan',
   },
 
   /**
-   * The unreviewed marker required by docs/OPEN-QUESTIONS.md C8. It disappears
-   * by itself when `legal.isLawyerReviewed` flips — nothing to remember.
+   * The unreviewed marker required by docs/OPEN-QUESTIONS.md C8.
+   *
+   * No longer rendered: the owner approved publication on 2026-08-07 and
+   * `isLawyerReviewed` is now `true`. Kept, with its copy intact, because
+   * setting that flag back to `false` — for a material rewrite, say — must
+   * bring the notice back with no other edit.
    */
   draftNotice: {
     heading: 'Taslak metin',

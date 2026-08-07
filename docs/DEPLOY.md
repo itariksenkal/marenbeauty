@@ -247,6 +247,23 @@ If **email** breaks:
 
 ---
 
+## 6b. `LEGAL_ENTITY` is a build-time variable
+
+The three legal pages are statically prerendered, so the ünvan is read during
+`next build` and baked into the HTML. **Setting it only at run time does
+nothing** — the pages will still say it is pending.
+
+| Target | What to do                                                             |
+| ------ | ---------------------------------------------------------------------- |
+| Vercel | Nothing extra. Project environment variables are exposed to the build. |
+| Docker | `docker build --build-arg LEGAL_ENTITY="…" -t marenbeauty .`           |
+
+The value in production on 2026-08-07 is **provisional** — the company is still
+being registered (`docs/OPEN-QUESTIONS.md` B2). Replacing it with the registered
+ünvan is one variable and one rebuild.
+
+---
+
 ## 7. Self-hosting
 
 The portability guarantee (`CLAUDE.md` §3). Verified at M16, and it must stay

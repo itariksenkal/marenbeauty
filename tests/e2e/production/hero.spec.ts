@@ -40,6 +40,24 @@ async function scrollToProgress(page: Page, fraction: number) {
 const handoffState = (page: Page) =>
   page.locator('html').getAttribute('data-hero-handoff');
 
+/**
+ * Wait for the handoff to reach a state, rather than sampling it.
+ *
+ * The attribute is written from a scroll-linked motion value, so it lands on
+ * the next animation frame after a scroll — not synchronously with it. A fixed
+ * `waitForTimeout` after scrolling is usually enough and is not always enough:
+ * under a loaded machine this test failed once with "pending" on a page that
+ * was a frame away from "done". Waiting for the condition removes the race
+ * without weakening what is asserted.
+ */
+async function expectHandoff(page: Page, state: 'pending' | 'done') {
+  await page.waitForFunction(
+    (want) => document.documentElement.dataset.heroHandoff === want,
+    state,
+  );
+  expect(await handoffState(page)).toBe(state);
+}
+
 test.describe('pinned opening', () => {
   test('renders with no runtime error and exactly one h1', async ({ page }) => {
     const errors = watchForRuntimeErrors(page);
@@ -148,17 +166,17 @@ test.describe('pinned opening', () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/');
     await scrollToProgress(page, 0.75);
-    expect(await handoffState(page)).toBe('done');
+    await expectHandoff(page, 'done');
 
     await page.reload();
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(400);
 
     // The browser restores the scroll position; the hero must seed from where
     // it actually is, not from zero.
+    await page.waitForFunction(() => window.scrollY > 100);
     const scrolled = await page.evaluate(() => window.scrollY);
     expect(scrolled, 'scroll position was not restored').toBeGreaterThan(100);
-    expect(await handoffState(page)).toBe('done');
+    await expectHandoff(page, 'done');
     await expect(page.locator('[data-header-wordmark]')).toBeVisible();
   });
 

@@ -192,9 +192,38 @@ describe('legal copy matches the implementation', () => {
     expect(bullets).toBe(9);
   });
 
-  it('is marked unreviewed until the owner says otherwise', () => {
-    expect(legal.isLawyerReviewed).toBe(false);
-    expect(legal.effectiveDate).toBeNull();
+  /**
+   * The owner approved publication on 2026-08-07, so the draft notice is gone
+   * and an effective date is shown. The external review has NOT happened, and
+   * the two facts are now carried by two flags rather than by one that would
+   * have to be wrong about one of them (docs/OPEN-QUESTIONS.md C8).
+   */
+  it('is approved for publication, with a real effective date', () => {
+    expect(legal.isLawyerReviewed).toBe(true);
+    expect(legal.effectiveDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // Parses, and is not in the future.
+    const date = new Date(`${legal.effectiveDate}T00:00:00Z`);
+    expect(Number.isNaN(date.getTime())).toBe(false);
+    expect(date.getTime()).toBeLessThanOrEqual(Date.now());
+  });
+
+  it('still records that no external legal review has happened', () => {
+    // The moment this becomes true, C8 closes. Until then it is the one place
+    // in the codebase that says so, and it must not be flipped to make a
+    // narrative tidy.
+    expect(legal.hasExternalLegalReview).toBe(false);
+  });
+
+  it('brings the draft notice back if approval is ever withdrawn', () => {
+    // The copy is retained and the render is still conditional, so a material
+    // rewrite is one flag away from being labelled again.
+    expect(legalPage.draftNotice.heading).toBe('Taslak metin');
+    expect(
+      readFileSync(
+        join(ROOT, 'src/components/content/LegalDocumentPage.tsx'),
+        'utf8',
+      ),
+    ).toContain('{!legal.isLawyerReviewed && (');
   });
 });
 

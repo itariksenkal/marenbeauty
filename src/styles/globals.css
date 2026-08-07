@@ -136,3 +136,20 @@
   border-bottom-color: var(--color-border-subtle);
   backdrop-filter: blur(10px);
 }
+
+/* ── Anchor targets clear the sticky header ─────────────────────────────────
+   Without this every in-page link lands with its target UNDER the header:
+   `/sss` links to `/hizmetler/<slug>#sss`, and every MDX heading gets an
+   anchor from rehype-autolink-headings, so it is the site's most common
+   navigation and it was silently broken.
+
+   `:target` is exactly the case — it matches whatever the URL fragment points
+   at, and nothing else. `--spacing-20` (5rem) clears the ~70px header with
+   room to breathe; it is a scale value, not a measured constant, so a header
+   that grows a little does not reopen the bug.
+
+   Found at M15's viewport suite, which passed for three runs by luck: with
+   `scroll-behavior: smooth` the measurement sometimes landed mid-scroll. */
+:target {
+  scroll-margin-top: var(--spacing-20);
+}

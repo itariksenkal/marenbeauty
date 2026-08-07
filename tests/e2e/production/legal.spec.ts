@@ -25,25 +25,50 @@ test.describe('legal pages', () => {
       await expect(h1).toHaveText(page_.heading);
     });
 
-    test(`${page_.path} names no legal entity while B2 is open`, async ({
+    /**
+     * The entity comes from the environment and from nowhere else.
+     *
+     * Production sets `LEGAL_ENTITY` (a **provisional** value — the company is
+     * still being registered, `docs/OPEN-QUESTIONS.md` B2). CI does not, and
+     * cannot meaningfully: these pages are statically prerendered, so the ünvan
+     * is read at BUILD time. This asserts the half CI can see — that a build
+     * without one names nothing rather than guessing. `legalEntity()` has unit
+     * tests for the resolved half, and `npm run preflight` refuses a deploy
+     * without it.
+     */
+    test(`${page_.path} names no entity in a build without one`, async ({
       page,
     }) => {
       await page.goto(page_.path);
       const text = (await page.locator('body').innerText()).toLowerCase();
 
-      // Neither an invented ünvan …
+      // Never an invented ünvan …
       expect(text).not.toMatch(/ltd\.?\s*şti|limited şirketi|anonim şirketi/);
-      // … nor the token, which the guard blocks from output by design.
+      // … and never the token, which guard rule 2 blocks from output anyway.
       expect(text).not.toContain('{{');
-      // … and the reader is told plainly that it is pending.
+      // … just the honest sentence for an environment that has none.
       expect(text).toContain('ticari ünvanı');
     });
 
-    test(`${page_.path} is marked as an unreviewed draft`, async ({ page }) => {
+    /**
+     * The owner approved publication on 2026-08-07, so the draft notice is
+     * gone and a real effective date is shown. `docs/OPEN-QUESTIONS.md` C8
+     * stays open: no external lawyer has read these texts, and that is tracked
+     * by `legal.hasExternalLegalReview`, not by anything on the page.
+     */
+    test(`${page_.path} is published, with a dated notice`, async ({
+      page,
+    }) => {
       await page.goto(page_.path);
-      await expect(page.getByText('Taslak metin')).toBeVisible();
+
+      await expect(page.getByText('Taslak metin')).toHaveCount(0);
       await expect(
         page.getByText('Yürürlük tarihi, hukuki inceleme sonrasında'),
+      ).toHaveCount(0);
+
+      // A real, formatted date rather than a promise of one.
+      await expect(
+        page.getByText(/Yürürlük tarihi:\s*\d{1,2}\s+\p{L}+\s+\d{4}/u),
       ).toBeVisible();
     });
   }

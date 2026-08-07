@@ -62,15 +62,19 @@ const checks = [
   },
   {
     id: 'legal-review',
-    describe: 'Legal text has been reviewed',
+    describe: 'Legal text is approved for publication',
     run: () =>
       configFlag('src/config/legal.ts', 'isLawyerReviewed')
         ? null
         : `src/config/legal.ts has isLawyerReviewed: false.\n` +
           `      The three legal pages are still marked as drafts on screen\n` +
           `      (docs/OPEN-QUESTIONS.md C8).\n` +
-          `      Fix: after the owner's lawyer signs off, set isLawyerReviewed: true\n` +
-          `      and set legal.effectiveDate.`,
+          `      Fix: once the owner approves the texts for publication, set\n` +
+          `      isLawyerReviewed: true and legal.effectiveDate. That flag records\n` +
+          `      the OWNER'S approval; whether an external lawyer has read them is\n` +
+          `      tracked separately as legal.hasExternalLegalReview, and preflight\n` +
+          `      deliberately does not gate on it — the owner decides when to\n` +
+          `      publish.`,
   },
   {
     id: 'mail',

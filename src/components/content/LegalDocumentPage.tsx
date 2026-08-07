@@ -24,9 +24,11 @@ import type { LegalDocument } from '@/content-layer';
  *     unresolved: not a guess, not a plausible placeholder, and not the
  *     `{{LEGAL_ENTITY}}` token, which is not a name either and which the guard
  *     blocks from reaching output by design.
- *   - The **unreviewed-draft notice** required by C8. It disappears by itself
- *     when `legal.isLawyerReviewed` flips — nothing to remember, nothing to
- *     delete by hand.
+ *   - The **unreviewed-draft notice** required by C8. It disappeared by
+ *     itself when the owner set `legal.isLawyerReviewed` on 2026-08-07, and it
+ *     comes back the same way — nothing to remember, nothing to delete by hand.
+ *     Note that flag means "approved for publication"; the external review is
+ *     tracked separately as `legal.hasExternalLegalReview`, still false.
  */
 export async function LegalDocumentPage({
   document,

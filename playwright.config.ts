@@ -65,6 +65,13 @@ export default defineConfig({
         // test servers get a fixed one. It is not a credential and is not a
         // secret — a real deployment generates its own (docs/DEPLOY.md).
         ALTCHA_HMAC_KEY: TEST_HMAC_KEY,
+        /*
+         * LEGAL_ENTITY is deliberately absent, and setting it here would do
+         * nothing anyway: the legal pages are statically prerendered, so the
+         * ünvan is read at BUILD time and baked into the HTML. A webServer env
+         * arrives long after that. The resolved path is covered by unit tests
+         * over `legalEntity()`; this suite covers the build CI actually makes.
+         */
         // Deliberately NO SMTP variables here. The production project asserts
         // that a submission with nowhere to go fails cleanly and says nothing
         // specific — which is exactly the state the site is in until the

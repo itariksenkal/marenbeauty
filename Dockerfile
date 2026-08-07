@@ -13,6 +13,22 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# The legal entity is a BUILD-TIME variable, not a runtime one.
+#
+# The three legal pages are statically prerendered, so `legalEntity()` runs
+# during `next build` and the ünvan is baked into the HTML. Supplying
+# LEGAL_ENTITY only to `docker run` does nothing — the pages would already say
+# it is pending. Vercel exposes project environment variables to the build, so
+# it works there without this; a container needs it passed explicitly:
+#
+#   docker build --build-arg LEGAL_ENTITY="…" -t marenbeauty .
+#
+# Left empty, the pages name no entity and say so, which is the correct
+# unresolved state rather than a broken one.
+ARG LEGAL_ENTITY=""
+ENV LEGAL_ENTITY=$LEGAL_ENTITY
+
 RUN npm run build
 
 # ── runtime ─────────────────────────────────────────────────────────────────

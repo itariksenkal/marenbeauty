@@ -91,13 +91,27 @@ test.describe('reduced motion', () => {
     const steps = page.locator('[data-step]');
     await expect(steps).toHaveCount(4);
 
-    // Opacity is checked AFTER load. `getComputedStyle` before the stylesheet
-    // applies returns an empty string, which `Number('')` turns into 0 — a
-    // failure that looks exactly like invisible text and is not one.
+    /*
+     * Opacity is read only once all four elements are attached AND styled.
+     *
+     * `getComputedStyle` on an element that is not currently rendered — during
+     * hydration, or before the stylesheet applies — returns an empty
+     * declaration, so `.opacity` is `''` and `Number('')` is 0. That is
+     * indistinguishable from genuinely invisible text, and it made this test
+     * fail intermittently while the component was perfectly fine.
+     *
+     * Waiting for a load event was not enough; the condition that matters is
+     * "every value is a real number", so that is what is waited for.
+     */
     await page.waitForLoadState('load');
-    const opacities = await steps.evaluateAll((elements) =>
-      elements.map((el) => getComputedStyle(el).opacity),
-    );
+    const handle = await page.waitForFunction(() => {
+      const nodes = [...document.querySelectorAll('[data-step]')];
+      if (nodes.length !== 4) return null;
+      const values = nodes.map((el) => getComputedStyle(el).opacity);
+      return values.every((value) => value !== '') ? values : null;
+    });
+    const opacities = (await handle.jsonValue()) as string[];
+
     expect(opacities).toHaveLength(4);
     for (const opacity of opacities) {
       expect(Number(opacity)).toBe(1);
