@@ -90,6 +90,32 @@ export type SpamEnv = z.infer<typeof spamSchema>;
 export type MailEnv =
   z.infer<typeof smtpSchema> | z.infer<typeof captureSchema>;
 
+/**
+ * An unset variable and one set to the empty string are the same thing.
+ *
+ * They are not the same thing to Zod. `.optional()` skips `undefined` and only
+ * `undefined`, so `UMAMI_SCRIPT_URL=` reaches `z.url()` as `''` and fails —
+ * and that line is copied verbatim out of `.env.example`, which is also what a
+ * hosting dashboard stores for a variable added with no value. The result was
+ * an optional analytics identifier nobody has asked for taking the whole build
+ * down at module load, which is precisely what the PUBLIC tier above promises
+ * can never happen.
+ *
+ * Whitespace-only counts as absent too — a pasted value can pick up a space.
+ * Values that survive are passed through untouched, because trimming a real
+ * one would quietly corrupt a credential.
+ *
+ * Every tier reads through here, so the promise is structural rather than
+ * remembered.
+ */
+function present(source: NodeJS.ProcessEnv): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(source)) {
+    if (value !== undefined && value.trim() !== '') out[key] = value;
+  }
+  return out;
+}
+
 function fail(issues: z.core.$ZodIssue[], tier: string): never {
   const lines = issues.map(
     (i) => `  ${i.path.join('.') || '(root)'}: ${i.message}`,
@@ -100,7 +126,7 @@ function fail(issues: z.core.$ZodIssue[], tier: string): never {
   );
 }
 
-const publicParsed = publicSchema.safeParse(process.env);
+const publicParsed = publicSchema.safeParse(present(process.env));
 if (!publicParsed.success) fail(publicParsed.error.issues, 'public');
 
 export const env: PublicEnv = publicParsed.data;
@@ -118,7 +144,7 @@ let ephemeralKey: string | null = null;
  * verification the moment there are two instances.
  */
 function altchaKey(): string | undefined {
-  const configured = process.env.ALTCHA_HMAC_KEY;
+  const configured = present(process.env).ALTCHA_HMAC_KEY;
   if (configured) return configured;
   if (env.NODE_ENV === 'production') return undefined;
 
@@ -153,7 +179,8 @@ export function spamEnv(): SpamEnv {
 export function mailEnv(): MailEnv {
   if (mailCache) return mailCache;
 
-  const transport = process.env.MAIL_TRANSPORT ?? 'smtp';
+  const raw = present(process.env);
+  const transport = raw.MAIL_TRANSPORT ?? 'smtp';
 
   if (transport === 'capture') {
     if (env.NODE_ENV === 'production') {
@@ -169,10 +196,7 @@ export function mailEnv(): MailEnv {
     return mailCache;
   }
 
-  const parsed = smtpSchema.safeParse({
-    ...process.env,
-    MAIL_TRANSPORT: 'smtp',
-  });
+  const parsed = smtpSchema.safeParse({ ...raw, MAIL_TRANSPORT: 'smtp' });
   if (!parsed.success) fail(parsed.error.issues, 'mail');
   mailCache = parsed.data;
   return mailCache;

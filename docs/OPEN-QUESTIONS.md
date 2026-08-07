@@ -1167,6 +1167,77 @@ is added.
 
 ---
 
+### G28 — An empty environment variable is not an absent one 🟢 → fixed 2026-08-07
+
+`src/config/env.ts` says in its own header that the PUBLIC tier is "everything
+optional with a sane default, so importing this can never break a build". It
+could, and the way it could is worth writing down because the shape recurs.
+
+Zod's `.optional()` skips `undefined` **and only `undefined`**. A variable set
+to the empty string is present as far as the schema is concerned, so
+`UMAMI_SCRIPT_URL=''` reached `z.url()` and failed. `env.ts` is imported by the
+root layout, so the throw lands at module evaluation on every route at once.
+
+The trigger is the ordinary way a project gets configured for the first time.
+`.env.example` documents every variable, and four of them — the analytics
+identifiers — ship with **no value**:
+
+```
+UMAMI_SCRIPT_URL=
+UMAMI_WEBSITE_ID=
+GA4_MEASUREMENT_ID=
+META_PIXEL_ID=
+```
+
+Copy that file into a hosting dashboard, or add a variable there and leave the
+value box empty, and you get four empty strings rather than four absent keys.
+Reproduced locally: `npx next build` with those four exported empty exits 1 with
+`Invalid public environment: UMAMI_SCRIPT_URL: Invalid URL`.
+
+Nothing in local development or CI sets an empty variable, so the failure was
+invisible to `npm run verify` and appeared only in a deployed environment — and
+`npm run preflight` did not catch it either, because preflight guards the legal
+entity, the legal-review flag, mail and the spam key, and these four are none of
+those. An optional measurement nobody has asked for could take the whole build
+down.
+
+**Fixed** by normalising at the boundary: one `present()` helper drops keys whose
+value is empty or whitespace-only, and all three tiers parse through it. Values
+that survive are passed through **untrimmed** — trimming a real one would
+silently corrupt a password with meaningful outer spaces, which
+`tests/unit/env.test.ts` pins along with the empty and whitespace-only cases.
+
+Whitespace-only counts as absent because a value pasted into a dashboard picks up
+a space more often than anyone admits.
+
+---
+
+### G29 — The `/_next/static` Cache-Control header broke dev, not prod 🟢 → fixed 2026-08-07
+
+`next.config.ts` set `public, max-age=31536000, immutable` on
+`/_next/static/:path*`. Fingerprinted assets should be immutable for a year, so
+the rule looked obviously right. It was not.
+
+Next already sets that **exact** header on that folder itself, in production, on
+Vercel and in the standalone server alike — so the rule bought nothing. And it
+cost something. `next/dist/server/lib/router-server.js` applies its own value
+only `if (!res.getHeader('cache-control'))`, and the branch a custom header
+suppresses is the **development** one, which serves `no-cache, must-revalidate`.
+A custom rule there therefore pins every chunk in `npm run dev` as immutable for
+a year, and the browser keeps serving a stale one across edits.
+
+That is what the build warning "Setting a custom Cache-Control header can break
+Next.js development behavior" means; `load-custom-routes.js` emits it for any
+`source` under `/_next/`. It had been sitting in the build log since M16, read as
+noise.
+
+**Fixed** by deleting the rule. Production output is byte-identical. The
+`/images/:path*` rule stays — it is not under `/_next/`, those files are
+deliberately not fingerprinted so the whole photography set can be swapped in one
+file, and Next sets nothing for them.
+
+---
+
 ## H. Content posture — standing rule
 
 **Recorded 2026-08-06. This is a working rule, not a question.** Also written

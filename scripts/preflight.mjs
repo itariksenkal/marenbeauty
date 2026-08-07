@@ -96,7 +96,13 @@ const checks = [
         'MAIL_FROM',
         'MAIL_TO',
       ];
-      const missing = required.filter((name) => !process.env[name]);
+      // Trimmed, to agree with `present()` in src/config/env.ts, which treats a
+      // whitespace-only value as absent. Without the trim a key of spaces
+      // passes preflight and then fails at runtime — the exact split this
+      // script exists to prevent.
+      const missing = required.filter(
+        (name) => !(process.env[name] ?? '').trim(),
+      );
       if (missing.length) {
         return (
           `Missing SMTP variables: ${missing.join(', ')}.\n` +
@@ -112,7 +118,8 @@ const checks = [
     id: 'spam-key',
     describe: 'Spam gate has a stable signing key',
     run: () => {
-      const key = process.env.ALTCHA_HMAC_KEY ?? '';
+      // Trimmed for the same reason as the mail check above.
+      const key = (process.env.ALTCHA_HMAC_KEY ?? '').trim();
       if (key.length < 32) {
         return (
           `ALTCHA_HMAC_KEY is missing or shorter than 32 characters.\n` +

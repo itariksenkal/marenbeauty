@@ -62,17 +62,22 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
-        // Fingerprinted assets: immutable, a year. Everything under
-        // /_next/static already carries a content hash in its name.
-        source: '/_next/static/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
+      /*
+       * There is deliberately NO Cache-Control rule for `/_next/static` here.
+       *
+       * It is tempting — fingerprinted assets should be immutable for a year —
+       * but Next already sets exactly `public, max-age=31536000, immutable` on
+       * that folder itself, in production, on Vercel and in the standalone
+       * server alike (`next/dist/server/lib/router-server.js`). So the rule
+       * bought nothing, and it cost something: Next only applies its own value
+       * `if (!res.getHeader('cache-control'))`, and the branch it skips when a
+       * custom header is present is the DEV one, which serves
+       * `no-cache, must-revalidate`. A custom rule here therefore pins every
+       * chunk in `npm run dev` as immutable for a year, and the browser keeps
+       * serving a stale one across edits. That is what Next means by the build
+       * warning "Setting a custom Cache-Control header can break Next.js
+       * development behavior" — it fires for any `source` under `/_next/`.
+       */
       {
         // The self-hosted images are NOT fingerprinted — the manifest points at
         // stable paths so the whole set can be swapped in one file. A day of

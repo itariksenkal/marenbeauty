@@ -3,7 +3,7 @@
 **What is shipping, what is a placeholder, what is missing, and what to do next.**
 
 Last updated: 2026-08-07. Every milestone through M19 is built and
-`npm run verify` exits 0: **752 unit tests, 210 browser tests, 102 accessibility
+`npm run verify` exits 0: **761 unit tests, 210 browser tests, 102 accessibility
 tests, 0 blocking guard violations.**
 
 The site is **feature-complete.** `npm run preflight` now passes two of its four
@@ -223,6 +223,72 @@ could not finish.
 | 5   | `next start` prints a warning under `output: 'standalone'`.                              | Cosmetic. The container runs `node server.js`, which is the supported path; `next start` is used only by the test suites.                                                                                       |
 | 6   | **Permit verification** for the six regulated services (A2).                             | Owner's checklist. No page names a device, depth, concentration or setting, so the copy is already inside whatever the permits allow — but the boxes still need ticking.                                        |
 | 7   | Post 12's title was changed from the content plan.                                       | Recorded as a deviation in `docs/CONTENT-PLAN.md` §4. The planned title promised a number the posture forbids the body from giving.                                                                             |
+| 8   | **A Vercel build died silently during static generation.**                               | Two real defects found and fixed (G28, G29); neither is proven to be the cause. Memory and environment are both ruled out by measurement. See §3.1 — the next step is the owner's.                              |
+| 9   | Two `consent.spec.ts` cases use 14.7s of a 30s budget.                                   | They walk every route with `waitForLoadState('networkidle')`. They pass consistently alone and timed out three times while a container build shared the machine. A latent flake, not a defect in the site.      |
+
+### 3.1 The silent build failure — what is known
+
+A production build on Vercel (2 cores, 8 GB) passed preflight and compilation,
+then stopped during `Generating static pages using 1 worker (44/89)` with no
+error and no stack.
+
+That reads like an out-of-memory kill, and a cgroup OOM is genuinely silent —
+exit 137, no output — so it was the first hypothesis and it was tested rather
+than assumed. **It does not survive the measurement.** The failing topology was
+reproduced exactly in a Linux container (`--cpus=2`, and `experimental.cpus: 1`
+injected, because Next derives its worker count from `os.cpus().length - 1` and
+`os.cpus()` ignores a CFS quota — which is why the real machine says "1 worker"):
+
+| Ceiling | Result               | Peak RSS, all processes |
+| ------- | -------------------- | ----------------------- |
+| 8 GB    | exit 0, 7.5 s        | 1682 MB                 |
+| 2 GB    | exit 0, 8.1 s        | 1683 MB                 |
+| 1 GB    | **exit 137, silent** | 1217 MB at kill         |
+
+So the failure mode reproduces, but only below 2 GB. The build wants ~1.7 GB and
+the machine has 8 — roughly 4.7× headroom.
+
+The suspects named up front were measured individually and cleared:
+
+- **OG images** — 33 renders in one process: RSS 46 → 95 MB, then flat. No leak.
+  About 5 s in total against a 60 s per-page timeout.
+- **MDX evaluation** — all 36 documents in one process: 278 → 346 MB, plateauing,
+  frequently net-negative after a GC. `generateStaticParams` does not retain the
+  bodies.
+- **The image manifest and `public/`** — not traced into the server bundle at
+  all: `.next/standalone` contains zero `.webp`, and the whole photography set is
+  5 MB on disk.
+- **The sitemap** — already does no filesystem work (a test asserts `node:fs` is
+  absent from it).
+- **A hung build-time network call**, which would look identical — there are no
+  build-time network calls. Every `fetch` in `src/` is in a client component.
+
+The 1.4 GB single-process peak is the compiler, not the content.
+
+The environment was the last thing left that could differ, so it was tested too:
+the same container, 8 GB, one worker, running Vercel's **exact** build command
+`npm run preflight && next build` with `LEGAL_ENTITY`, `ALTCHA_HMAC_KEY`, all six
+SMTP variables, `CI=1`, `VERCEL=1` and `VERCEL_ENV=production` set. Preflight
+passed all four checks — the same four the failing deploy reports — and the build
+**exited 0**, through the same 44/89 tick, peaking at 1414 MB.
+
+**A larger memory flag is therefore not the right answer, and it is not being
+added.** Adding one here would be guessing with a plausible-looking number, and
+it would mask whatever the real cause is.
+
+**What is left, and it is the owner's to try:** the one difference that cannot be
+reproduced from outside the platform is Vercel's restored `.next/cache`. The
+first failing deploy followed `6a42649`, which changed `next.config.ts` and added
+routes. **Redeploy with "Use existing Build Cache" switched off** — it is free
+and it is the only untested variable. If it still fails, capture the _raw_ build
+log rather than the dashboard view; "no error message at all" is sometimes a
+truncated panel rather than a truly silent exit.
+
+Two real defects were found on the way and are fixed regardless — G28, an empty
+environment variable taking the build down at module load, which is exactly the
+kind of thing a first-time deploy configuration produces and local development
+never sees; and G29, a Cache-Control header that suppressed Next's development
+no-cache branch.
 
 ---
 
