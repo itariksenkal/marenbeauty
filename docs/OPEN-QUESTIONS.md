@@ -1379,6 +1379,47 @@ asserts they still match so a future divergence has to be deliberate.
 
 ---
 
+### G33 — The wordmark handoff is gone 🟢 → owner's call, 2026-08-07
+
+The header logo used to be **withheld** at the top of the home page: the hero
+published `--hero-handoff` on `<html>`, `theme.css` bound the header mark's
+opacity to it, and below a threshold the mark was `visibility: hidden` so a
+keyboard user could not land on an invisible link. That cross-fade was signature
+interaction #1 in `docs/MOTION.md` §4.
+
+**The owner asked for the logo in the corner from first paint, and for the
+opening screen to carry the logo rather than the word set in Fraunces.** Both
+are done, and the cross-fade is **removed rather than disabled** — a CSS
+variable nothing reads and a selector nothing matches are worse than the
+behaviour they replaced. Gone with it: `resetHandoff`, the `handoff` transform,
+and the `data-hero-handoff` attribute.
+
+**What this costs.** The top of the home page now shows the mark twice — full
+size in the middle, small in the corner. That is what the handoff existed to
+avoid, and it is a deliberate trade the owner made. The pinned sequence itself
+is untouched: the opening still contracts, the story still reveals on scroll,
+and stage counts in `docs/MOTION.md` are unchanged apart from this one.
+
+**What still holds, and is still tested:** the hero mark and the header mark are
+two separate elements, and the hero one never travels into the header.
+
+#### The mark rendered at full width, twice, before this was right
+
+Worth writing down because the cause is a rule this project set for itself.
+`h-44`, `h-56` and `h-64` are **not in the spacing scale** — `theme.css` clears
+Tailwind's defaults with `*: initial`, so those classes compile to nothing.
+The lockup filled the viewport and pushed "BEAUTY" off the bottom of the screen.
+`h-32`, `h-40` and `h-48` exist. This is exactly the failure mode `CLAUDE.md`
+§14 predicts: _"If a utility you expect is missing, the value is missing from
+the design system."_
+
+The second cause was the component's own: `width: auto` on an `<svg>` resolves
+to **100% of the containing block**, not to the viewBox ratio, so a height
+utility on the `<svg>` could not constrain it either. `Wordmark` now sizes a
+wrapper and lets the svg fill it.
+
+---
+
 ## H. Content posture — standing rule
 
 **Recorded 2026-08-06. This is a working rule, not a question.** Also written

@@ -327,24 +327,16 @@ test.describe('the mega footer', () => {
   });
 });
 
-test.describe('the wordmark handoff still works', () => {
+test.describe('the header logo', () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
-  test('the header wordmark is withheld at the top of the home page', async ({
+  test('the logo is in the corner at the top of the home page', async ({
     page,
   }) => {
+    // It used to be withheld until the hero handed off. The owner asked for it
+    // from first paint (docs/OPEN-QUESTIONS.md G33).
     await page.goto('/');
-    // The hero publishes the handoff state after mount; asserting before it
-    // does would be asserting the server's guess, not the behaviour.
-    await page.waitForFunction(
-      () => document.documentElement.dataset.heroHandoff === 'pending',
-    );
-    const visibility = await page.evaluate(
-      () =>
-        getComputedStyle(document.querySelector('[data-header-wordmark]')!)
-          .visibility,
-    );
-    expect(visibility).toBe('hidden');
+    await expect(page.locator('[data-header-wordmark]')).toBeVisible();
   });
 
   test('but the navigation and the CTA are never withheld', async ({

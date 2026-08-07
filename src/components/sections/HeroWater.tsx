@@ -16,7 +16,6 @@ import {
 import { WaterForm } from '@/components/motion/WaterForm';
 import { BrandStory } from '@/components/sections/BrandStory';
 import { home } from '@/config/home';
-import { site } from '@/config/site';
 import { useIsMobileViewport } from '@/hooks/use-media-query';
 import { useMotionTier } from '@/hooks/use-motion-tier';
 
@@ -89,14 +88,13 @@ function syncInert(
   );
 }
 
-/** Restores the default so every route without a hero shows its wordmark. */
-function resetHandoff() {
-  const root = document.documentElement;
-  root.style.setProperty('--hero-handoff', '1');
-  root.dataset.heroHandoff = 'done';
-}
-
-function Stage({ venueImage }: { venueImage: React.ReactNode }) {
+function Stage({
+  venueImage,
+  wordmark,
+}: {
+  venueImage: React.ReactNode;
+  wordmark: React.ReactNode;
+}) {
   const pinnedProgress = usePinnedProgress();
   const tier = useMotionTier();
   const isMobile = useIsMobileViewport();
@@ -111,56 +109,18 @@ function Stage({ venueImage }: { venueImage: React.ReactNode }) {
   const storyRef = useRef<HTMLDivElement>(null);
   const venueRef = useRef<HTMLDivElement>(null);
 
-  /**
-   * The wordmark handoff — a CROSS-FADE BETWEEN TWO ELEMENTS, never a DOM move.
-   * The hero wordmark and the header wordmark are separate; neither travels
-   * into the other's position. That keeps the header a plain sticky element
-   * with no JS-driven layout, and a mid-page refresh lands in the right state
-   * rather than mid-flight.
-   *
-   * Published as a CSS variable on <html> rather than through React context,
-   * so `SiteHeader` needs no knowledge of the hero at all.
-   */
-  const handoff = useTransform(
-    progress,
-    [stages.spread[0], stages.spread[1]],
-    [0, 1],
-    {
-      clamp: true,
-    },
-  );
-
-  useMotionValueEvent(handoff, 'change', (value) => {
-    if (!animated) return;
-    const root = document.documentElement;
-    root.style.setProperty('--hero-handoff', String(value));
-    root.dataset.heroHandoff = value < 0.5 ? 'pending' : 'done';
-  });
-
-  // Seed from the CURRENT scroll position, so refreshing halfway through the
-  // sequence is correct rather than starting from zero.
+  // The server cannot know the tier, so it renders as if `full`. A brief
+  // full-tier client render can set `inert` before the tier resolves to
+  // reduced — and then nothing would ever take it off, leaving content inert
+  // for exactly the visitor who must not get it.
   useEffect(() => {
-    if (!animated) {
-      resetHandoff();
-      // Clear inert too. The server renders as if `full`, so a brief full-tier
-      // client render can set it before the tier resolves to reduced — and
-      // then nothing would ever take it off, leaving content inert for exactly
-      // the visitor who must not get it.
-      syncInert({ story: storyRef, venue: venueRef }, false, stages, 1);
-      return;
-    }
-    const value = handoff.get();
-    const root = document.documentElement;
-    root.style.setProperty('--hero-handoff', String(value));
-    root.dataset.heroHandoff = value < 0.5 ? 'pending' : 'done';
     syncInert(
       { story: storyRef, venue: venueRef },
       animated,
       stages,
-      progress.get(),
+      animated ? progress.get() : 1,
     );
-    return resetHandoff;
-  }, [animated, handoff, progress, stages]);
+  }, [animated, progress, stages]);
 
   useMotionValueEvent(progress, 'change', (value) =>
     syncInert({ story: storyRef, venue: venueRef }, animated, stages, value),
@@ -219,9 +179,14 @@ function Stage({ venueImage }: { venueImage: React.ReactNode }) {
               : undefined
           }
         >
-          <h1 className="font-display text-hero tracking-hero text-text-primary">
-            {site.wordmark}
-          </h1>
+          {/*
+            The logo, not the word set in Fraunces. The header shows the same
+            lockup in the corner from first paint now, so the opening screen
+            showing something else would have been two marks for one brand.
+            Rendered on the server and passed in — `src/config/logo.ts` carries
+            every treatment's path data and this module is `'use client'`.
+          */}
+          <h1 className="text-text-primary">{wordmark}</h1>
 
           {/*
             INSIDE the wordmark group, not beside it.
@@ -303,10 +268,16 @@ function Stage({ venueImage }: { venueImage: React.ReactNode }) {
   );
 }
 
-export function HeroWater({ venueImage }: { venueImage: React.ReactNode }) {
+export function HeroWater({
+  venueImage,
+  wordmark,
+}: {
+  venueImage: React.ReactNode;
+  wordmark: React.ReactNode;
+}) {
   return (
     <PinnedSequence distance="300svh" mobileDistance="180svh">
-      <Stage venueImage={venueImage} />
+      <Stage venueImage={venueImage} wordmark={wordmark} />
     </PinnedSequence>
   );
 }

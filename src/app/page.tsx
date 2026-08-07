@@ -1,4 +1,5 @@
 import { ImageFigure } from '@/components/content/ImageFigure';
+import { Wordmark } from '@/components/ui/Wordmark';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
@@ -57,6 +58,12 @@ export default function HomePage() {
           client component, so resolving it there would pull the image manifest
           into the browser bundle. */}
       <HeroWater
+        wordmark={
+          // 44, 56 and 64 are NOT in the spacing scale — `theme.css` clears
+          // Tailwind's defaults, so `h-44` compiles to nothing and the mark
+          // rendered at the container's full width. These three exist.
+          <Wordmark lockup="stacked" className="mx-auto h-32 sm:h-40 lg:h-48" />
+        }
         venueImage={
           <ImageFigure
             // NOT `page-home-venue` — that is the wide frame further down the

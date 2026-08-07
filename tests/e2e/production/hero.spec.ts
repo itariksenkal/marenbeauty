@@ -37,27 +37,6 @@ async function scrollToProgress(page: Page, fraction: number) {
   await page.waitForTimeout(300);
 }
 
-const handoffState = (page: Page) =>
-  page.locator('html').getAttribute('data-hero-handoff');
-
-/**
- * Wait for the handoff to reach a state, rather than sampling it.
- *
- * The attribute is written from a scroll-linked motion value, so it lands on
- * the next animation frame after a scroll — not synchronously with it. A fixed
- * `waitForTimeout` after scrolling is usually enough and is not always enough:
- * under a loaded machine this test failed once with "pending" on a page that
- * was a frame away from "done". Waiting for the condition removes the race
- * without weakening what is asserted.
- */
-async function expectHandoff(page: Page, state: 'pending' | 'done') {
-  await page.waitForFunction(
-    (want) => document.documentElement.dataset.heroHandoff === want,
-    state,
-  );
-  expect(await handoffState(page)).toBe(state);
-}
-
 test.describe('pinned opening', () => {
   test('renders with no runtime error and exactly one h1', async ({ page }) => {
     const errors = watchForRuntimeErrors(page);
@@ -67,7 +46,9 @@ test.describe('pinned opening', () => {
     expect(errors.pageErrors).toEqual([]);
     expect(errors.consoleErrors).toEqual([]);
     await expect(page.locator('h1')).toHaveCount(1);
-    await expect(page.locator('h1')).toHaveText('Maren');
+    // The h1 is the logo now, so it has no text — its accessible name comes
+    // from the mark's `aria-label`.
+    await expect(page.locator('h1')).toHaveAccessibleName('Maren Beauty');
   });
 
   test('pins for 300svh on desktop', async ({ page }) => {
@@ -132,24 +113,25 @@ test.describe('pinned opening', () => {
     }
   });
 
-  test('the wordmark hands off as a cross-fade between two elements', async ({
+  /**
+   * The cross-fade is gone (docs/OPEN-QUESTIONS.md G33). The header logo used
+   * to be withheld until the hero handed off; the owner asked for it in the
+   * corner from first paint. What still has to hold is that these are two
+   * separate elements — the hero mark must never travel into the header.
+   */
+  test('the logo is in the header from first paint, and stays', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/');
 
-    // Stage 1: hero wordmark visible, header wordmark withheld.
     await scrollToProgress(page, 0);
-    expect(await handoffState(page)).toBe('pending');
-    await expect(page.locator('[data-header-wordmark]')).toBeHidden();
+    await expect(page.locator('[data-header-wordmark]')).toBeVisible();
     await expect(page.locator('h1')).toBeVisible();
 
-    // After the handoff range: header wordmark present.
     await scrollToProgress(page, 0.6);
-    expect(await handoffState(page)).toBe('done');
     await expect(page.locator('[data-header-wordmark]')).toBeVisible();
 
-    // Two separate elements — the hero wordmark never moved into the header.
     const heroInHeader = await page
       .locator('header h1')
       .count()
@@ -160,13 +142,10 @@ test.describe('pinned opening', () => {
     ).toBe(0);
   });
 
-  test('the handoff is correct after a mid-sequence refresh', async ({
-    page,
-  }) => {
+  test('a mid-sequence refresh lands in the right state', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/');
     await scrollToProgress(page, 0.75);
-    await expectHandoff(page, 'done');
 
     await page.reload();
     await page.waitForLoadState('networkidle');
@@ -176,7 +155,6 @@ test.describe('pinned opening', () => {
     await page.waitForFunction(() => window.scrollY > 100);
     const scrolled = await page.evaluate(() => window.scrollY);
     expect(scrolled, 'scroll position was not restored').toBeGreaterThan(100);
-    await expectHandoff(page, 'done');
     await expect(page.locator('[data-header-wordmark]')).toBeVisible();
   });
 

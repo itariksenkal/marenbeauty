@@ -148,8 +148,14 @@
    room to breathe; it is a scale value, not a measured constant, so a header
    that grows a little does not reopen the bug.
 
+   RAISED from 20 to 32 on 2026-08-07. "A little" ran out: the header wordmark
+   became the logo lockup, which is taller than the word was, and the sticky
+   header now measures ~99px. The anchor landed at 80. The a11y suite caught
+   it, which is the whole reason that test measures the real header instead of
+   trusting a constant.
+
    Found at M15's viewport suite, which passed for three runs by luck: with
    `scroll-behavior: smooth` the measurement sometimes landed mid-scroll. */
 :target {
-  scroll-margin-top: var(--spacing-20);
+  scroll-margin-top: var(--spacing-32);
 }

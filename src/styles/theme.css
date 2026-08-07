@@ -435,27 +435,16 @@
   );
 }
 
-/* ── Wordmark handoff — docs/MOTION.md §4 ───────────────────────────────────
-   A cross-fade between TWO elements, never a DOM move: the hero wordmark and
-   the header wordmark are separate, and neither travels into the other's
-   position. That keeps the header a plain sticky element with no JS layout,
-   and it survives a mid-page refresh.
+/* ── The header wordmark is ALWAYS shown ────────────────────────────────────
+   It used to cross-fade in: the hero published `--hero-handoff` on <html> and
+   this bound the header logo's opacity to it, so the top of the home page had
+   no mark in the corner until you scrolled.
 
-   Defaults to 1 so every page WITHOUT a hero shows its header wordmark. */
-:root {
-  --hero-handoff: 1;
-}
-
-[data-header-wordmark] {
-  opacity: var(--hero-handoff);
-}
-
-/* Below the threshold the header wordmark is not merely transparent — it is
-   removed from the tab order and the accessibility tree. An invisible link a
-   keyboard user can still land on is worse than no link. */
-[data-hero-handoff='pending'] [data-header-wordmark] {
-  visibility: hidden;
-}
+   Changed at the owner's request on 2026-08-07 — the logo is in the corner
+   from first paint, on every page, and the hero carries it full size as well.
+   The cross-fade is gone rather than disabled: a variable nothing reads and a
+   selector nothing matches are worse than the behaviour they replaced.
+   docs/OPEN-QUESTIONS.md G33. */
 
 /* ── Tier correction before hydration ───────────────────────────────────────
    The server cannot know the motion tier, so it renders the `full` structure:
