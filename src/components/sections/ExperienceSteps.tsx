@@ -11,6 +11,23 @@ import { cn } from '@/lib/cn';
  *
  * Renders nothing when there are no steps. That is still how a fact we do not
  * have is expressed (docs/OPEN-QUESTIONS.md C11).
+ *
+ * ── WHY NO TEXT IS DIMMED ────────────────────────────────────────────────────
+ *
+ * The first version faded inactive steps to `opacity-40`. axe measured the
+ * result at **1.73:1 to 2.49:1** — text far below AA, on three of the four
+ * steps, for as long as the sequence was in view. Nothing about it being
+ * temporary makes it readable.
+ *
+ * Raising the opacity does not fix it either: at 90% over the aurora's worst
+ * case the text lands at 4.50:1, which is AA by a hundredth and moves the
+ * moment a background stop changes.
+ *
+ * So the emphasis moved off the text entirely. Every step is at full contrast,
+ * always; the active one is marked by a **rule that scales in** beneath its
+ * number — a decorative element, animating `transform` only. That also
+ * satisfies `CLAUDE.md` §16: nothing here is conveyed by animation alone, and
+ * a reader who never scrolls loses nothing.
  */
 export function ExperienceSteps({
   className,
@@ -19,8 +36,8 @@ export function ExperienceSteps({
   className?: string;
   /**
    * Which step the pinned sequence is currently on. Undefined — the static
-   * case — means every step reads at full strength, which is the correct
-   * composition when nothing is animating.
+   * case — means no step is marked, which is the correct composition when
+   * nothing is animating.
    */
   activeIndex?: number;
 }) {
@@ -29,27 +46,35 @@ export function ExperienceSteps({
   return (
     <ol className={cn('grid gap-10 sm:grid-cols-2', className)}>
       {experience.steps.map((step, index) => {
-        const dimmed = activeIndex !== undefined && index !== activeIndex;
+        const active = activeIndex === index;
 
         return (
           <li
             key={step.id}
             data-step={step.id}
-            data-active={activeIndex === index ? '' : undefined}
-            className={cn(
-              // Only opacity — no layout property is touched, so the list
-              // never reflows as the sequence advances (CLAUDE.md §13).
-              'duration-slow transition-opacity ease-standard',
-              dimmed && 'opacity-40',
-            )}
+            data-active={active || undefined}
           >
             <p
               aria-hidden="true"
-              className="font-display text-2xl tracking-display text-text-accent"
+              className="font-display text-2xl tracking-display text-text-secondary"
             >
               {String(index + 1).padStart(2, '0')}
             </p>
-            <h3 className="mt-3 font-display text-xl tracking-display text-text-primary">
+
+            {/*
+              The only thing that moves. `transform` on a decorative rule —
+              never opacity on text, and never a layout property, so the list
+              cannot reflow as the sequence advances (CLAUDE.md §13).
+            */}
+            <span
+              aria-hidden="true"
+              className={cn(
+                'duration-base mt-2 block h-px w-16 origin-left bg-accent-solid transition-transform ease-standard',
+                active ? 'scale-x-100' : 'scale-x-0',
+              )}
+            />
+
+            <h3 className="mt-4 font-display text-xl tracking-display text-text-primary">
               {step.title}
             </h3>
             <p className="mt-3 max-w-lead text-text-secondary">{step.body}</p>

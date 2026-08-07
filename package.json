@@ -17,7 +17,7 @@
     "guard": "node scripts/guard.mjs",
     "preflight": "node scripts/preflight.mjs",
     "test": "vitest run",
-    "test:a11y": "node scripts/stub.mjs test:a11y \"axe + Playwright arrive at M15\"",
+    "test:a11y": "playwright test --config=playwright.a11y.config.ts",
     "licenses": "node scripts/licenses.mjs",
     "verify": "npm run typecheck && npm run lint && npm run format:check && npm run fonts && npm run build && npm run guard && npm run test && npm run test:e2e && npm run test:a11y && npm run licenses",
     "fonts": "node scripts/verify-fonts.mjs",
@@ -42,6 +42,7 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
     "@eslint/js": "9.39.5",
     "@playwright/test": "1.62.1",
     "@tailwindcss/postcss": "4.3.3",
@@ -49,6 +50,7 @@
     "@types/nodemailer": "8.0.1",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
+    "axe-core": "4.13.0",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.0",
     "license-checker-rseidelsohn": "5.0.1",

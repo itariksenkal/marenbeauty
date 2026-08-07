@@ -39,6 +39,13 @@ is credited to its author with a link to its licence.
 2. NAMED LICENCE EXCEPTIONS
 ==============================================================================
 
+  @axe-core/playwright 4.12.1
+      Licence:    MPL-2.0
+      Licence URL: https://spdx.org/licenses/MPL-2.0.html
+      Author:     not declared in package metadata
+      Source:     https://github.com/dequelabs/axe-core-npm
+      Scope:      dev only
+
   @img/sharp-wasm32 0.35.3
       Licence:    Apache-2.0 AND LGPL-3.0-or-later AND MIT
       Licence URL: https://spdx.org/licenses/Apache-2.0.html
@@ -52,6 +59,13 @@ is credited to its author with a link to its licence.
       Author:     Lovell Fuller
       Source:     https://github.com/lovell/sharp
       Scope:      runtime — SHIPS in the container
+
+  axe-core 4.12.1
+      Licence:    MPL-2.0
+      Licence URL: https://spdx.org/licenses/MPL-2.0.html
+      Author:     not declared in package metadata
+      Source:     https://github.com/dequelabs/axe-core
+      Scope:      dev only
 
   axe-core 4.13.0
       Licence:    MPL-2.0

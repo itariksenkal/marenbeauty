@@ -48,7 +48,13 @@ export function ContactChannels({
             <span className="text-2xs tracking-eyebrow text-text-muted uppercase">
               {channelLabels[key]}
             </span>
-            <span className="mt-1 text-sm tracking-wide text-text-accent">
+            {/*
+              text-secondary, NOT text-accent. Rosewood on nude is 4.14:1 —
+              under AA — and this component renders inside the nude location
+              panel. The accent colour is permitted on ivory, cream and sand
+              only (docs/DESIGN-SYSTEM.md §1.4); axe caught it on three pages.
+            */}
+            <span className="mt-1 text-sm tracking-wide text-text-secondary">
               {contact[key]?.label}
             </span>
           </a>

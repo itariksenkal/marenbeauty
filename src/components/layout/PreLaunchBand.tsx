@@ -11,17 +11,26 @@ import { site } from '@/config/site';
  *
  * Renders nothing once `isPreLaunch` is false. Flipping that flag must not
  * require touching a component.
+ *
+ * It is an `<aside>` with a name, not a `<div>`. It sits above the header, so
+ * without a landmark it is content outside every region — which axe reports on
+ * every page of the site, and which means a screen-reader user navigating by
+ * landmark skips it entirely. It is the one sentence explaining why nothing on
+ * the site can be booked.
  */
 export function PreLaunchBand() {
   if (!site.isPreLaunch) return null;
 
   return (
-    <div className="border-b border-border-decor bg-surface-accent">
+    <aside
+      aria-label={home.preLaunchLabel}
+      className="border-b border-border-decor bg-surface-accent"
+    >
       <Container className="py-3">
         <p className="text-center text-sm text-text-secondary">
           {home.preLaunchNotice}
         </p>
       </Container>
-    </div>
+    </aside>
   );
 }

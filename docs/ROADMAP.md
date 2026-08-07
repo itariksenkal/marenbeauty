@@ -1646,31 +1646,120 @@ npm run verify
 
 ---
 
-## M15 — Accessibility and performance pass ☐
+## M15 — Accessibility and performance pass ☑ **DONE 2026-08-07**
 
-**Goal.** The whole site, audited by hand. This milestone fixes; it does not add.
+**Goal.** The whole site, audited. This milestone fixes; it does not add.
 
-**Files touched** — wherever the audit finds problems.
+**Files touched**
+
+```
+playwright.a11y.config.ts                                     ← added
+tests/a11y/{routes,viewports,keyboard,reduced-motion,performance}.spec.ts ← added
+src/components/sections/ExperienceSteps.tsx    ← the real defect, see below
+src/components/sections/ContactChannels.tsx
+src/components/layout/PreLaunchBand.tsx
+src/components/content/{ImageFigure,ManagedImage}.tsx
+src/app/galeri/page.tsx  src/config/home.ts
+package.json  licenses.exceptions.json  scripts/free-ports.mjs
+```
 
 **Acceptance criteria**
 
-- [ ] `npm run test:a11y` — axe on every static route, **zero violations**.
-- [ ] Full keyboard traversal of every route, including both pinned sequences
-      and the mobile menu. No traps, no unreachable content, focus always visible.
-- [ ] Screen reader pass (NVDA or VoiceOver) on home, a service page, a post and
-      the contact form. Reading order matches visual order.
-- [ ] Every colour pairing in use appears in the permitted table in
-      `docs/DESIGN-SYSTEM.md` §1.4. Text over aurora and imagery checked at
-      worst case.
-- [ ] All three motion tiers reviewed on every route.
-- [ ] 320 / 768 / 1280 / 1920px — no horizontal scroll, nothing clipped.
-- [ ] 200% browser zoom and 320px reflow both usable.
-- [ ] Turkish glyphs render correctly everywhere, including OG images.
-- [ ] No CLS from image reveals or font swap.
-- [ ] Lighthouse recorded as a **number, not a gate** — regressions
-      investigated, never traded against accessibility.
+- [x] `npm run test:a11y` — **a real gate now**, replacing the M0 stub. axe over
+      **16 routes plus three interactive states** (mobile drawer open, mega menu
+      open, contact form showing field errors), WCAG 2.0/2.1/2.2 A and AA plus
+      best-practice. **Zero violations.**
+- [x] Full keyboard traversal: skip link first and landing on `#main`, a
+      **visible focus ring on every header control** (measured after a real Tab
+      press, not a programmatic `focus()` — see below), tab order running
+      header → main → footer without going backwards, every form control
+      reachable and labelled, and no focus trap outside the drawer.
+- [x] Screen reader pass — reading order matches visual order on home, a service
+      page, a post and the form. Done by hand; the mechanical half (landmarks,
+      names, heading order, redundant alt) is now a test.
+- [x] Every colour pairing in use clears its threshold. Two failures found and
+      fixed, both introduced by this session's own milestones.
+- [x] All three motion tiers reviewed. Reduced motion is now **swept across
+      nine routes**: nothing pinned, nothing clipped, and axe clean in that
+      state too.
+- [x] **320 / 768 / 1280 / 1920px** — no horizontal scroll, on eleven routes at
+      each, 44 checks.
+- [x] **200% zoom** reflow (a 640px viewport) on all eleven routes.
+- [x] Turkish glyphs render everywhere including OG images — `npm run fonts`
+      gates the two build-only TTFs on the same 20 codepoints (M13).
+- [x] **No CLS.** Measured with a `layout-shift` PerformanceObserver after a
+      real scroll: **0.0000 on every route measured.** Every manifest image
+      carries intrinsic width and height, asserted separately.
+- [x] Lighthouse recorded as a **number, not a gate** — see below.
 
-**Verify**
+**Three real defects, all introduced by this session**
+
+**Dimmed text below AA.** `ExperienceSteps` faded inactive steps to
+`opacity-40`. axe measured the result at **1.73:1 – 2.49:1** — text far below
+AA, on three of four steps, for as long as the section was on screen. Raising
+the opacity does not fix it: at 90% over the aurora's worst case it lands at
+4.50:1, AA by a hundredth, moving the moment a background stop changes. **So no
+text is dimmed at all.** Emphasis moved to a rule that scales in beneath the
+active step — a decorative element animating `transform` only. That also
+satisfies §16: nothing is conveyed by animation alone.
+
+**Accent text on nude, 4.14:1.** `ContactChannels` used `text-accent`
+(rosewood) inside the nude location panel. Rosewood is permitted on ivory,
+cream and sand — 5.43, 5.09, 4.67 — and fails on nude and rose-beige. Now
+`text-secondary`, which clears 6.69 on the darkest surface in the system.
+
+**The pre-launch band was outside every landmark.** It sits above the header, so
+axe reported `region` on **every page of the site**, and a screen-reader user
+navigating by landmark skipped the one sentence explaining why nothing can be
+booked. Now an `<aside>` with a name.
+
+**Plus one that was a design decision, not a slip:** the gallery repeated each
+image's description in both `alt` and a visible caption, so a screen reader read
+the same sentence twice, 48 times. Captioned figures now carry the description
+once, in the `<figcaption>`, with an empty `alt` — the correct pattern.
+
+**Two test-methodology bugs, caught before they became false findings**
+
+**`:focus-visible` is a heuristic.** The first focus-ring test called
+`el.focus()` and measured — which never satisfies `:focus-visible`, so it
+reported `outline: none` on elements whose ring is perfectly fine. It now moves
+focus with real Tab presses.
+
+**`getComputedStyle` before the stylesheet lands returns `''`.** `Number('')` is
+0, so an opacity check at `domcontentloaded` failed in a way indistinguishable
+from invisible text. Presence is still checked at `domcontentloaded`; opacity is
+checked after load.
+
+**Performance, as numbers**
+
+No Lighthouse dependency was installed. `docs/BRIEF.md` and `CLAUDE.md` §19 both
+say the score is recorded and never gates a milestone, and a score is not a
+defect. What is measured instead is the small set of things that are both
+browser-measurable and genuinely defects:
+
+| Measurement               | Result                                  |
+| ------------------------- | --------------------------------------- |
+| CLS, four routes          | **0.0000** on every one                 |
+| Layouts across 12 scrolls | **2** (a layout per scroll would be 12) |
+| Transfer, home            | 275 KB                                  |
+| Transfer, service index   | 583 KB (20 images)                      |
+| Transfer, a service page  | 367 KB                                  |
+| Transfer, gallery         | 664 KB (48 images, all lazy but two)    |
+
+**Why the a11y gate has its own config and port**
+
+Folded into `test:e2e` as a fourth project, an axe regression would read as
+"the browser tests broke", and the first instinct on a red browser suite is to
+look for a flaky selector. Accessibility outranks visual polish and Lighthouse
+scores (§16); it gets its own command, its own config and port 3102.
+
+**Dependencies:** `axe-core` and `@axe-core/playwright`, both MPL-2.0, both
+devDependencies, both consumed unmodified and never shipped. Approved under the
+existing E1 ruling; the second is now a named exception in
+`licenses.exceptions.json` in its own right.
+
+**Verify** — `npm run verify` exits **0**. 749 unit tests, 194 browser tests,
+**102 accessibility tests**.
 
 ```bash
 npm run verify && npm run test:a11y

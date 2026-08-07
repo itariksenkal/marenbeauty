@@ -1,6 +1,5 @@
 {
   "$comment": "Licence policy, attribution obligations and named exceptions. See docs/LICENSES.md and CLAUDE.md §2. Ruled on 2026-08-06. Every exception needs licence, scope, reason and status. The 'licence' field pins what the exception was granted against — if the package changes licence, the audit fails even though an exception exists. NOTICE is regenerated from the real tree on every run; it cannot drift.",
-
   "policy": [
     "MIT",
     "MIT-0",
@@ -17,11 +16,8 @@
     "CC-BY-4.0",
     "CC-BY-3.0"
   ],
-
   "$policyNote": "BlueOak-1.0.0 and Python-2.0 added 2026-08-06: both permissive with no conditions we cannot meet. CC-BY-4.0 and CC-BY-3.0 added under an explicit condition — CC-BY is not a free pass, it obliges attribution — so every CC-BY package is listed by author and licence link in the generated NOTICE.",
-
   "attributionRequired": ["CC-BY-4.0", "CC-BY-3.0"],
-
   "exceptions": [
     {
       "package": "@img/sharp-win32-x64",
@@ -62,6 +58,13 @@
       "status": "approved",
       "embedLicenceText": false,
       "reason": "Approved 2026-08-06 (docs/OPEN-QUESTIONS.md E1). MPL-2.0 is file-level copyleft; the tool is consumed unmodified, is a devDependency, and is never shipped. No obligation triggered. Arrives transitively via eslint-plugin-jsx-a11y, and directly via @axe-core/playwright at M15."
+    },
+    {
+      "package": "@axe-core/playwright",
+      "licence": "MPL-2.0",
+      "scope": "dev only",
+      "status": "approved",
+      "reason": "Approved 2026-08-06 under the same ruling as axe-core (docs/OPEN-QUESTIONS.md E1), installed directly at M15. MPL-2.0 is file-level copyleft; the package is consumed unmodified, is a devDependency, and is never shipped — it only injects axe into a Playwright page during `npm run test:a11y`. No obligation triggered."
     }
   ]
 }

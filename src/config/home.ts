@@ -91,6 +91,13 @@ export const home = {
   preLaunchNotice: 'Yakında Konya Selçuklu’da açılıyoruz.',
 
   /**
+   * Names the pre-launch band as a landmark. Without it the band is content
+   * outside every region — invisible to landmark navigation, and the one
+   * sentence that explains why nothing on the site can be booked.
+   */
+  preLaunchLabel: 'Açılış durumu',
+
+  /**
    * Flips to `true` when the owner has approved the wording. Until then the
    * copy is provisional and `docs/OPEN-QUESTIONS.md` C10 stays open.
    */

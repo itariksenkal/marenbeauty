@@ -100,10 +100,14 @@ export default function GalleryPage() {
                       priority={index === 0 && position === 0}
                       sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                       showCredit={false}
+                      // The caption below IS the description. Repeating it in
+                      // alt makes a screen reader announce the same sentence
+                      // twice per frame — 48 times on this page — which axe
+                      // reports as image-redundant-alt and a listener would
+                      // experience as noise.
+                      captioned
+                      caption={image.alt}
                     />
-                    <p className="mt-3 text-sm text-text-secondary">
-                      {image.alt}
-                    </p>
                   </li>
                 ))}
               </ul>

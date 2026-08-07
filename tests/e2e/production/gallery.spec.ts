@@ -36,17 +36,32 @@ test.describe('the gallery', () => {
     expect(leadY).toBeLessThan(firstImageY);
   });
 
-  test('every image has real Turkish alt text', async ({ page }) => {
+  /**
+   * Each frame is a captioned figure, so the description is the visible
+   * `<figcaption>` and the image's `alt` is empty. That is the correct pattern
+   * rather than a shortcut: with both set, a screen reader reads the same
+   * sentence twice — 48 times on this page — which axe reports as
+   * `image-redundant-alt` and a listener experiences as noise. Changed at M15.
+   */
+  test('every image is described exactly once, by its caption', async ({
+    page,
+  }) => {
     await page.goto('/galeri');
+
     const alts = await page
       .locator('main img')
       .evaluateAll((els) =>
         els.map((el) => (el as HTMLImageElement).alt ?? ''),
       );
-
     expect(alts).toHaveLength(48);
-    for (const alt of alts) {
-      expect(alt.length).toBeGreaterThan(15);
+    expect(alts.every((alt) => alt === '')).toBe(true);
+
+    const captions = await page
+      .locator('main figcaption')
+      .evaluateAll((els) => els.map((el) => (el.textContent ?? '').trim()));
+    expect(captions).toHaveLength(48);
+    for (const caption of captions) {
+      expect(caption.length).toBeGreaterThan(15);
     }
   });
 

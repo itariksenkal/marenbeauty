@@ -16,7 +16,7 @@
  */
 import { execFileSync } from 'node:child_process';
 
-const PORTS = [3000, 3100, 3101];
+const PORTS = [3000, 3100, 3101, 3102];
 const isWindows = process.platform === 'win32';
 
 function run(file, args) {

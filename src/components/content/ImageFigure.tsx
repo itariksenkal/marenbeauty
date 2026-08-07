@@ -34,6 +34,8 @@ export function ImageFigure({
   rounded = 'rounded-xl',
   className,
   showCredit = true,
+  captioned = false,
+  caption,
 }: {
   id: string;
   sizes: string;
@@ -42,6 +44,18 @@ export function ImageFigure({
   rounded?: string;
   className?: string;
   showCredit?: boolean;
+  /**
+   * Render the description as a visible `<figcaption>` and give the image an
+   * EMPTY alt.
+   *
+   * That is the correct pattern for a captioned figure, not a shortcut: with
+   * both set, a screen reader announces the same sentence twice per image —
+   * 48 times on the gallery page. The caption names the figure; the image adds
+   * nothing by repeating it. axe reports the duplicate as
+   * `image-redundant-alt`, which is how this was found.
+   */
+  captioned?: boolean;
+  caption?: string;
 }) {
   return (
     <figure className={className}>
@@ -51,7 +65,13 @@ export function ImageFigure({
         priority={priority}
         className={cn(RATIO[ratio], rounded)}
         imageClassName={rounded}
+        decorative={captioned}
       />
+      {captioned && caption ? (
+        <figcaption className="mt-3 text-sm text-text-secondary">
+          {caption}
+        </figcaption>
+      ) : null}
       {showCredit && (
         <figcaption>
           <ImageCredit id={id} className="mt-3" />

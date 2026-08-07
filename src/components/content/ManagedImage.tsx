@@ -28,6 +28,7 @@ export function ManagedImage({
   className,
   imageClassName,
   viewTransitionName,
+  decorative = false,
 }: {
   id: string;
   /** Explicit, always (CLAUDE.md §8). There is no sensible default. */
@@ -42,9 +43,18 @@ export function ManagedImage({
    * set on ONE image per page — never mapped across a list.
    */
   viewTransitionName?: string;
+  /**
+   * Force the decorative treatment even though the manifest has alt text.
+   *
+   * The one legitimate caller is a captioned figure: the caption already says
+   * what the image shows, so repeating it in `alt` makes a screen reader read
+   * the same sentence twice. Not a way to skip writing alt text — the manifest
+   * still requires it, and a test asserts every entry has some.
+   */
+  decorative?: boolean;
 }) {
   const image = getImage(id);
-  const isDecorative = image.alt === '';
+  const isDecorative = decorative || image.alt === '';
 
   return (
     <div
@@ -53,7 +63,7 @@ export function ManagedImage({
     >
       <Image
         src={image.src}
-        alt={image.alt}
+        alt={isDecorative ? '' : image.alt}
         width={image.width}
         height={image.height}
         sizes={sizes}
