@@ -162,6 +162,9 @@ describe('the logo set', () => {
     };
     walk(join(ROOT, 'src'));
     expect(importers.sort()).toEqual([
+      // Reads `textCentre` to align the hero slogan on the NAME rather than on
+      // the whole lockup — geometry only `scripts/build-logo.mjs` knows.
+      'src/app/page.tsx',
       'src/app/styleguide/page.tsx',
       'src/components/ui/Wordmark.tsx',
     ]);

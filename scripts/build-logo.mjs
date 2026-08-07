@@ -589,6 +589,15 @@ function horizontal(treatment) {
   return {
     viewBox: `0 0 ${round(width)} ${round(height)}`,
     parts: [...markParts, ...textParts],
+    /**
+     * Where the NAME's optical centre sits, as a fraction of the whole lockup.
+     *
+     * The mark is on the left, so the lockup's centre and the name's centre are
+     * not the same point — anything centred under the lockup reads as offset
+     * from the word it belongs to. Emitted here because only this function
+     * knows the layout; the SVG is one path by the time anyone else sees it.
+     */
+    textCentre: round((textLeft + text.width / 2) / width) / 1,
   };
 }
 
@@ -655,6 +664,12 @@ export type LogoPart =
 export type LogoLockup = {
   readonly viewBox: string;
   readonly parts: readonly LogoPart[];
+  /**
+   * Horizontal only: the name's optical centre as a fraction of the lockup's
+   * width. The mark sits to its left, so 0.5 is the centre of the whole
+   * lockup, not of the word.
+   */
+  readonly textCentre?: number;
 };
 
 export type LogoTreatment = {

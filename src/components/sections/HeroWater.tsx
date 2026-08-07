@@ -15,7 +15,6 @@ import {
 } from '@/components/motion/PinnedSequence';
 import { WaterForm } from '@/components/motion/WaterForm';
 import { BrandStory } from '@/components/sections/BrandStory';
-import { home } from '@/config/home';
 import { useIsMobileViewport } from '@/hooks/use-media-query';
 import { useMotionTier } from '@/hooks/use-motion-tier';
 
@@ -180,31 +179,12 @@ function Stage({
           }
         >
           {/*
-            The logo, not the word set in Fraunces. The header shows the same
-            lockup in the corner from first paint now, so the opening screen
-            showing something else would have been two marks for one brand.
-            Rendered on the server and passed in — `src/config/logo.ts` carries
-            every treatment's path data and this module is `'use client'`.
+            The whole opening block — logo AND slogan — comes in as one node
+            from the server. They are together because the slogan is centred on
+            the NAME inside the lockup rather than on the lockup as a whole, and
+            only the thing that knows the lockup's geometry can do that.
           */}
-          <h1 className="text-text-primary">{wordmark}</h1>
-
-          {/*
-            INSIDE the wordmark group, not beside it.
-
-            The slogan used to be its own `motion.p` with its own scroll-driven
-            opacity ramp, and it kept outliving the word it captions: measured
-            against the real build, its computed opacity ran 1 → 0.18 → 0.83 → 1
-            as you scrolled, so it faded and then came BACK while the brand
-            story was on screen. Two elements reading the same progress through
-            two different ramps is a bug waiting to be re-tuned wrong.
-
-            Now it is one element with the wordmark. It cannot be visible when
-            the wordmark is not, because it is the same box — whatever the stage
-            boundaries are set to.
-          */}
-          <p className="mt-4 text-lg text-balance text-text-secondary">
-            {home.slogan}
-          </p>
+          {wordmark}
         </motion.div>
 
         {/*

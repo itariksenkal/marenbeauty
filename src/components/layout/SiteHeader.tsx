@@ -60,7 +60,7 @@ export function SiteHeader() {
             data-header-wordmark=""
             className="text-text-primary focus-visible:focus-ring"
           >
-            <Wordmark className="h-7 sm:h-8" />
+            <Wordmark className="h-8 sm:h-10" />
           </Link>
 
           <div className="flex items-center gap-3">

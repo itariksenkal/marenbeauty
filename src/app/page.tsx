@@ -11,6 +11,8 @@ import { LocationCard } from '@/components/sections/LocationCard';
 import { ServicesPanels } from '@/components/sections/ServicesPanels';
 import { toListItems } from '@/components/sections/service-list-item';
 import { TestimonialsSection } from '@/components/sections/TestimonialsSection';
+import { home } from '@/config/home';
+import { logoTreatments } from '@/config/logo';
 import { routeSeo } from '@/config/seo';
 import { serviceGroups } from '@/config/services';
 import { standardGraph } from '@/lib/schema/graph';
@@ -59,10 +61,43 @@ export default function HomePage() {
           into the browser bundle. */}
       <HeroWater
         wordmark={
-          // 44, 56 and 64 are NOT in the spacing scale — `theme.css` clears
-          // Tailwind's defaults, so `h-44` compiles to nothing and the mark
-          // rendered at the container's full width. These three exist.
-          <Wordmark lockup="stacked" className="mx-auto h-32 sm:h-40 lg:h-48" />
+          <div className="mx-auto w-fit">
+            <h1>
+              {/*
+                The HORIZONTAL lockup: the M sits beside the name rather than
+                above it. At the same height its lettering is far larger than
+                the stacked form's. 971:290, so h-48 is ~643px wide.
+
+                Heights come from the spacing scale. 44, 56 and 64 are NOT in
+                it — `theme.css` clears Tailwind's defaults, so `h-44` compiles
+                to nothing and the mark renders at its container's full width.
+              */}
+              <Wordmark lockup="horizontal" className="h-32 sm:h-40 lg:h-48" />
+            </h1>
+
+            {/*
+              Centred on the NAME, not on the lockup.
+
+              The mark sits to the left of the words, so the lockup's centre is
+              well left of the word's — a slogan centred under the whole thing
+              reads as drifting. `textCentre` is emitted by
+              `scripts/build-logo.mjs`, which is the only place that knows where
+              the name was laid out; by the time this file sees the lockup it is
+              one path. The shift is a percentage of this paragraph's own width,
+              and the paragraph fills the `w-fit` column, so it tracks the
+              logo's width at every breakpoint without a second measurement.
+            */}
+            <p
+              className="mt-4 w-full text-lg text-balance text-text-secondary"
+              style={{
+                transform: `translateX(calc((${
+                  logoTreatments.serif.lockups.horizontal.textCentre ?? 0.5
+                } - 0.5) * 100%))`,
+              }}
+            >
+              {home.slogan}
+            </p>
+          </div>
         }
         venueImage={
           <ImageFigure
