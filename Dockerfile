@@ -24,9 +24,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Non-root.
+# Non-root. `--ingroup` is not optional: without it Alpine's adduser puts the
+# user in `nogroup`, and the `nodejs` group created on the line above is never
+# used. `docker exec … id` reported `gid=65533(nogroup)` at M16 — the files are
+# chowned to `nextjs:nodejs`, so the process was running outside the group that
+# owns them.
 RUN addgroup --system --gid 1001 nodejs \
-  && adduser --system --uid 1001 nextjs
+  && adduser --system --uid 1001 --ingroup nodejs nextjs
 
 # `output: 'standalone'` emits a self-contained server; only these three
 # artefacts are needed at runtime.

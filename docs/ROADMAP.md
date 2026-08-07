@@ -1767,30 +1767,66 @@ npm run verify && npm run test:a11y
 
 ---
 
-## M16 — Self-host verification ☐
+## M16 — Self-host verification ☑ **DONE 2026-08-07**
 
 **Goal.** Prove the portability rule. The site must run with no Vercel.
 
 **Files touched**
 
 ```
-Dockerfile  .dockerignore  docs/DEPLOY.md
+Dockerfile  docs/DEPLOY.md
+src/app/api/contact/route.ts        ← the defect this milestone existed to find
+tests/e2e/production/contact.spec.ts
 ```
 
 **Acceptance criteria**
 
-- [ ] Multi-stage Dockerfile on a Node 24 base, non-root user, standalone output.
-- [ ] `docker build` then `docker run` serves the complete site on a clean
-      machine with only env vars supplied.
-- [ ] Every route renders; the contact form sends successfully from the
-      container.
-- [ ] Grep confirms **no `@vercel/*` import and no Vercel-only API** anywhere in
-      `src/`.
-- [ ] Image optimisation works in the container (`sharp` present).
-- [ ] `docs/DEPLOY.md` self-host section verified against the actual run and
-      corrected where it was wrong.
+- [x] Multi-stage Dockerfile on `node:24-alpine`, non-root, standalone output.
+      Verified in the running container: **uid 1001 (nextjs), gid 1001
+      (nodejs)**.
+- [x] `docker build` then `docker run` serves the complete site with only
+      `ALTCHA_HMAC_KEY` supplied. **337 MB** image.
+- [x] **All 18 routes and generated files return 200**; an unknown path returns
+      a real 404; `/styleguide`, `/motion` and `/api/dev/outbox` all 404.
+- [x] **Image optimisation works in the container** — `sharp` present, serving
+      `image/jpeg` by default and `image/webp` (24 KB) on content negotiation.
+- [x] `grep -r "@vercel/" src/` returns nothing; no `waitUntil`, no Edge Config,
+      no `geolocation()`/`ipAddress()`; `package.json` contains no `vercel`.
+- [x] `docs/DEPLOY.md` §7 verified against the actual run and corrected — it now
+      records what happened rather than what was expected.
+- [ ] **The contact form sends from inside the container.** Blocked on B3, like
+      everywhere else. The container reaches the mail step, logs exactly which
+      six variables are missing, and returns the generic message. Supplying
+      `--env-file` with the real credential is the whole remaining step.
 
-**Verify**
+**The defect this milestone existed to find**
+
+The no-JavaScript redirect was absolute:
+
+```ts
+const target = new URL('/iletisim', request.url);
+```
+
+In the standalone server `request.url` is composed from `HOSTNAME` and `PORT`,
+not from the Host header. A container started with `HOSTNAME=0.0.0.0` — which is
+what the Dockerfile sets, correctly, so the server binds all interfaces — sent
+every no-JavaScript visitor to **`http://0.0.0.0:3000/iletisim`**. An address
+that resolves nowhere.
+
+**It worked perfectly on Vercel**, where the platform sets a public origin. That
+is the entire argument for `CLAUDE.md` §3 in one bug: it would have shipped, and
+it would only ever have failed for self-hosted deployments and for anyone behind
+a reverse proxy on a different port.
+
+Fixed by returning a **relative** `Location`, which RFC 7231 permits and every
+browser resolves against the request URL — removing the question of which origin
+the server thinks it is on. A browser test now asserts the header is relative.
+
+**Also fixed:** `adduser` without `--ingroup` put the runtime user in `nogroup`
+while every copied file was chowned to `nodejs`. `docker exec … id` showed
+`gid=65533(nogroup)`.
+
+**Verify** — `npm run verify` exits **0**, plus the container run above.
 
 ```bash
 npm run verify && docker build -t marenbeauty . && docker run --rm -p 3000:3000 --env-file .env.local marenbeauty

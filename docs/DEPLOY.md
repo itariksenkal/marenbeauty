@@ -257,16 +257,37 @@ docker build -t marenbeauty .
 docker run --rm -p 3000:3000 --env-file .env.local marenbeauty
 ```
 
-- [ ] Multi-stage build on a Node 24 base; runs as a non-root user.
-- [ ] `output: 'standalone'`; only the standalone bundle, `public/` and
-      `.next/static` are copied into the final image.
-- [ ] Every route renders. Image optimisation works (`sharp` present).
-- [ ] The contact form sends from inside the container.
-- [ ] `grep -r "@vercel/" src/` returns nothing.
+**Run at M16 and confirmed:**
+
+- [x] Multi-stage build on `node:24-alpine`; runs as **uid 1001 (nextjs), gid
+      1001 (nodejs)**. `--ingroup` matters — without it Alpine's `adduser` puts
+      the user in `nogroup` while the files are chowned to `nodejs`.
+- [x] `output: 'standalone'`; only the standalone bundle, `public/` and
+      `.next/static` in the final image. **337 MB**, of which `node:24-alpine`
+      is most.
+- [x] **All 18 routes and generated files return 200** from the container:
+      every page, `sitemap.xml`, `robots.txt`, `manifest.webmanifest`,
+      `opengraph-image`, `icon.svg`. An unknown path returns a real **404**.
+- [x] **Image optimisation works** — `/_next/image?url=…&w=640&q=75` returns
+      `image/jpeg` for a plain `Accept`, and `image/webp` (24 KB) when the
+      client asks for it. `sharp` is present and re-encoding.
+- [x] **Dev-only routes 404**: `/styleguide`, `/motion`, `/api/dev/outbox`.
+- [x] `GET /api/altcha` issues a signed challenge; `POST /api/contact` validates,
+      applies the spam gate, and returns a **303 to a relative Location**.
+- [x] `grep -r "@vercel/" src/` returns nothing, and `package.json` contains no
+      `vercel` string at all.
+
+**Not yet done, and blocked on the same thing as everywhere else:** a real send
+from inside the container. With no SMTP credential the container reaches the
+mail step and logs exactly which six variables are missing, then returns the
+generic message — which is the correct behaviour and is asserted. Supplying
+`--env-file` with the real credential is the whole remaining step
+(`docs/OPEN-QUESTIONS.md` B3).
 
 To move off Vercel: point the `A` record at the host running the container, put
 a TLS-terminating reverse proxy in front of it, and supply the same environment
-variables. Nothing in the application changes.
+variables. Nothing in the application changes — **including the no-JavaScript
+redirect**, which M16 had to fix to make that sentence true.
 
 ---
 

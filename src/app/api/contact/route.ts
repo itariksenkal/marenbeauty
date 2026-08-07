@@ -184,16 +184,29 @@ function respond(
   extra?: { fields: readonly string[] },
 ): Response {
   if (!wantsJson) {
-    // 303, so a refresh does not re-submit.
-    const target = new URL('/iletisim', request.url);
-    target.searchParams.set(
-      contactForm.resultParam,
-      contactForm.resultValues[result],
-    );
-    target.hash = 'iletisim-formu';
+    /*
+     * 303, so a refresh does not re-submit — and a RELATIVE Location.
+     *
+     * The first version built `new URL('/iletisim', request.url)`. In the
+     * standalone server `request.url` is composed from `HOSTNAME` and `PORT`,
+     * not from the Host header, so a container started with `HOSTNAME=0.0.0.0`
+     * sent every no-JavaScript visitor to `http://0.0.0.0:3000/iletisim` — an
+     * address that resolves nowhere. It worked on Vercel, which is precisely
+     * why the portability rule requires running it in a plain container
+     * (CLAUDE.md §3). Found at M16, in the container, on the first real POST.
+     *
+     * RFC 7231 permits a relative URI reference in `Location`, and every
+     * browser resolves it against the request URL. That removes the question of
+     * which origin the server thinks it is on, behind any proxy or port.
+     */
+    const query = new URLSearchParams({
+      [contactForm.resultParam]: contactForm.resultValues[result],
+    });
+    const location = `/iletisim?${query.toString()}#iletisim-formu`;
+
     return new Response(null, {
       status: 303,
-      headers: { location: target.toString(), ...headers },
+      headers: { location, ...headers },
     });
   }
 

@@ -323,6 +323,31 @@ test.describe('the no-JavaScript path', () => {
       page.getByText('Mesajınız şu anda gönderilemedi.', { exact: false }),
     ).toBeVisible();
   });
+
+  /**
+   * The redirect target must be RELATIVE.
+   *
+   * It was absolute, built from `new URL('/iletisim', request.url)`. In the
+   * standalone server `request.url` is composed from `HOSTNAME` and `PORT`
+   * rather than the Host header, so a container started with
+   * `HOSTNAME=0.0.0.0` sent every no-JavaScript visitor to
+   * `http://0.0.0.0:3000/iletisim` — an address that resolves nowhere. It
+   * worked on Vercel, which is exactly why CLAUDE.md §3 requires running it in
+   * a plain container. Found at M16, on the first real POST inside one.
+   */
+  test('redirects to a relative location, not to an assumed origin', async ({
+    request,
+  }) => {
+    const response = await request.post('/api/contact', {
+      form: { ad: '', eposta: '', mesaj: '', onay: '', website: '' },
+      maxRedirects: 0,
+    });
+
+    expect(response.status()).toBe(303);
+    const location = response.headers()['location'];
+    expect(location).toBe('/iletisim?durum=eksik#iletisim-formu');
+    expect(location).not.toMatch(/^https?:\/\//);
+  });
 });
 
 test.describe('the development capture', () => {
