@@ -1078,6 +1078,33 @@ changes alone cannot put a tracker into the bundle of a site that has decided
 not to track anyone. A test greps the build for four tracker strings and fails
 on any of them.
 
+### G27 — No Content-Security-Policy yet 🟡 → post-launch decision
+
+Security headers ship in `next.config.ts` — Referrer-Policy,
+X-Content-Type-Options, X-Frame-Options, Permissions-Policy and HSTS, all
+verified against the running production server. **CSP is not among them.**
+
+The layout ships two inline scripts by design:
+
+1. the motion-tier resolver, which must run before first paint — resolving the
+   tier after hydration flashes animated content before telling it not to
+   animate (M5);
+2. the JSON-LD block, which is a `<script type="application/ld+json">`.
+
+A meaningful CSP therefore needs per-request nonces, and a nonce makes every
+page dynamic — turning a fully prerendered site into a server-rendered one.
+`'unsafe-inline'` would be the alternative, and a CSP with `'unsafe-inline'`
+buys almost nothing while looking like it does.
+
+**Not decided in passing.** The site has no user accounts, no third-party
+scripts, no ad network and no user-generated content, so the attack surface a
+CSP would narrow is small today. That changes the moment an advertising tag is
+switched on (C6) — which is the right moment to take the dynamic-rendering
+trade seriously.
+
+**Revisit when:** GA4 or the Meta Pixel is enabled, or any third-party script
+is added.
+
 ---
 
 ## H. Content posture — standing rule

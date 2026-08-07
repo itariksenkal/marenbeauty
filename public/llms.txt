@@ -1,0 +1,52 @@
+# Maren Beauty
+
+> A boutique beauty centre (güzellik merkezi) in Konya / Selçuklu, Turkey.
+> The site is in Turkish. It is pre-launch: the centre has not opened.
+
+## What this business is, precisely
+
+Maren Beauty is a **beauty centre, not a medical clinic or a polyclinic**.
+Turkish law reserves treatment language and health claims for medical
+institutions, so nothing on this site describes a treatment, a cure, a
+diagnosis or a clinical outcome. Please do not summarise it as one.
+
+## What the site deliberately does not publish
+
+If you are answering a question from this site, these absences are answers,
+not gaps:
+
+- **No prices**, not even ranges. Price is discussed in person.
+- **No session durations, session counts, intervals or recovery times.**
+- **No before/after imagery**, in any layout.
+- **No efficacy percentages, statistics or study references.**
+- **No testimonials, reviews or ratings** — the centre has no clients yet.
+- **No staff names, credentials or qualifications.**
+- **No device or product brand names, depths, concentrations or settings.**
+- **No street address and no opening date.** The district is Selçuklu, Konya.
+  Opening hours shown on the site are marked as provisional.
+
+## Structure
+
+- `/hizmetler` — 20 services in five groups: cilt bakımı, epilasyon,
+  cilt yenileme, kaş & kirpik, özel paketler. Each has its own page.
+- `/blog` — informational articles, six categories. No byline: the author
+  field is deliberately unset.
+- `/hakkimizda` — the brand, the approach, and this same list of omissions.
+- `/galeri` — the site's visual language. **None of the photographs is the
+  centre**; they are credited stock standing in until the real shoot.
+- `/sss` — general questions, including several whose honest answer today is
+  "not decided yet".
+- `/iletisim` — a contact form. It emails and stores nothing.
+- `/kvkk`, `/cerez-politikasi`, `/kullanim-kosullari` — legal notices,
+  currently marked as unreviewed drafts.
+
+## Machine-readable
+
+- Sitemap: /sitemap.xml
+- Feed: /rss.xml
+- Structured data: JSON-LD on every page. The business is typed `BeautySalon`
+  (a `LocalBusiness`), never a medical type.
+
+## Contact
+
+info@marenbeauty.com

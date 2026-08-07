@@ -1,0 +1,27 @@
+/* TEAM */
+
+  Maren Beauty — Konya, Selçuklu.
+
+  The people who work here are not named on this site yet. The centre has not
+  opened, and a name published before someone has started is a name that may
+  be wrong. It goes here when it is true.
+  See docs/OPEN-QUESTIONS.md.
+
+/* SITE */
+
+  Language:   Turkish (tr-TR)
+  Standards:  HTML5, WCAG 2.1 AA
+  Components: Next.js (App Router), React, TypeScript, Tailwind CSS v4,
+              MDX, Zod, Motion, Nodemailer, Altcha
+  Fonts:      Fraunces and Manrope, SIL Open Font License 1.1, self-hosted
+  Analytics:  none
+  Cookies:    none
+  Hosting:    Vercel, and any container host — the app is portable by rule
+
+/* THANKS */
+
+  Every photograph on this site is placeholder stock from Unsplash and Pexels,
+  credited by photographer at /galeri. Real photography of the actual space
+  replaces the whole set after opening.
+
+  Third-party software licences and attributions: /lisanslar

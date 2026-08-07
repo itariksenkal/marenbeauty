@@ -1,0 +1,14 @@
+# Maren Beauty — security contact
+#
+# This is a small static marketing site. It stores no personal data: the
+# contact form composes an email and forgets. There is no database, no user
+# account and no admin surface.
+#
+# Reports are read by a person, not a queue. Please describe what you found
+# and how to reproduce it; there is no bounty programme.
+
+Contact: mailto:info@marenbeauty.com
+Expires: 2027-08-07T00:38:52.000Z
+Preferred-Languages: tr, en
+Canonical: https://marenbeauty.com/.well-known/security.txt
+Policy: https://marenbeauty.com/kullanim-kosullari

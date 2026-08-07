@@ -16,6 +16,80 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   trailingSlash: false,
 
+  /**
+   * Security headers.
+   *
+   * Defined HERE and not in `vercel.json`, deliberately. Headers configured on
+   * the platform apply only on that platform, and the portability rule says the
+   * container must serve the same site (`CLAUDE.md` §3) — a self-hosted
+   * deployment that quietly loses its security headers is exactly the kind of
+   * difference M16 exists to prevent.
+   *
+   * No `Content-Security-Policy` yet. The layout ships two inline scripts by
+   * design — the motion-tier resolver, which must run before first paint, and
+   * the JSON-LD block — so a meaningful CSP needs per-request nonces, which
+   * would make every page dynamic. That is a real trade against a real benefit
+   * and it belongs in a decision, not in a config file written in passing.
+   * Recorded in `docs/OPEN-QUESTIONS.md` G27.
+   */
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          // Referrer: origin only on cross-origin requests. The site has no
+          // query-string secrets, but a path can name what a visitor read.
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          // No MIME sniffing. `/lisanslar` serves 1,200 lines of plain text.
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          // Framing: nobody embeds this site, and clickjacking a contact form
+          // is a real, cheap attack.
+          { key: 'X-Frame-Options', value: 'DENY' },
+          // The site asks for no device permission at all. Saying so is free.
+          {
+            key: 'Permissions-Policy',
+            value:
+              'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()',
+          },
+          // Two years, subdomains included. Set only once the apex is on HTTPS,
+          // which the DNS cutover does before this ever ships (docs/DEPLOY.md).
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains',
+          },
+        ],
+      },
+      {
+        // Fingerprinted assets: immutable, a year. Everything under
+        // /_next/static already carries a content hash in its name.
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        // The self-hosted images are NOT fingerprinted — the manifest points at
+        // stable paths so the whole set can be swapped in one file. A day of
+        // browser cache with a week of stale-while-revalidate is the right
+        // trade: a real-photography swap goes live within a week without a
+        // rename, and nobody re-downloads 5 MB on every visit.
+        source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
+          },
+        ],
+      },
+    ];
+  },
+
   async redirects() {
     return [
       {

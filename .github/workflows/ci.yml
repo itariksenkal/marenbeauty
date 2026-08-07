@@ -63,3 +63,45 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # The portability rule is a rule, so it is checked rather than trusted
+  # (CLAUDE.md §3). It runs in parallel with verify: a Docker build that stops
+  # working is a separate failure from a test that stops passing, and reading
+  # it as "CI is red" would lose which one happened.
+  docker:
+    name: docker build and run
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the image
+        run: docker build -t marenbeauty:ci .
+
+      - name: Run it and check every route
+        run: |
+          docker run -d --rm --name mb-ci -p 3000:3000             -e ALTCHA_HMAC_KEY=ci-verification-key-00000000000000000000             marenbeauty:ci
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:3000/ > /dev/null && break
+            sleep 2
+          done
+          fail=0
+          for route in / /hizmetler /hizmetler/hydrafacial /hakkimizda /galeri                        /blog /blog/cilt-bakimi-nedir /sss /iletisim /kvkk                        /cerez-politikasi /kullanim-kosullari /lisanslar                        /sitemap.xml /robots.txt /rss.xml /manifest.webmanifest                        /humans.txt /llms.txt /.well-known/security.txt; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:3000$route")
+            echo "$code  $route"
+            [ "$code" = "200" ] || fail=1
+          done
+          # Dev-only surfaces must not exist in a production image.
+          for route in /styleguide /motion /api/dev/outbox; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:3000$route")
+            echo "$code  $route (expected 404)"
+            [ "$code" = "404" ] || fail=1
+          done
+          # sharp is present and re-encoding.
+          type=$(curl -s -H 'Accept: image/webp' -o /dev/null -w '%{content_type}'             'http://127.0.0.1:3000/_next/image?url=%2Fimages%2Fservices%2Fhydrafacial.webp&w=640&q=75')
+          echo "image optimiser: $type"
+          [ "$type" = "image/webp" ] || fail=1
+          docker logs mb-ci
+          docker rm -f mb-ci > /dev/null
+          exit $fail
