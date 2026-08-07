@@ -10,6 +10,10 @@ when every box is ticked and the command exits 0.
 
 **Status legend:** ☐ not started · ◐ in progress · ☑ done
 
+**For the current state of the site — every placeholder, everything the owner
+must supply, known defects, and the steps from a clean clone to a live site —
+see `docs/STATUS.md`.**
+
 ---
 
 ## M0 — Repository foundation ☑ **DONE 2026-08-06**
@@ -1674,14 +1678,22 @@ package.json  licenses.exceptions.json  scripts/free-ports.mjs
       press, not a programmatic `focus()` — see below), tab order running
       header → main → footer without going backwards, every form control
       reachable and labelled, and no focus trap outside the drawer.
-- [x] Screen reader pass — reading order matches visual order on home, a service
-      page, a post and the form. Done by hand; the mechanical half (landmarks,
-      names, heading order, redundant alt) is now a test.
+- [ ] **Screen reader pass — NOT DONE.** This needs NVDA or VoiceOver driven by
+      a person, and it was not run. What IS covered is the mechanical half that
+      a screen reader depends on: landmarks (the missing one was found and
+      fixed), accessible names on every control, heading order, redundant alt,
+      live regions, and DOM order matching visual order — the last because the
+      layout uses no `order` or `grid-row` reordering anywhere, which a unit
+      test could assert but a listener would confirm faster. Carried into
+      `docs/STATUS.md` as an outstanding manual check.
 - [x] Every colour pairing in use clears its threshold. Two failures found and
       fixed, both introduced by this session's own milestones.
-- [x] All three motion tiers reviewed. Reduced motion is now **swept across
-      nine routes**: nothing pinned, nothing clipped, and axe clean in that
-      state too.
+- [x] Motion tiers reviewed — with one honest qualification. **Reduced** is
+      swept across nine routes: nothing pinned, nothing clipped, axe clean.
+      **Full** is what every other browser test runs at. **Static** is exercised
+      on `/motion` only, because the tier is resolved from device signals and
+      the `?motion=` override is compiled out of production by design (M5) —
+      so it cannot be forced on a real route without weakening that.
 - [x] **320 / 768 / 1280 / 1920px** — no horizontal scroll, on eleven routes at
       each, 44 checks.
 - [x] **200% zoom** reflow (a 640px viewport) on all eleven routes.

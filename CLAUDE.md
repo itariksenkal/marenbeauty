@@ -5,8 +5,9 @@ repository. It outranks habit, convention and personal preference. If a task
 seems to require breaking a rule here, stop and raise it in
 `docs/OPEN-QUESTIONS.md` instead of breaking it.
 
-**Read before every task:** this file, then `docs/ROADMAP.md` (current
-milestone only), then the doc relevant to the task.
+**Read before every task:** this file, then `docs/STATUS.md` (what is real and
+what is a placeholder today), then `docs/ROADMAP.md` (current milestone only),
+then the doc relevant to the task.
 
 ---
 
