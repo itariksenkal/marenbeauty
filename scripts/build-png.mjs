@@ -34,6 +34,7 @@ const TARGETS = [
   { file: 'instagram-avatar', width: 1080, transparent: false },
   { file: 'horizontal-espresso', width: 2400, transparent: true },
   { file: 'horizontal-ivory', width: 2400, transparent: false },
+  { file: 'horizontal-black', width: 2400, transparent: true },
 ];
 
 const browser = await chromium.launch();

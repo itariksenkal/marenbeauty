@@ -474,6 +474,16 @@ const CHOSEN = 'serif';
 const PALETTE = {
   cream: '#faf4ec',
   ivory: '#fefcf9',
+  /**
+   * Deliberately OUTSIDE the palette, and the only place in the repo that is.
+   *
+   * Pure black is what one-colour work needs — a single-ink print run, a
+   * rubber stamp, an embroidery file, a supplier's template that will
+   * threshold whatever it is given. Espresso is a brown; sent to a printer
+   * expecting black it either becomes a second ink or gets converted by
+   * someone guessing. Nothing on the site may use this.
+   */
+  black: '#000000',
   blush: '#d2b3a5',
   espresso: '#3a241e',
 };
@@ -769,6 +779,13 @@ writeFileSync(
 writeFileSync(
   join(BRAND_DIR, 'horizontal-ivory.svg'),
   coloured(chosen.lockups.horizontal, PALETTE.ivory, PALETTE.espresso),
+  'utf8',
+);
+
+// Flat black on transparent — the one-colour master. See PALETTE.black.
+writeFileSync(
+  join(BRAND_DIR, 'horizontal-black.svg'),
+  coloured(chosen.lockups.horizontal, PALETTE.black),
   'utf8',
 );
 
