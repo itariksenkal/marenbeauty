@@ -473,6 +473,7 @@ const CHOSEN = 'serif';
  */
 const PALETTE = {
   cream: '#faf4ec',
+  ivory: '#fefcf9',
   blush: '#d2b3a5',
   espresso: '#3a241e',
 };
@@ -748,8 +749,31 @@ writeFileSync(
   'utf8',
 );
 
+/*
+ * Fixed-colour copies for sending out.
+ *
+ * `horizontal.svg` is `currentColor`, which is right for the site and useless
+ * in an email: with no CSS around it, it renders BLACK. Anything handed to a
+ * printer, a sign-maker or a customer needs the ink resolved, so these carry
+ * espresso on transparent and ivory on espresso — the two colourways the mark
+ * was designed against.
+ *
+ * `node scripts/build-png.mjs` rasterises these and the avatar.
+ */
+writeFileSync(
+  join(BRAND_DIR, 'horizontal-espresso.svg'),
+  coloured(chosen.lockups.horizontal, PALETTE.espresso),
+  'utf8',
+);
+
+writeFileSync(
+  join(BRAND_DIR, 'horizontal-ivory.svg'),
+  coloured(chosen.lockups.horizontal, PALETTE.ivory, PALETTE.espresso),
+  'utf8',
+);
+
 // The Instagram avatar, as SVG here and rasterised to PNG by
-// `node scripts/build-avatar.mjs` — Instagram will not take an SVG.
+// `node scripts/build-png.mjs` — Instagram will not take an SVG.
 writeFileSync(
   join(BRAND_DIR, 'instagram-avatar.svg'),
   coloured(chosen.lockups.monogram, PALETTE.cream, PALETTE.blush, 0.3),
