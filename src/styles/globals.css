@@ -126,15 +126,43 @@
 
    Only background, border and backdrop-filter change. No height, no padding,
    no font-size: a header that resizes on scroll reflows the whole document on
-   the frame it changes, which is the failure docs/MOTION.md §2 rule 2 names. */
-[data-scrolled] [data-site-header] {
+   the frame it changes, which is the failure docs/MOTION.md §2 rule 2 names.
+
+   THE SURFACE IS A PSEUDO-ELEMENT, AND THAT IS NOT DECORATION.
+   `backdrop-filter` makes an element a containing block for every
+   `position: fixed` DESCENDANT — the same rule as `transform`, and it applies
+   whether or not the filter is doing anything visible. The mobile drawer is
+   `fixed inset-0` and lives inside the header, so the moment the page left
+   the top the drawer stopped resolving against the viewport and resolved
+   against the header instead: it opened 390×70 rather than 390×844, an empty
+   strip with the menu clipped away (docs/OPEN-QUESTIONS.md G38).
+
+   Painting the surface on `::before` keeps the blur and gives the header
+   itself no filter, so the drawer is measured against the viewport again. The
+   pseudo has no descendants, so the containing block it creates reaches
+   nothing. Opacity carries the transition; `backdrop-filter` is expensive to
+   animate and the pseudo is a compositable layer either way. */
+[data-site-header]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background-color: color-mix(
     in srgb,
     var(--color-surface-page) 88%,
     transparent
   );
-  border-bottom-color: var(--color-border-subtle);
   backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+
+[data-scrolled] [data-site-header]::before {
+  opacity: 1;
+}
+
+[data-scrolled] [data-site-header] {
+  border-bottom-color: var(--color-border-subtle);
 }
 
 /* ── Anchor targets clear the sticky header ─────────────────────────────────

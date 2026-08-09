@@ -278,8 +278,24 @@ export function HeaderNav({
             : 'pointer-events-none invisible -translate-y-4 opacity-0',
         )}
       >
-        <div className="mx-auto w-full max-w-page px-gutter py-8">
-          <div className="flex justify-end">
+        {/*
+          THE CLOSE BUTTON IS STICKY, AND IT IS THE ONLY WAY OUT.
+
+          The drawer is the scroll container and its content is twice a phone
+          screen tall — twenty service names plus the nav. The header's own
+          toggle is underneath the drawer (z-overlay sits above z-header), so
+          this button is the only close control a pointer can reach. Scrolled
+          away, the menu becomes a trap for anyone not using a keyboard: a
+          reader who scrolls to the bottom of the list has to scroll all the
+          way back up to leave (docs/OPEN-QUESTIONS.md G39).
+
+          Sticky, not fixed: `fixed` inside a scroll container is measured
+          against the viewport, which is right here by accident and wrong the
+          moment anything above gains a transform. The bar carries its own
+          opaque surface because the list scrolls underneath it.
+        */}
+        <div className="sticky top-0 z-raised bg-surface-page">
+          <div className="mx-auto flex w-full max-w-page justify-end px-gutter py-4">
             <button
               type="button"
               onClick={() => {
@@ -291,8 +307,10 @@ export function HeaderNav({
               {chrome.closeMenu}
             </button>
           </div>
+        </div>
 
-          <nav aria-label={chrome.primaryNavLabel} className="mt-8">
+        <div className="mx-auto w-full max-w-page px-gutter pb-8">
+          <nav aria-label={chrome.primaryNavLabel} className="mt-4">
             <ul className="space-y-1">
               {primaryNav.map((item) => (
                 <li key={item.href}>

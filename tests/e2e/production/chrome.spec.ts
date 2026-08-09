@@ -87,14 +87,34 @@ test.describe('header — desktop', () => {
 test.describe('header — scroll state', () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
+  /**
+   * The surface is painted on `[data-site-header]::before`, not on the header,
+   * so this reads the pseudo-element. That is not an implementation detail the
+   * test is chasing: `backdrop-filter` on the header itself would make it the
+   * containing block for the `fixed` mobile drawer inside it, which is the bug
+   * recorded as G38. The last assertion pins that invariant where the surface
+   * is defined — the drawer's own test covers the consequence.
+   */
   test('gains a surface once the page leaves the top', async ({ page }) => {
     await page.goto('/');
 
-    const transparentAtRest = await page.evaluate(
-      () =>
-        getComputedStyle(document.querySelector('[data-site-header]')!)
-          .backgroundColor,
-    );
+    const read = () =>
+      page.evaluate(() => {
+        const header = document.querySelector('[data-site-header]')!;
+        const surface = getComputedStyle(header, '::before');
+        const own = getComputedStyle(header);
+        return {
+          opacity: surface.opacity,
+          background: surface.backgroundColor,
+          blur: surface.backdropFilter,
+          ownBlur: own.backdropFilter,
+          ownFilter: own.filter,
+          ownTransform: own.transform,
+        };
+      });
+
+    const atRest = await read();
+    expect(atRest.opacity).toBe('0');
 
     await page.evaluate(() =>
       window.scrollTo({ top: 600, behavior: 'instant' }),
@@ -103,13 +123,30 @@ test.describe('header — scroll state', () => {
       document.documentElement.hasAttribute('data-scrolled'),
     );
 
-    const scrolled = await page.evaluate(
+    /*
+     * WAIT FOR THE END STATE, DO NOT SLEEP FOR THE DURATION. The transition is
+     * 220ms of wall clock, but `getComputedStyle` reports the value as of the
+     * last painted frame, and a 10px backdrop blur over the animating aurora
+     * paints slowly enough on a loaded CI box that a 400ms sleep still read
+     * 0. The assertion is about the state the header settles in.
+     */
+    await page.waitForFunction(
       () =>
-        getComputedStyle(document.querySelector('[data-site-header]')!)
-          .backgroundColor,
+        getComputedStyle(
+          document.querySelector('[data-site-header]')!,
+          '::before',
+        ).opacity === '1',
     );
 
-    expect(scrolled).not.toBe(transparentAtRest);
+    const scrolled = await read();
+    expect(scrolled.opacity).toBe('1');
+    expect(scrolled.background).not.toBe('rgba(0, 0, 0, 0)');
+    expect(scrolled.blur).toContain('blur');
+
+    // Nothing on the header itself may create a containing block for `fixed`.
+    expect(scrolled.ownBlur).toBe('none');
+    expect(scrolled.ownFilter).toBe('none');
+    expect(scrolled.ownTransform).toBe('none');
   });
 
   test('the header never changes height on scroll', async ({ page }) => {
@@ -241,6 +278,96 @@ test.describe('header — mobile drawer', () => {
     await page.getByRole('button', { name: 'Menüyü aç' }).click();
     expect(await page.evaluate(() => document.body.style.overflow)).toBe(
       'hidden',
+    );
+  });
+
+  /**
+   * The drawer is `position: fixed` and lives inside the header, so anything
+   * on the header that creates a containing block for fixed descendants —
+   * `transform`, `filter`, `backdrop-filter`, `will-change`, `contain: paint`
+   * — silently re-parents it. The scrolled header's `backdrop-filter` did
+   * exactly that: at the top of the page the drawer opened 375×720, and one
+   * screen down it opened 375×70, an empty strip with the menu clipped off
+   * (docs/OPEN-QUESTIONS.md G38).
+   *
+   * Asserted at BOTH scroll positions, because the bug only exists at one of
+   * them, and against the viewport rather than against a pixel count.
+   */
+  test('fills the viewport whether or not the page has been scrolled', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    for (const scrollY of [0, 900]) {
+      await page.evaluate(
+        (y) => window.scrollTo({ top: y, behavior: 'instant' }),
+        scrollY,
+      );
+      await page.waitForTimeout(400);
+
+      await page.getByRole('button', { name: 'Menüyü aç' }).click();
+      await page.waitForTimeout(400);
+
+      const box = await page.evaluate(() => {
+        const r = document
+          .querySelector('[data-mobile-drawer]')!
+          .getBoundingClientRect();
+        return {
+          top: r.top,
+          left: r.left,
+          width: r.width,
+          height: r.height,
+          vw: window.innerWidth,
+          vh: window.innerHeight,
+        };
+      });
+
+      expect(box.top, `top at scrollY=${scrollY}`).toBe(0);
+      expect(box.left, `left at scrollY=${scrollY}`).toBe(0);
+      expect(box.width, `width at scrollY=${scrollY}`).toBe(box.vw);
+      expect(box.height, `height at scrollY=${scrollY}`).toBe(box.vh);
+
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(300);
+    }
+  });
+
+  /**
+   * The drawer's content is twice a phone screen tall, and the header's own
+   * toggle is underneath it — z-overlay sits above z-header. So this button is
+   * the only close control a pointer can reach, and it has to stay reachable
+   * from anywhere in the list (docs/OPEN-QUESTIONS.md G39).
+   */
+  test('the close control stays on screen while the menu is scrolled', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Menüyü aç' }).click();
+
+    const overflows = await page.evaluate(() => {
+      const drawer = document.querySelector('[data-mobile-drawer]')!;
+      return drawer.scrollHeight > drawer.clientHeight;
+    });
+    expect(overflows, 'the drawer no longer scrolls — retune this test').toBe(
+      true,
+    );
+
+    await page.evaluate(() => {
+      const drawer = document.querySelector('[data-mobile-drawer]')!;
+      drawer.scrollTo({ top: drawer.scrollHeight, behavior: 'instant' });
+    });
+    await page.waitForTimeout(400);
+
+    const close = page
+      .locator('[data-mobile-drawer]')
+      .getByRole('button', { name: 'Menüyü kapat' });
+    await expect(close).toBeInViewport();
+
+    // And it still closes from down there.
+    await close.click();
+    await expect(page.locator('[data-mobile-drawer]')).toHaveAttribute(
+      'inert',
+      '',
     );
   });
 });

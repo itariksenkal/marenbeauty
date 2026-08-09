@@ -51,6 +51,27 @@ async function analyse(page: Page) {
   return new AxeBuilder({ page }).withTags(TAGS).analyze();
 }
 
+/**
+ * Wait for a panel's open transition to finish before auditing it.
+ *
+ * Both the drawer and the mega menu fade in over 220ms, and a panel at
+ * `opacity: 0.5` composites its own text against the page behind it: the close
+ * button's accent on ivory measures 2.02:1 mid-fade and 5.4:1 once settled.
+ * `analyse()` immediately after the click therefore audited a frame that
+ * exists for a fifth of a second and never as a resting state — passing
+ * whenever axe was slow to inject and failing under load, which is the worst
+ * of both. Proven by forcing `opacity: 0.5`: one `color-contrast` violation,
+ * gone at 1 (docs/OPEN-QUESTIONS.md G40).
+ *
+ * The audited state is the state that ships.
+ */
+async function settled(page: Page, selector: string) {
+  await page.waitForFunction(
+    (sel) => getComputedStyle(document.querySelector(sel)!).opacity === '1',
+    selector,
+  );
+}
+
 test.describe('axe — every route, zero violations', () => {
   for (const route of ROUTES) {
     test(`${route}`, async ({ page }) => {
@@ -80,6 +101,7 @@ test.describe('axe at the two states a static audit misses', () => {
     await page.setViewportSize({ width: 375, height: 720 });
     await page.goto('/');
     await page.getByRole('button', { name: 'Menüyü aç' }).click();
+    await settled(page, '[data-mobile-drawer]');
 
     const results = await analyse(page);
     expect(results.violations.map((v) => v.id)).toEqual([]);
@@ -89,6 +111,7 @@ test.describe('axe at the two states a static audit misses', () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/');
     await page.locator('header button[aria-expanded]').first().click();
+    await settled(page, '[data-mega-menu]');
 
     const results = await analyse(page);
     expect(results.violations.map((v) => v.id)).toEqual([]);

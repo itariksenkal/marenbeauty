@@ -1631,6 +1631,93 @@ FAIL against the old configuration before being kept.
 
 ---
 
+### G38 — The mobile menu opened as an empty strip once the page was scrolled 🟢 → fixed 2026-08-09
+
+Reported from a phone: scroll down, tap **Menüyü aç**, and the menu does not
+open — the screen goes blank apart from a **Menüyü kapat** button in the
+corner. At the very top of the page the same tap works perfectly.
+
+**Cause — `backdrop-filter` makes an element a containing block for every
+`position: fixed` descendant.** Same rule as `transform`, and it applies
+whether or not the filter is visibly doing anything. The scrolled header
+carried `backdrop-filter: blur(10px)` (M19), and the drawer is `fixed inset-0`
+**inside** that header. So the moment `data-scrolled` appeared, `inset: 0`
+stopped meaning the viewport and started meaning the header.
+
+Measured at 390×844: the drawer's box was **390×70 at scrollY 900** and
+390×844 at scrollY 0. Not hidden — sized to the header and clipped, which is
+why it read as "the button does nothing" while still visibly changing the
+screen.
+
+**Fix — the surface moves to `[data-site-header]::before`.** The blur is
+unchanged and so is the look; the header itself now has no filter, so the
+drawer resolves against the viewport again. The pseudo-element has no
+descendants, so the containing block it creates in turn reaches nothing.
+Opacity carries the transition instead of `backdrop-filter`.
+
+**Why no test caught it.** Every drawer test opened the menu at the top of the
+page, where the header has no surface and therefore no bug. The new test
+asserts the drawer's box equals the viewport at **both** scroll positions, and
+`gains a surface once the page leaves the top` now also pins the invariant
+directly: nothing on the header element may have a `transform`, `filter` or
+`backdrop-filter`.
+
+**One note on that test.** It waits for the settled opacity rather than
+sleeping for the transition. 220ms is wall clock, but `getComputedStyle`
+reports the last painted frame, and a 10px backdrop blur over the animating
+aurora paints slowly enough that a 400ms sleep still read `0` while a 1500ms
+one read `1`. Sleeping for the duration would have made the test flaky in
+exactly the conditions it is meant to cover.
+
+---
+
+### G39 — The only way out of the mobile menu scrolled away 🟢 → fixed 2026-08-09
+
+The drawer's content is about twice a phone screen tall — six nav items plus
+twenty service names — and its close button sat at the top of that scrolling
+content. Scroll down the menu and the button leaves with it. The header's own
+toggle is **underneath** the drawer (`z-overlay` 50 above `z-header` 40), so
+there was no second control: a reader who scrolled to the bottom of the list
+had to scroll all the way back up to leave. Measured: after 700px inside the
+drawer the button sat at `top: -660px`.
+
+**Fix** — the close bar is `sticky top-0` with its own opaque surface, so the
+list scrolls underneath it and the control stays where the reader last saw it.
+Sticky rather than fixed on purpose: `fixed` inside a scroll container is
+measured against the viewport, which is right here only by accident and stops
+being right the moment anything above it gains a transform — which is G38, one
+entry up.
+
+Tested by scrolling the drawer to its end, asserting the button is still in
+the viewport, and clicking it from down there.
+
+---
+
+### G40 — The a11y gate audited a frame that never rests 🟢 → fixed 2026-08-09
+
+Surfaced while verifying G38/G39: `axe at the two states a static audit
+misses › with the mobile drawer open` failed once under full-suite load with a
+single `color-contrast` violation, and passed every time it was run alone.
+
+**Cause — the audit raced the 220ms open transition.** Both panels fade in,
+and a panel at `opacity: 0.5` composites its own text against the page behind
+it. Forced to that exact value, axe reports the close button at
+**2.02:1** (`#c2a9a1` on `#faf4ec`); settled at `opacity: 1` it reports
+nothing. So the test passed whenever axe was slow to inject and failed
+whenever it was quick — the timing of the tool decided the result, and the
+frame it judged exists for a fifth of a second and is never a resting state.
+
+**Fixed** by waiting for the panel's opacity to settle before analysing, for
+the drawer and the mega menu alike. Nothing is excluded and no rule is
+relaxed: the audited state is the state that ships. The same reasoning applies
+to `gains a surface once the page leaves the top` in `chrome.spec.ts`, which
+waits for the settled value rather than sleeping for the duration.
+
+**Worth keeping in mind:** a transition is a range of states, and only its end
+is a promise. Auditing anywhere else measures the tool's speed.
+
+---
+
 ## H. Content posture — standing rule
 
 **Recorded 2026-08-06. This is a working rule, not a question.** Also written

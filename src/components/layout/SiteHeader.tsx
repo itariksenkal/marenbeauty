@@ -50,8 +50,14 @@ export function SiteHeader() {
           'sticky top-0 z-header',
           // Transparent at rest so the aurora shows through; the scrolled state
           // is a CSS rule keyed on <html data-scrolled>, defined in globals.css.
+          //
+          // The scrolled SURFACE — background and blur — is painted on
+          // `[data-site-header]::before`, not here. `backdrop-filter` on this
+          // element would make it the containing block for the `fixed` drawer
+          // inside it, which is what broke the mobile menu on a scrolled page
+          // (docs/OPEN-QUESTIONS.md G38). Only the border transitions here.
           'border-b border-transparent',
-          'duration-base transition-[background-color,border-color,backdrop-filter] ease-standard',
+          'duration-base transition-[border-color] ease-standard',
         ].join(' ')}
       >
         <div className="relative mx-auto flex w-full max-w-page items-center justify-between gap-6 px-gutter py-4">
