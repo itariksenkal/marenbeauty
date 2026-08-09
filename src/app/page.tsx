@@ -61,7 +61,7 @@ export default function HomePage() {
           into the browser bundle. */}
       <HeroWater
         wordmark={
-          <div className="mx-auto w-fit">
+          <div className="mx-auto w-full sm:w-fit">
             <h1>
               {/*
                 The HORIZONTAL lockup: the M sits beside the name rather than
@@ -71,8 +71,21 @@ export default function HomePage() {
                 Heights come from the spacing scale. 44, 56 and 64 are NOT in
                 it — `theme.css` clears Tailwind's defaults, so `h-44` compiles
                 to nothing and the mark renders at its container's full width.
+
+                BELOW `sm` THE MARK IS SIZED BY WIDTH, NOT HEIGHT. With a 3.35
+                aspect ratio a height IS a width, and `h-32` is 429px of it —
+                wider than the content column of every phone (350px at 390px,
+                280px at 320px). The overrun was invisible rather than
+                scrollable, because the stage clips it: the last letters of
+                MAREN were simply cut off. Measured at 320/360/390/430px, not
+                reasoned about. `w-full` hands the width to the container and
+                lets the ratio choose the height, so the name is whole at every
+                width; `sm:w-auto` gives the height back once there is room.
               */}
-              <Wordmark lockup="horizontal" className="h-32 sm:h-40 lg:h-48" />
+              <Wordmark
+                lockup="horizontal"
+                className="w-full sm:h-40 sm:w-auto lg:h-48"
+              />
             </h1>
 
             {/*
@@ -84,15 +97,24 @@ export default function HomePage() {
               `scripts/build-logo.mjs`, which is the only place that knows where
               the name was laid out; by the time this file sees the lockup it is
               one path. The shift is a percentage of this paragraph's own width,
-              and the paragraph fills the `w-fit` column, so it tracks the
-              logo's width at every breakpoint without a second measurement.
+              and the paragraph fills the column, so it tracks the logo's width
+              at every breakpoint without a second measurement.
+
+              PADDING, NOT A TRANSFORM. A transform leaves the box where it
+              is: a full-width paragraph pushed 16% right ends 16% outside the
+              column, and on a phone — where the column IS the screen — that
+              carried the sentence off the edge with the logo. Padding moves
+              the CONTENT box instead. `(c − 0.5) × 200%` leaves the text
+              between (2c−1)·W and W, whose centre is exactly c·W: the same
+              optical centre the transform produced on desktop, and one that
+              cannot leave the column at any width.
             */}
             <p
               className="mt-4 w-full text-lg text-balance text-text-secondary"
               style={{
-                transform: `translateX(calc((${
+                paddingLeft: `calc((${
                   logoTreatments.serif.lockups.horizontal.textCentre ?? 0.5
-                } - 0.5) * 100%))`,
+                } - 0.5) * 200%)`,
               }}
             >
               {home.slogan}

@@ -193,6 +193,57 @@ test.describe('pinned opening', () => {
     expect(focusedIsHidden, 'focus landed on a hidden element').toBe(false);
   });
 
+  /**
+   * The overflow test below cannot see this one.
+   *
+   * The stage is `overflow-hidden`, so a wordmark wider than the phone never
+   * reaches the document scroll width — it is silently clipped, and the last
+   * letters of MAREN just stop existing. That is exactly how it shipped: a
+   * height class on a 3.35:1 lockup is a 429px width, and no phone has a 429px
+   * content column. Assert the boxes, not the scrollbar.
+   */
+  for (const width of [320, 360, 390, 430]) {
+    test(`the opening lockup and slogan are whole at ${width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 780 });
+      await page.goto('/');
+      await page.waitForLoadState('networkidle');
+
+      const boxes = await page.evaluate(() => {
+        const mark = document.querySelector('h1 svg');
+        const slogan = mark?.closest('div')?.querySelector('p');
+        const box = (el: Element | null | undefined) => {
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          return { left: r.left, right: r.right };
+        };
+        return {
+          viewport: document.documentElement.clientWidth,
+          mark: box(mark),
+          slogan: box(slogan),
+        };
+      });
+
+      expect(boxes.mark, 'no hero mark on the page').not.toBeNull();
+      expect(boxes.slogan, 'no hero slogan on the page').not.toBeNull();
+
+      for (const [name, box] of Object.entries({
+        mark: boxes.mark!,
+        slogan: boxes.slogan!,
+      })) {
+        expect(
+          box.left,
+          `${name} is cut off on the left`,
+        ).toBeGreaterThanOrEqual(-1);
+        expect(
+          box.right,
+          `${name} is cut off on the right`,
+        ).toBeLessThanOrEqual(boxes.viewport + 1);
+      }
+    });
+  }
+
   test('no horizontal scroll at 320px', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto('/');
