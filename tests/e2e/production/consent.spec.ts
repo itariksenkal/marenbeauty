@@ -105,22 +105,20 @@ test.describe('the consent surface', () => {
     page,
   }) => {
     await page.goto('/');
-    await expect(
-      page.getByRole('dialog', { name: 'Ölçümleme izni' }),
-    ).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Çerezler' })).toBeVisible();
   });
 
   test('offers refusal exactly as easily as agreement', async ({ page }) => {
     await page.goto('/');
-    const banner = page.getByRole('dialog', { name: 'Ölçümleme izni' });
-    // `exact` matters: "İzin ver" is a prefix of "İzin verme", and Playwright
-    // matches accessible names by substring unless told otherwise.
+    const banner = page.getByRole('dialog', { name: 'Çerezler' });
+    // `exact` matters: Playwright matches accessible names by substring, so a
+    // future label that contains another would silently resolve to two nodes.
     const accept = banner.getByRole('button', {
-      name: 'İzin ver',
+      name: 'Kabul et',
       exact: true,
     });
     const reject = banner.getByRole('button', {
-      name: 'İzin verme',
+      name: 'Reddet',
       exact: true,
     });
 
@@ -142,10 +140,10 @@ test.describe('the consent surface', () => {
       panel.getByRole('heading', { name: 'Tercihiniz' }),
     ).toBeVisible();
     await expect(
-      panel.getByRole('button', { name: 'İzin ver', exact: true }),
+      panel.getByRole('button', { name: 'Kabul et', exact: true }),
     ).toBeVisible();
     await expect(
-      panel.getByRole('button', { name: 'İzin verme', exact: true }),
+      panel.getByRole('button', { name: 'Reddet', exact: true }),
     ).toBeVisible();
   });
 
@@ -168,7 +166,7 @@ test.describe('the consent surface', () => {
  * The unit tests prove the loader is absent from every server-rendered document
  * and that the component returns null without a grant. Only a real browser can
  * show the consequence: that `googletagmanager.com` is contacted after a click
- * on "İzin ver" and not one moment before.
+ * on "Kabul et" and not one moment before.
  */
 test.describe('the gate, end to end', () => {
   const gtmRequests = (page: import('@playwright/test').Page) => {
@@ -180,13 +178,13 @@ test.describe('the gate, end to end', () => {
     return hits;
   };
 
-  /** The banner's own buttons, named exactly — "İzin ver" prefixes "İzin verme". */
+  /** The banner's own buttons, matched exactly rather than by substring. */
   const bannerButton = (
     page: import('@playwright/test').Page,
-    name: 'İzin ver' | 'İzin verme',
+    name: 'Kabul et' | 'Reddet',
   ) =>
     page
-      .getByRole('dialog', { name: 'Ölçümleme izni' })
+      .getByRole('dialog', { name: 'Çerezler' })
       .getByRole('button', { name, exact: true });
 
   test('refusing loads no container and sets no cookie', async ({
@@ -195,7 +193,7 @@ test.describe('the gate, end to end', () => {
   }) => {
     const hits = gtmRequests(page);
     await page.goto('/');
-    await bannerButton(page, 'İzin verme').click();
+    await bannerButton(page, 'Reddet').click();
 
     // Give it every chance to misbehave.
     await page.goto('/hizmetler');
@@ -215,7 +213,7 @@ test.describe('the gate, end to end', () => {
   }) => {
     const hits = gtmRequests(page);
     await page.goto('/');
-    await bannerButton(page, 'İzin ver').click();
+    await bannerButton(page, 'Kabul et').click();
 
     await expect
       .poll(() => hits.length, { timeout: 10_000 })
@@ -224,21 +222,15 @@ test.describe('the gate, end to end', () => {
 
     // The choice survives navigation — a returning visitor is not re-asked.
     await page.goto('/iletisim');
-    await expect(
-      page.getByRole('dialog', { name: 'Ölçümleme izni' }),
-    ).toHaveCount(0);
+    await expect(page.getByRole('dialog', { name: 'Çerezler' })).toHaveCount(0);
   });
 
   test('the banner never returns once answered', async ({ page }) => {
     await page.goto('/');
-    await bannerButton(page, 'İzin verme').click();
-    await expect(
-      page.getByRole('dialog', { name: 'Ölçümleme izni' }),
-    ).toHaveCount(0);
+    await bannerButton(page, 'Reddet').click();
+    await expect(page.getByRole('dialog', { name: 'Çerezler' })).toHaveCount(0);
 
     await page.goto('/');
-    await expect(
-      page.getByRole('dialog', { name: 'Ölçümleme izni' }),
-    ).toHaveCount(0);
+    await expect(page.getByRole('dialog', { name: 'Çerezler' })).toHaveCount(0);
   });
 });
