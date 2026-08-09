@@ -1,16 +1,18 @@
 ---
 title: Çerez Politikası
-summary: Maren Beauty sitesi açılışta çerez kullanmaz. Bu sayfa hangi çerezlerin kullanılmadığını, ölçümlemenin nasıl çalışacağını ve onayın nasıl alınacağını açıklar.
+summary: Maren Beauty sitesi, izin vermediğiniz sürece çerez kullanmaz. Bu sayfa izin verdiğinizde neyin yüklendiğini ve kararınızı nasıl değiştireceğinizi açıklar.
 order: 2
 ---
 
 ## Kısa cevap
 
-**Bu site çerez kullanmıyor.**
+**İzin vermediğiniz sürece bu site çerez kullanmaz.**
 
 Bu bir hedef ya da niyet beyanı değil, bugünkü durumun tarifi: siteyi
-gezdiğinizde tarayıcınıza çerez yazılmaz, üçüncü taraf bir sunucuya istek
-gönderilmez, reklam pikseli yüklenmez.
+açtığınızda tarayıcınıza ölçümleme çerezi yazılmaz ve ölçümleme için üçüncü
+taraf bir sunucuya istek gönderilmez.
+Ölçümleme aracı yalnızca **açık onayınızdan sonra** yüklenir; onay vermezseniz
+hiç yüklenmez.
 
 Çoğu sitenin çerez politikası, o sitede bulunmayan çerezleri de anlatan uzun
 bir listedir. Bu sayfa bunun tersini yapar: yalnızca doğru olanı yazar ve
@@ -24,43 +26,64 @@ Benzer teknolojiler — `localStorage`, `sessionStorage`, piksel görselleri ve
 parmak izi çıkarma yöntemleri — çerez olmasalar da aynı sonucu doğurabildikleri
 için bu politika kapsamındadır.
 
-## Şu anda ne yapılıyor?
+## Onay vermeden önce
+
+Sayfayı ilk açtığınızdaki durum:
 
 | Alan                        | Durum                                                   |
 | --------------------------- | ------------------------------------------------------- |
 | Zorunlu çerezler            | Yok. Site oturum açmayı gerektirmez.                    |
-| Ölçümleme / analiz          | Yok. Kurulu bir analiz aracı bulunmuyor.                |
-| Reklam ve yeniden pazarlama | Yok. Reklam pikseli yüklenmiyor.                        |
+| Ölçümleme / analiz          | Yüklenmez. Onayınız olmadan hiç başlamaz.               |
+| Reklam ve yeniden pazarlama | Yüklenmez.                                              |
 | Gömülü içerik               | Yok. Harita, video ya da sosyal medya gömüsü yok.       |
 | Yazı tipleri                | Site sunucusundan servis edilir. Dış bağlantı kurulmaz. |
 | Görseller                   | Site sunucusundan servis edilir.                        |
 
-İletişim formu da çerez yazmaz. Formun kötüye kullanımını sınırlayan doğrulama
+İletişim formu çerez yazmaz. Formun kötüye kullanımını sınırlayan doğrulama
 adımı tarayıcıda çalışır ve sonucunu yalnızca o gönderim için kullanır;
 tarayıcınızda bir iz bırakmaz.
 
-## İleride ne olacak?
+Seçiminizi kaydetmek için tarayıcınızın `localStorage` alanında `mb-consent`
+adlı tek bir kayıt tutulur. Bu kayıt yalnızca siz bir seçim yaptığınızda
+oluşturulur, sunucuya hiçbir zaman gönderilmez ve yalnızca kararınızı
+hatırlamaya yarar.
 
-Merkez açıldıktan sonra ziyaretçi sayısını ölçmek isteyebiliriz. Bunun için
-seçilen araç çerez kullanmayan, kendi sunucumuzda çalışan bir ölçüm aracıdır.
-Devreye alındığında bu sayfa güncellenir.
+## Onay verdiğinizde ne oluyor?
 
-Reklam yayınlanması gündeme gelirse — örneğin arama ya da sosyal medya
-reklamları — ilgili betikler yalnızca **açık onayınızdan sonra** çalışır.
-Bunun için sitede bir onay kutusu görürsünüz ve:
+Onay verdiğinizde sitede **Google Tag Manager** yüklenir. Bu araç, ziyaretçi
+sayısını ve sayfaların nasıl kullanıldığını ölçmek için kullanılan etiketleri
+çalıştırır. Bu etiketler tarayıcınıza çerez yazabilir ve ziyaretinizle ilgili
+verileri Google'a iletebilir.
 
-- Onay vermek ile reddetmek aynı kolaylıkta olur; reddetmek ek adım gerektirmez.
-- Onay vermediğiniz sürece hiçbir izleme betiği yüklenmez. Betik yüklenip
-  "pasif" beklemez; hiç yüklenmez.
-- Kararınızı sonradan değiştirebilir, verdiğiniz onayı geri alabilirsiniz.
-- Varsayılan durum daima **reddedilmiş** kabul edilir.
+Ölçüm, Google'ın **Onay Modu** (Consent Mode) kuralına göre çalışır: onay
+verilmediği sürece varsayılan durum daima **reddedilmiş** kabul edilir. Bu
+sitede bir adım daha ileri gidilir — onay verilmeden betik sayfaya hiç
+eklenmez, yani "pasif" bekleyen bir betik de bulunmaz.
+
+Toplanan veriler ziyaretçi davranışını topluca anlamak için kullanılır. Bu
+sayfada tek tek çerez adları listelenmez: liste ancak eksiksiz ve doğru
+tutulabildiği sürece işe yarar, yanlış bir liste hiç liste olmamasından daha
+kötüdür. Ölçümleme yapılandırması kesinleştiğinde bu bölüm kullanılan araçların
+adlarıyla birlikte güncellenir.
+
+## Kararınızı değiştirmek
+
+- Onay vermek ile reddetmek aynı kolaylıktadır; reddetmek ek adım gerektirmez.
+- Onay vermediğiniz sürece hiçbir ölçümleme betiği yüklenmez. Betik yüklenip
+  bekletilmez; hiç yüklenmez.
+- Kararınızı istediğiniz zaman değiştirebilir, verdiğiniz onayı geri
+  alabilirsiniz. Bu sayfadaki **Tercihiniz** bölümü bunun içindir.
+- Onayı geri aldığınızda ölçümleme betiği sonraki sayfa açılışlarında yeniden
+  yüklenmez.
+
+Daha önce yazılmış çerezleri silmek için tarayıcınızın ayarlarını
+kullanabilirsiniz.
 
 ## Tarayıcı ayarları
 
 Çerezleri tarayıcı ayarlarınızdan tümüyle engelleyebilir ya da mevcut olanları
-silebilirsiniz. Bu sitede çerez bulunmadığı için böyle bir ayar sitenin
-çalışmasını etkilemez — sayfalar aynı şekilde açılır, form aynı şekilde
-gönderilir.
+silebilirsiniz. Bu sitenin çalışması buna bağlı değildir — sayfalar aynı
+şekilde açılır, form aynı şekilde gönderilir. Yalnızca ölçümleme çalışmaz.
 
 ## İlgili metinler
 

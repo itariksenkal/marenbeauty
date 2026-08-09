@@ -250,6 +250,9 @@ At launch, therefore:
 - Result: no cookies, no third-party requests, and a gate already in place for
   the day advertising starts.
 
+**Superseded in part by C13 on 2026-08-09** — that day arrived. The ordering C6
+insisted on held: the gate existed before the first tag did.
+
 ### C7 — Photography ✅ 🟢 → judged at M8, one question back to the owner
 
 **Answered 2026-08-06:** free stock at launch, curated to **one narrow visual
@@ -427,6 +430,49 @@ search engine the business is open at those times. `docs/SEO.md` §2.5 and a
 unit test both hold that line.
 
 **Need:** the real hours. Then flip `isPreLaunch` and the schema fills itself in.
+
+### C13 — Google Tag Manager ✅ 🟡 → supersedes part of C6
+
+**Answered 2026-08-09: advertising is starting. Turn GTM on, behind the gate.**
+
+Container `GTM-NP37MNW9`. This is the condition C6 was waiting for, so the
+decision is a scheduled one rather than a reversal — but it does change what
+ships, and it changed two published legal pages, so it is recorded here.
+
+What changed:
+
+- `analytics.gtm.enabled` is `true`; `requiresConsentBanner()` therefore returns
+  true and the banner appears with **no component edit**, which is the promise
+  C6 made.
+- GA4 and the Meta Pixel stay `false` and stay out of the module graph. If
+  either is ever wanted it belongs **inside the container**, configured in the
+  GTM console, not as a second script element in this repository.
+- The container ID lives in `src/config/analytics.ts`, not `env`. An absent env
+  var renders nothing and reports nothing; the only symptom is an empty report
+  weeks later. A container ID is public by construction, so that failure mode
+  buys no secrecy.
+- `content/legal/cerez-politikasi.mdx` and `content/legal/kvkk.mdx` were
+  rewritten. Both previously stated the site set no cookies and made no
+  third-party transfer. Both are now conditioned on consent, and the KVKK
+  notice states the transfer abroad that measurement involves.
+
+What did NOT change: the gate. GTM renders no element at all until consent is
+granted, Consent Mode v2 still defaults to denied, there is no `<noscript>`
+iframe, and `track()` pushes nothing to the dataLayer before a grant.
+
+**Still open — the container's contents are not known to this repository.**
+
+The cookie policy deliberately does not list cookie names, because whatever the
+container runs is configured in the GTM console and cannot be verified from
+here. Listing names we cannot check would be the boilerplate policy this site
+exists not to be. **Need:** confirmation of which tags the container runs, then
+that section gets the real names. Until then the policy describes the mechanism
+and says plainly that it will be updated.
+
+**Also open:** whether a refusal should be measurable. It currently is not —
+`track()` is consent-gated, so a visitor who declines produces no event at all,
+which means the banner's accept RATE cannot be computed from this data alone.
+That is a deliberate trade and the owner may want it revisited.
 
 ## D. Guard configuration ✅
 
@@ -1419,6 +1465,64 @@ utility on the `<svg>` could not constrain it either. `Wordmark` now sizes a
 wrapper and lets the svg fill it.
 
 ---
+
+### G34 — The guard's allowance drifted on Turkish `İ` ✅ → fixed 2026-08-09
+
+**Found while adding GTM (C13). A latent bug, not a new one.**
+
+Adding two paragraphs beginning "İzin" to `/kvkk` made the build fail on
+`blocking:yok ed` — inside `silinmesini veya yok edilmesini isteme`, the one
+approved statutory allowance (G25). Nothing about the quoted sentence changed.
+
+`suppressed()` located the phrase with
+`line.toLowerCase().indexOf(phrase.toLowerCase())` and compared the result
+against a match index taken from the **original** line. Turkish `İ` (U+0130)
+lowercases to **two** code units — `i` plus a combining dot, U+0069 U+0307 — so
+the lowercased copy is longer than the line it came from and every index past
+an `İ` is shifted. The window drifted by exactly one character per `İ` above
+the match: measured at 18 on the built page, which was enough to move the
+allowance clear of the violation.
+
+This is the same family as the `\b` problem recorded in CLAUDE.md §12 — an
+ASCII assumption that survives until enough real Turkish reaches it. The failure
+mode is the nasty one: an approved allowance stops applying because unrelated
+copy was added somewhere above it, and the reported violation points at a
+sentence that is entirely correct.
+
+**Fixed** by matching with a case-insensitive `RegExp` instead of a lowercased
+copy, so indices stay in one space. The same change moved `indexOf` to
+`matchAll`, because `guard.allow.json` promises suppression inside _an_
+occurrence and a built page inlines its RSC payload after the markup — so the
+same sentence legitimately appears more than once on one line, and only the
+first was ever covered.
+
+Two regression tests in `tests/unit/guard.test.ts` pin both halves. The
+allowance itself is unchanged and still scoped to that exact phrase: nothing was
+weakened to make the build pass (CLAUDE.md §18.13).
+
+### G35 — `npm run verify` could never pass on its first Windows run ✅ → fixed 2026-08-09
+
+**Pre-existing, unrelated to C13, found while verifying it.**
+
+`npm run licenses` embeds each dependency's LICENSE file verbatim. Some of them
+ship CRLF. `.gitattributes` stores `NOTICE` as LF (`* text=auto eol=lf`), so the
+generated file differed from the committed one **in bytes while being identical
+in text** — 190 CRLF lines out of 1259. The audit therefore reported NOTICE
+stale, rewrote it, and exited 1 on every clean checkout. A second run passed,
+because by then the file on disk matched what the generator produces.
+
+The symptom is misleading twice over: `git diff NOTICE` shows nothing (git
+normalises on read), and the audit's message asks you to commit a file that
+contains no change worth committing.
+
+**Fixed** in `readLicenceText()` by normalising CRLF to LF as the text is
+embedded. Which third party happens to ship CRLF is not something this
+repository controls, so it is normalised at the boundary rather than
+accommodated downstream. `npm run licenses` is now idempotent from a clean
+checkout and `NOTICE` stays byte-identical to the committed copy.
+
+Same family as the note in `.gitattributes` itself, which exists because a
+fresh Windows clone once broke `prettier --check` the same way.
 
 ## H. Content posture — standing rule
 

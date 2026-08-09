@@ -218,6 +218,19 @@ function excerpt(line, index, length) {
 }
 
 /**
+ * Escape a literal for use inside a RegExp.
+ *
+ * Allowed phrases are quotations of statute, so they can contain punctuation a
+ * regex would otherwise read as syntax.
+ *
+ * @param {string} literal
+ * @returns {string}
+ */
+function escapeRegExp(literal) {
+  return literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * @typedef {{ phrase: string, reason: string, rule?: string }} Allowance
  * @typedef {{
  *   tier: 'error' | 'warning',
@@ -259,11 +272,34 @@ export function scanText(
      */
     const blockedRanges = [];
 
+    /**
+     * Does this match fall inside an allowed phrase?
+     *
+     * TWO THINGS HERE ARE LOAD-BEARING, and both were once wrong:
+     *
+     * **Case-insensitivity comes from the regex flag, never `toLowerCase()`.**
+     * Turkish `İ` (U+0130) lowercases to TWO code units — `i` plus a combining
+     * dot, U+0069 U+0307 — so a lowercased copy of a line has different indices
+     * from the line the match index came from. Searching the copy and comparing
+     * against the original drifts by exactly one per `İ` earlier in the line,
+     * and an approved allowance silently stops applying once enough Turkish
+     * text lands above it. Same family as the `\b` problem in CLAUDE.md §12:
+     * an ASCII assumption that survives until real Turkish reaches it.
+     *
+     * **Every occurrence counts, not just the first.** `guard.allow.json`
+     * promises suppression when a match falls inside *an* occurrence of the
+     * phrase, and a long line — an HTML document with an RSC payload inlined
+     * after it — routinely carries the same sentence more than once.
+     */
     const suppressed = (index, length, matched) =>
       allowances.some((a) => {
-        const at = line.toLowerCase().indexOf(a.phrase.toLowerCase());
-        if (at === -1) return false;
-        return index >= at && index + length <= at + a.phrase.length;
+        const pattern = new RegExp(escapeRegExp(a.phrase), 'gi');
+        for (const occurrence of line.matchAll(pattern)) {
+          const at = occurrence.index;
+          if (index >= at && index + length <= at + occurrence[0].length)
+            return true;
+        }
+        return false;
       }) ||
       // An allowance may also be written as the exact matched fragment.
       allowances.some((a) => a.phrase.toLowerCase() === matched.toLowerCase());

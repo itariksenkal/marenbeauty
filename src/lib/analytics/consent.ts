@@ -80,6 +80,18 @@ export function clearConsent(): void {
   emit();
 }
 
+/**
+ * The consent state, outside React.
+ *
+ * `useConsent` is the hook; this is the same answer for callers that are not
+ * components — chiefly `track()`, which runs inside an event handler and must
+ * not push anything anywhere until a visitor has actually said yes.
+ */
+export function isConsentGranted(): boolean {
+  if (typeof window === 'undefined') return false;
+  return read() === 'granted' && analytics.consentGate.enabled;
+}
+
 export function useConsent(): {
   readonly state: ConsentState;
   readonly granted: boolean;

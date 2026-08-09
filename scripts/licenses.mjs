@@ -136,7 +136,21 @@ function licenceUrl(licence) {
 function readLicenceText(meta) {
   if (!meta.licenseFile || !existsSync(meta.licenseFile)) return null;
   try {
-    return readFileSync(meta.licenseFile, 'utf8').trimEnd();
+    /*
+     * Line endings are normalised to LF, because a dependency's LICENSE file
+     * is copied in verbatim and some of them ship CRLF.
+     *
+     * `.gitattributes` stores NOTICE as LF, so an embedded CRLF made the
+     * generated file differ from the committed one in bytes while being
+     * identical in text: the audit reported NOTICE stale, rewrote it, and
+     * exited 1 — every time, from a clean checkout, so `npm run verify` could
+     * never pass on its first run. Whose licence text happens to carry CRLF is
+     * not something this repository controls, so it is normalised here rather
+     * than accommodated downstream (docs/OPEN-QUESTIONS.md G35).
+     */
+    return readFileSync(meta.licenseFile, 'utf8')
+      .replace(/\r\n/g, '\n')
+      .trimEnd();
   } catch {
     return null;
   }

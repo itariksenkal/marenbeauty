@@ -1,22 +1,28 @@
+import { AnalyticsEvents } from '@/components/analytics/AnalyticsEvents';
+import { GtmScript } from '@/components/analytics/adapters/GtmScript';
 import { UmamiScript } from '@/components/analytics/adapters/UmamiScript';
 import { analytics } from '@/config/analytics';
 
 /**
  * The analytics mount point. Rendered in the root layout, on every page.
  *
- * Today it renders nothing: every flag is `false` (docs/OPEN-QUESTIONS.md C5).
+ * ── WHY THE ADAPTERS ARE NOT TREATED ALIKE ───────────────────────────────────
  *
- * ── WHY THE THREE ADAPTERS ARE NOT TREATED ALIKE ─────────────────────────────
+ * **GTM is wired and ON** (docs/OPEN-QUESTIONS.md C13). It is the one tag this
+ * site loads, and `GtmScript` renders nothing at all until consent is granted,
+ * so `googletagmanager.com` reaches no visitor who has not said yes. It is a
+ * Client Component, so the host appears in a client CHUNK — but in no `.html`
+ * and no `.rsc` payload, which is what proves it cannot load before hydration
+ * and therefore cannot load before the gate. A unit test asserts exactly that
+ * split.
  *
- * **Umami is wired.** It is a Server Component emitting one `<script async>`,
- * its URL comes from `env`, and it needs no consent. Nothing about it appears
- * in a client bundle, and no third-party host is baked into any build output.
+ * **Umami is wired but off.** Cookieless, needs no consent, and no backend is
+ * deployed (C5).
  *
- * **GA4 and the Meta Pixel are NOT imported here.** Both live, complete, in
- * `./adapters/`, and neither is referenced by any module in the graph — so
- * `googletagmanager.com`, `connect.facebook.net` and `fbevents.js` appear
- * NOWHERE in the built output. A unit test greps the built chunks and fails if
- * any of the three ever does.
+ * **`Ga4Script` and `MetaPixelScript` are NOT imported here.** Both live,
+ * complete, in `./adapters/`, and neither is referenced by any module in the
+ * graph — so `connect.facebook.net` and `fbevents.js` appear NOWHERE in the
+ * built output.
  *
  * That is deliberate, and it cost an experiment to arrive at. The obvious
  * approach — `if (analytics.ga4.enabled) { const { Ga4Script } = await
@@ -26,36 +32,24 @@ import { analytics } from '@/config/analytics';
  * `NEXT_PUBLIC_*` literal instead made no difference; both were verified by
  * grepping the build, not assumed.
  *
- * ── TURNING ONE ON ───────────────────────────────────────────────────────────
+ * ── IF GA4 OR THE PIXEL IS EVER WANTED ───────────────────────────────────────
  *
- * 1. Set the flag in `src/config/analytics.ts` to `true`.
- * 2. Set `GA4_MEASUREMENT_ID` (or `META_PIXEL_ID`) in the environment.
- * 3. Uncomment the matching import and block below.
- *
- * Step 3 is one line each, and it exists precisely so that steps 1 and 2 alone
- * cannot put a tracker into the bundle by accident. Both adapters already
- * implement Consent Mode v2 defaults-denied and render nothing without granted
- * consent — there is no integration left to write.
+ * Configure it INSIDE the container, in the GTM console. That is what a
+ * container is for, and it keeps the number of script elements on the page at
+ * one. The two adapters stay here, unimported, for the day the container itself
+ * is not wanted.
  */
-// import { Ga4Script } from '@/components/analytics/adapters/Ga4Script';
-// import { MetaPixelScript } from '@/components/analytics/adapters/MetaPixelScript';
 
 export function Analytics() {
   return (
     <>
       {analytics.umami.enabled ? <UmamiScript /> : null}
 
-      {/* Step 3, GA4:
-      {analytics.ga4.enabled && env.GA4_MEASUREMENT_ID ? (
-        <Ga4Script measurementId={env.GA4_MEASUREMENT_ID} />
+      {analytics.gtm.enabled ? (
+        <GtmScript containerId={analytics.gtm.containerId} />
       ) : null}
-      */}
 
-      {/* Step 3, Meta Pixel:
-      {analytics.metaPixel.enabled && env.META_PIXEL_ID ? (
-        <MetaPixelScript pixelId={env.META_PIXEL_ID} />
-      ) : null}
-      */}
+      <AnalyticsEvents />
     </>
   );
 }

@@ -1,16 +1,20 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * Zero cookies, zero third parties — checked in a clean browser profile.
+ * Zero cookies, zero third parties — **before consent** — checked in a clean
+ * browser profile.
  *
  * Playwright gives every test a fresh context, which IS the clean profile the
  * criterion asks for: no cookie jar, no storage, no service worker carried over
- * from another test.
+ * from another test. Since C13 that also means no consent has been given, which
+ * is exactly the state these five describe.
  *
  * This is the only check that can actually falsify the cookie policy's first
- * line. The unit tests prove the flags are off and the tracker code is absent
- * from the build; only a browser can prove that nothing else — a font, an
- * image, an embed, a framework default — reaches for a third party either.
+ * line. The unit tests prove the container is absent from every server-rendered
+ * document; only a browser can prove that nothing else — a font, an image, an
+ * embed, a framework default — reaches for a third party either, and that the
+ * container really does stay away until asked. The other half, that agreeing
+ * DOES load it, is "the gate, end to end" at the bottom of this file.
  */
 const ROUTES = [
   '/',
@@ -97,31 +101,144 @@ test.describe('a clean profile stays clean', () => {
 });
 
 test.describe('the consent surface', () => {
-  test('shows no banner, because nothing requires consent', async ({
+  test('shows the banner, because GTM now requires consent', async ({
     page,
   }) => {
     await page.goto('/');
     await expect(
       page.getByRole('dialog', { name: 'Ölçümleme izni' }),
-    ).toHaveCount(0);
+    ).toBeVisible();
   });
 
-  test('is still reachable and honest on the cookie policy page', async ({
+  test('offers refusal exactly as easily as agreement', async ({ page }) => {
+    await page.goto('/');
+    const banner = page.getByRole('dialog', { name: 'Ölçümleme izni' });
+    // `exact` matters: "İzin ver" is a prefix of "İzin verme", and Playwright
+    // matches accessible names by substring unless told otherwise.
+    const accept = banner.getByRole('button', {
+      name: 'İzin ver',
+      exact: true,
+    });
+    const reject = banner.getByRole('button', {
+      name: 'İzin verme',
+      exact: true,
+    });
+
+    // Same box, to the pixel. One click each, on the same screen.
+    const [a, r] = [await accept.boundingBox(), await reject.boundingBox()];
+    expect(a?.height).toBe(r?.height);
+    expect(Math.abs((a?.width ?? 0) - (r?.width ?? 0))).toBeLessThan(24);
+  });
+
+  test('is reachable and honest on the cookie policy page', async ({
     page,
   }) => {
     await page.goto('/cerez-politikasi');
-    await expect(page.getByText('Tercihiniz')).toBeVisible();
+    // Scoped to `main`: the banner is also on this page, and the policy prose
+    // now refers to the panel by name, so neither the heading nor the buttons
+    // are unique to the document.
+    const panel = page.locator('main');
     await expect(
-      page.getByText('Şu anda izin gerektiren bir araç kullanılmıyor'),
+      panel.getByRole('heading', { name: 'Tercihiniz' }),
+    ).toBeVisible();
+    await expect(
+      panel.getByRole('button', { name: 'İzin ver', exact: true }),
+    ).toBeVisible();
+    await expect(
+      panel.getByRole('button', { name: 'İzin verme', exact: true }),
     ).toBeVisible();
   });
 
   test('the policy names no cookie the site does not set', async ({ page }) => {
     await page.goto('/cerez-politikasi');
     const text = await page.locator('main').innerText();
+    // Still the rule: the container's contents are configured outside this
+    // repo, so naming cookies here would be the boilerplate this page refuses
+    // to be (docs/OPEN-QUESTIONS.md C13).
     for (const name of ['_ga', '_gid', '_fbp', 'PHPSESSID']) {
       expect(text).not.toContain(name);
     }
-    expect(text).toContain('Bu site çerez kullanmıyor');
+    expect(text).toContain('İzin vermediğiniz sürece bu site çerez kullanmaz');
+  });
+});
+
+/**
+ * The gate itself, proven in a browser.
+ *
+ * The unit tests prove the loader is absent from every server-rendered document
+ * and that the component returns null without a grant. Only a real browser can
+ * show the consequence: that `googletagmanager.com` is contacted after a click
+ * on "İzin ver" and not one moment before.
+ */
+test.describe('the gate, end to end', () => {
+  const gtmRequests = (page: import('@playwright/test').Page) => {
+    const hits: string[] = [];
+    page.on('request', (request) => {
+      if (request.url().includes('googletagmanager.com'))
+        hits.push(request.url());
+    });
+    return hits;
+  };
+
+  /** The banner's own buttons, named exactly — "İzin ver" prefixes "İzin verme". */
+  const bannerButton = (
+    page: import('@playwright/test').Page,
+    name: 'İzin ver' | 'İzin verme',
+  ) =>
+    page
+      .getByRole('dialog', { name: 'Ölçümleme izni' })
+      .getByRole('button', { name, exact: true });
+
+  test('refusing loads no container and sets no cookie', async ({
+    page,
+    context,
+  }) => {
+    const hits = gtmRequests(page);
+    await page.goto('/');
+    await bannerButton(page, 'İzin verme').click();
+
+    // Give it every chance to misbehave.
+    await page.goto('/hizmetler');
+    await page.waitForLoadState('domcontentloaded');
+
+    expect(hits).toEqual([]);
+    expect(await context.cookies()).toEqual([]);
+    expect(
+      await page.evaluate(
+        () => typeof (window as unknown as Record<string, unknown>).dataLayer,
+      ),
+    ).toBe('undefined');
+  });
+
+  test('agreeing loads the container, and it stays loaded', async ({
+    page,
+  }) => {
+    const hits = gtmRequests(page);
+    await page.goto('/');
+    await bannerButton(page, 'İzin ver').click();
+
+    await expect
+      .poll(() => hits.length, { timeout: 10_000 })
+      .toBeGreaterThan(0);
+    expect(hits.some((url) => url.includes('GTM-'))).toBe(true);
+
+    // The choice survives navigation — a returning visitor is not re-asked.
+    await page.goto('/iletisim');
+    await expect(
+      page.getByRole('dialog', { name: 'Ölçümleme izni' }),
+    ).toHaveCount(0);
+  });
+
+  test('the banner never returns once answered', async ({ page }) => {
+    await page.goto('/');
+    await bannerButton(page, 'İzin verme').click();
+    await expect(
+      page.getByRole('dialog', { name: 'Ölçümleme izni' }),
+    ).toHaveCount(0);
+
+    await page.goto('/');
+    await expect(
+      page.getByRole('dialog', { name: 'Ölçümleme izni' }),
+    ).toHaveCount(0);
   });
 });

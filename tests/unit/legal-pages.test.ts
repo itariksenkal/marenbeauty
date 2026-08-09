@@ -170,12 +170,19 @@ describe('legal copy passes the content guard', () => {
 /* ── Accuracy: the text must describe what the site actually does ──────────── */
 
 describe('legal copy matches the implementation', () => {
-  it('says the site sets no cookies, which is what analytics.ts says too', async () => {
-    const { activeProviders } = await import('@/config/analytics');
-    expect(activeProviders()).toEqual([]);
+  it('conditions cookies on consent, which is what analytics.ts says too', async () => {
+    // Before C13 both sides said "no cookies". They now both say "none until
+    // you agree", and they still have to say it together — a policy that drifts
+    // from the config is the failure this block exists to catch.
+    const { activeProviders, requiresConsentBanner } =
+      await import('@/config/analytics');
+    expect(activeProviders()).toEqual(['gtm']);
+    expect(requiresConsentBanner()).toBe(true);
 
     const cookies = getLegalDocument('cerez-politikasi');
-    expect(cookies.body).toContain('Bu site çerez kullanmıyor');
+    expect(cookies.body).toContain(
+      'İzin vermediğiniz sürece bu site çerez kullanmaz',
+    );
   });
 
   it('says the contact form stores nothing, which legal.dataRetention says too', () => {

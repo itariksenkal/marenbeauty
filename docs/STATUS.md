@@ -141,13 +141,14 @@ Add real, consented testimonials and the section appears, with
 
 ### Not a placeholder — deliberately absent
 
-| Absent            | Why                                                                     |
-| ----------------- | ----------------------------------------------------------------------- |
-| Street address    | Premises not finalised (C1). A guessed address sends someone to a door. |
-| Opening date      | None confirmed. The band says "yakında" and carries no year.            |
-| Prices            | Never published, by decision. Not now, not after launch.                |
-| Before/after      | Never, in any layout.                                                   |
-| Analytics backend | No Umami instance, no VPS, no DNS record (C5).                          |
+| Absent             | Why                                                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Street address     | Premises not finalised (C1). A guessed address sends someone to a door.                                              |
+| Opening date       | None confirmed. The band says "yakında" and carries no year.                                                         |
+| Prices             | Never published, by decision. Not now, not after launch.                                                             |
+| Before/after       | Never, in any layout.                                                                                                |
+| Analytics backend  | No Umami instance, no VPS, no DNS record (C5). Measurement now runs through GTM instead (C13).                       |
+| Container tag list | GTM-NP37MNW9 is live but its contents are configured outside this repo, so the cookie policy names no cookies (C13). |
 
 ---
 

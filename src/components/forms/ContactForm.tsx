@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useId, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 
 import { CONTACT_FIELDS, contactForm } from '@/config/forms';
 import type { ContactResult } from '@/config/forms';
+import { track } from '@/lib/analytics/events';
 import { cn } from '@/lib/cn';
 
 import { FormField, fieldClassName } from './FormField';
@@ -49,6 +50,33 @@ export function ContactForm({
 
   const fieldId = (name: string) => `${uid}-${name}`;
 
+  /**
+   * Which service was chosen, captured at submit so the outcome can be reported
+   * with it. Held in a ref because the form is `reset()` on success — by the
+   * time the result is known, the select no longer holds the answer.
+   */
+  const submittedService = useRef('');
+  const reportedResult = useRef<ContactResult | undefined>(undefined);
+
+  /**
+   * The outcome is reported HERE rather than in `onSubmit`, because `onSubmit`
+   * is the enhancement. With JavaScript disabled the browser posts the form
+   * itself and the page re-renders with `initialResult` from the query string —
+   * a real submission that never touches the handler. Watching `result` catches
+   * both paths with one effect, and the ref keeps a re-render from counting the
+   * same outcome twice.
+   */
+  useEffect(() => {
+    if (!result || result === reportedResult.current) return;
+    reportedResult.current = result;
+
+    if (result === 'success') {
+      track({ event: 'form_gonderildi', hizmet: submittedService.current });
+    } else {
+      track({ event: 'form_hatasi', alan_sayisi: invalid.length });
+    }
+  }, [result, invalid]);
+
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     // Everything below this line is the enhancement. Without it the browser
     // submits the form itself, which is a supported path, not a fallback.
@@ -61,6 +89,7 @@ export function ContactForm({
 
     const form = event.currentTarget;
     const data = new FormData(form);
+    submittedService.current = String(data.get(CONTACT_FIELDS.service) ?? '');
 
     const solution = await altcha.ensure();
     if (solution) data.set(CONTACT_FIELDS.altcha, solution);
