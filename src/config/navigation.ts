@@ -88,6 +88,15 @@ export const footerBrand = {
   contactHeading: 'İletişim',
   hoursHeading: 'Çalışma saatleri',
   socialHeading: 'Bizi takip edin',
+  /**
+   * Studio credit in the footer baseline. Label and href live here rather than
+   * in the component because CLAUDE.md §7 keeps every user-facing string and
+   * §18.4 keeps every URL out of components.
+   */
+  builtBy: {
+    label: 'HatsonTech tarafından geliştirildi',
+    href: 'https://hatsontech.com',
+  },
 } as const;
 
 export const siteName = site.name;
