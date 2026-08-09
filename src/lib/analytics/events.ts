@@ -31,8 +31,8 @@ import { isConsentGranted } from '@/lib/analytics/consent';
  * is still not done here. GTM replays the whole array when it loads, so a queue
  * built before a grant becomes data collected before consent and transmitted
  * after it — which is exactly the ordering KVKK is about, and exactly the
- * ordering docs/OPEN-QUESTIONS.md C6 exists to prevent. The banner says
- * "İzin vermezseniz hiçbir ölçüm başlamaz". This is what makes that true.
+ * ordering docs/OPEN-QUESTIONS.md C6 exists to prevent. The cookie policy says
+ * measurement starts only after consent. This is what makes that true.
  */
 declare global {
   interface Window {

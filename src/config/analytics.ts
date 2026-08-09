@@ -114,11 +114,29 @@ export type ConsentState = 'granted' | 'denied' | 'unset';
 
 /** Every user-facing string the gate needs (CLAUDE.md §7). */
 export const consentCopy = {
-  bannerHeading: 'Ölçümleme izni',
-  bannerBody:
-    'Sitenin nasıl kullanıldığını ölçmek için tanımlama bilgisi kullanmak istiyoruz. İzin vermezseniz hiçbir ölçüm başlamaz; site aynı şekilde çalışır.',
-  accept: 'İzin ver',
-  reject: 'İzin verme',
+  /*
+   * ── KEEP THIS SHORT ────────────────────────────────────────────────────────
+   *
+   * An earlier version read "Ölçümleme izni" over three lines explaining that
+   * nothing would happen if you declined and that the site would work anyway.
+   * Every sentence was true, and the whole thing still read like a legal
+   * disclaimer — a banner that protests its own innocence makes a visitor
+   * wonder what the problem is.
+   *
+   * A cookie notice is a small courtesy, not a defence. One sentence saying
+   * what is used and why, two plain buttons, and the policy page for anyone
+   * who wants the detail. The careful wording belongs there, where someone has
+   * chosen to read it.
+   *
+   * "iyileştirmek" is the obvious verb here and CANNOT be used: it is a
+   * blocking term in the content guard (CLAUDE.md §9). That is the guard doing
+   * its job — the word is a claim — so the sentence says what actually happens
+   * instead.
+   */
+  bannerHeading: 'Çerezler',
+  bannerBody: 'Siteyi nasıl kullandığınızı anlamak için çerez kullanıyoruz.',
+  accept: 'Kabul et',
+  reject: 'Reddet',
   policyLink: 'Çerez Politikası',
 
   preferencesHeading: 'Tercihiniz',
@@ -130,8 +148,8 @@ export const consentCopy = {
    */
   nothingToConsentTo:
     'Şu anda izin gerektiren bir araç kullanılmıyor. Site çerez yazmıyor, üçüncü taraf bir sunucuya istek göndermiyor. İzne bağlı bir ölçüm devreye alındığında bu bölümde seçiminizi yapabilecek ve istediğiniz zaman değiştirebileceksiniz.',
-  statusGranted: 'İzin verdiniz.',
-  statusDenied: 'İzin vermediniz.',
-  statusUnset: 'Henüz bir seçim yapmadınız. Varsayılan: izin verilmedi.',
+  statusGranted: 'Çerezleri kabul ettiniz.',
+  statusDenied: 'Çerezleri reddettiniz.',
+  statusUnset: 'Henüz bir seçim yapmadınız. Çerezler şu an kapalı.',
   change: 'Seçimi değiştir',
 } as const;
