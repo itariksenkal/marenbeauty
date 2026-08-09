@@ -153,9 +153,23 @@ export function SiteFooter() {
 
         {/* ── Baseline ──────────────────────────────────────────────────── */}
         <div className="mt-16 flex flex-col gap-4 border-t border-border-decor pt-8 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-text-muted">
-            © {year} {site.name}. {chrome.allRightsReserved}
-          </p>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-text-muted">
+              © {year} {site.name}. {chrome.allRightsReserved}
+            </p>
+            {/* Studio credit. An external link, so a plain anchor rather than
+                next/link, and dofollow — it is a genuine attribution. */}
+            <p className="text-sm text-text-muted">
+              <a
+                href={footerBrand.builtBy.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="duration-fast underline decoration-1 underline-offset-4 transition-colors hover:text-text-accent hover:decoration-2 focus-visible:focus-ring"
+              >
+                {footerBrand.builtBy.label}
+              </a>
+            </p>
+          </div>
           <nav aria-label={chrome.legalNavLabel}>
             <ul className="flex flex-wrap gap-x-6 gap-y-2">
               {legalNav.slice(0, 3).map((item) => (
