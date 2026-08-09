@@ -1524,6 +1524,113 @@ checkout and `NOTICE` stays byte-identical to the committed copy.
 Same family as the note in `.gitattributes` itself, which exists because a
 fresh Windows clone once broke `prettier --check` the same way.
 
+---
+
+### G36 — The opening lockup was clipped on every phone 🟢 → fixed 2026-08-09
+
+Reported from a real device: the opening screen read **"MARE"**, and the slogan
+sat half off the right edge.
+
+**Cause — a height class on a 3.35:1 lockup is a width.** `h-32` is 128px tall
+and therefore 429px wide. No phone has a 429px content column: 350px at 390px,
+320px at 360px, 280px at 320px. Measured at each of those widths, the mark was
+429px wide every time, starting at the left gutter and running past the right
+edge by 59–129px.
+
+**Why no test caught it.** The stage is `overflow-hidden`, so the overrun never
+reached the document scroll width. `no horizontal scroll at 320px` passed
+throughout — it was asserting the scrollbar, and the failure had no scrollbar.
+The letters were simply cut away.
+
+**The slogan compounded it.** It was centred on the name with
+`transform: translateX((c − 0.5) × 100%)`. A transform does not move the box,
+so a full-width paragraph shifted 16% right ends 16% outside the column. On
+desktop the column is narrower than the container and the overhang is invisible
+slack; on a phone the column IS the screen, so the sentence went over the edge
+with the mark.
+
+**Fix, in `src/app/page.tsx` only — no component and no token changed:**
+
+| Was                                   | Now                                    |
+| ------------------------------------- | -------------------------------------- |
+| `h-32 sm:h-40 lg:h-48`                | `w-full sm:h-40 sm:w-auto lg:h-48`     |
+| `mx-auto w-fit` column                | `mx-auto w-full sm:w-fit`              |
+| `transform: translateX((c−0.5)·100%)` | `padding-left: calc((c − 0.5) · 200%)` |
+
+Below `sm` the container gives the width and the aspect ratio picks the height,
+so the mark is whole at any width. Padding moves the **content** box rather
+than the painted box: it leaves the text between (2c−1)·W and W, whose centre
+is exactly c·W — the same optical centre the transform produced, and one that
+cannot leave the column at any width. Desktop geometry is unchanged, verified
+at 640/768/1024/1280px: still 536px and 643px, still centred on the name.
+
+**Now tested.** `tests/e2e/production/hero.spec.ts` asserts the mark's and the
+slogan's bounding boxes stay inside the viewport at 320, 360, 390 and 430px.
+Boxes, not the scrollbar — the old assertion could not see this class of bug.
+
+**One accepted seam:** at 639px the mark is 588px wide and at 640px it is 536px,
+because that is where the width-driven size hands over to `sm:h-40`. A 15px
+step in height at one breakpoint, on a width almost nothing reports.
+
+---
+
+### G37 — Every Turkish ş, ğ and İ was drawn in Times 🟢 → fixed 2026-08-09
+
+Found while checking G36 on a phone: the story line read **"yaklaŞım"**. Not a
+capital Ş — a lowercase ş from a **different typeface**, 55% wider than ours,
+sitting mid-word in a Fraunces sentence.
+
+**Cause — `adjustFontFallback`, which we never set and therefore never
+questioned.** next/font emits, alongside each face, a second family
+`"<name> Fallback"`: a local face re-metricked with `size-adjust` to cut
+layout shift. It is emitted with **no `unicode-range`**, so it matches every
+codepoint there is. Each `--font-*` variable expands to
+`<name>, "<name> Fallback"`, and `globals.css` composes the two subsets in
+order, so the display stack resolved to:
+
+```
+frauncesLatin, "frauncesLatin Fallback", frauncesLatinExt, "frauncesLatinExt Fallback", ui-serif, Georgia, serif
+```
+
+`ş` is excluded from `frauncesLatin` by its unicode-range. The browser moved to
+the next family — the unrestricted fallback — and **never reached
+`frauncesLatinExt`**. Measured at 200px: `ş` was 116.38px wide instead of
+75.11px, `ğ` 129.44 instead of 93.61, `Ş` 155.23 instead of 110.61. Same for
+Manrope, so body copy had it too. `ı ç ö ü` were always fine — they are in the
+**latin** range and never left the first face, which is why the fault read as
+"one broken letter" rather than "the fallback is winning".
+
+**Fix — one adjusted fallback per family, and it goes last.** The two _latin_
+faces now set `adjustFontFallback: false`; the _ext_ faces keep theirs:
+
+```
+frauncesLatin, frauncesLatinExt, "frauncesLatinExt Fallback", ui-serif, Georgia, serif
+```
+
+Nothing is given up. Both files are the same typeface, so the ext face's
+metrics are the family's metrics, and the shift-reducing fallback still exists
+— it simply sits after both real subsets, which is where a fallback belongs.
+
+**Why `npm run fonts` could not see it.** That gate decodes the shipped .woff2
+and asserts every Turkish codepoint is in the `cmap`. It was right: the glyph
+was there the whole time. **Coverage is not reachability.** A glyph can be
+present in a file the cascade never consults. The script stays as it is — it
+answers its own question correctly — and `tests/e2e/production/typography.spec.ts`
+now answers the other one, in a browser.
+
+**On the test itself:** `document.fonts.check()` cannot express either
+assertion, and both readings were tried before this landed. Against the whole
+stack it answers for the stack rather than the codepoint — it returns `false`
+whenever an unused `"… Fallback"` face is merely unloaded. Against a single
+family it returns `true` for a letter that family does not cover. So the test
+**measures rendered width**: each letter is drawn once with the real stack and
+once with a stack stripped to the subset faces, and the two must agree. A
+second test asserts the cascade's shape — no `"… Fallback"` may precede a
+subset face — which needs nothing loaded to be true. Both were confirmed to
+FAIL against the old configuration before being kept.
+
+---
+
 ## H. Content posture — standing rule
 
 **Recorded 2026-08-06. This is a working rule, not a question.** Also written

@@ -20,6 +20,35 @@ import localFont from 'next/font/local';
  *
  * Coverage is not assumed: `npm run fonts` decodes these .woff2 files and
  * asserts every required Turkish codepoint is in the cmap we ship.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ONLY THE LAST FACE OF EACH FAMILY CARRIES A METRIC FALLBACK, AND THAT IS
+ * LOAD-BEARING.
+ *
+ * `adjustFontFallback` makes next/font emit a second family — `"<name>
+ * Fallback"` — that re-metrics a local face to cut layout shift. It is
+ * emitted with NO `unicode-range`, so it matches every codepoint there is,
+ * and each variable expands to `<name>, "<name> Fallback"`. With it left on
+ * the latin face the display stack resolved to:
+ *
+ *   frauncesLatin, "frauncesLatin Fallback", frauncesLatinExt, …
+ *
+ * `ş` is excluded from `frauncesLatin` by its unicode-range, so the browser
+ * moved to the next family — the unrestricted FALLBACK — and never reached
+ * `frauncesLatinExt`. Every ş, ğ, İ, Ş and Ğ on the site was drawn in a
+ * re-metricked Times, mid-sentence, on a Turkish site. `document.fonts.check`
+ * reported it plainly: `false` for 'ş' against the display stack.
+ *
+ * This is exactly the failure `scripts/verify-fonts.mjs` was written to
+ * prevent, and that script could not see it: the glyph IS in the cmap we
+ * ship, and the cascade never asked for it. Coverage and reachability are two
+ * different properties. A browser test now pins the second one.
+ *
+ * So the latin faces set `adjustFontFallback: false` and the ext faces keep
+ * theirs. One adjusted fallback per family, sitting LAST, after both real
+ * subsets — which is where a fallback belongs. Nothing is lost: both files
+ * are the same typeface, so the ext face's metrics are the family's metrics.
+ * ─────────────────────────────────────────────────────────────────────────
  */
 
 const frauncesLatin = localFont({
@@ -27,6 +56,8 @@ const frauncesLatin = localFont({
   display: 'swap',
   weight: '300 700',
   style: 'normal',
+  // See the block above — this must stay `false`, or it shadows the ext face.
+  adjustFontFallback: false,
   variable: '--font-fraunces-latin',
   declarations: [
     {
@@ -57,6 +88,9 @@ const manropeLatin = localFont({
   display: 'swap',
   weight: '300 800',
   style: 'normal',
+  // See the block at the top — this must stay `false`, or it shadows the ext
+  // face and every Turkish ş, ğ and İ in body copy is drawn in Arial.
+  adjustFontFallback: false,
   variable: '--font-manrope-latin',
   declarations: [
     {
