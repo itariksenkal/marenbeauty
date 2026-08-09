@@ -402,6 +402,62 @@ describe('allowances', () => {
       }).filter((v) => v.tier === 'error').length,
     ).toBeGreaterThan(0);
   });
+
+  /**
+   * Regression, 2026-08-09 (docs/OPEN-QUESTIONS.md G34).
+   *
+   * The allowance used to be located with `line.toLowerCase().indexOf(phrase)`.
+   * Turkish `İ` (U+0130) lowercases to TWO code units — `i` plus a combining
+   * dot — so the lowercased copy has different indices from the line the match
+   * index came from, and the computed window slid by one per `İ` above it.
+   *
+   * Nothing about the allowed sentence changed; enough Turkish text simply
+   * landed above it, and an approved statutory quotation started failing the
+   * build. Caught when the KVKK page gained two paragraphs beginning "İzin".
+   */
+  it('locates the allowed phrase however much Turkish precedes it', () => {
+    const config = JSON.parse(
+      readFileSync(join(process.cwd(), 'scripts', 'guard.allow.json'), 'utf8'),
+    );
+    const allowances = config.allow;
+    const quoted =
+      '<li>Kanunun 7. maddesindeki şartlar çerçevesinde silinmesini veya yok edilmesini isteme</li>';
+
+    // One `İ` per repetition, so the old code drifted one character per line
+    // of preamble and the allowance stopped covering the match well before 20.
+    for (const count of [0, 1, 5, 20]) {
+      const preamble = '<p>İzin vermediğiniz sürece ölçüm başlamaz.</p>'.repeat(
+        count,
+      );
+      const errors = scanText(preamble + quoted, {
+        file: 'fixture',
+        ext: '.html',
+        allowances,
+      }).filter((v) => v.tier === 'error');
+      expect(
+        errors,
+        `broke with ${count} İ-bearing paragraph(s) above`,
+      ).toEqual([]);
+    }
+  });
+
+  it('covers every occurrence of the phrase, not merely the first', () => {
+    // A built page inlines its RSC payload after the markup, so the same
+    // sentence legitimately appears twice on one very long line.
+    const config = JSON.parse(
+      readFileSync(join(process.cwd(), 'scripts', 'guard.allow.json'), 'utf8'),
+    );
+    const quoted =
+      'Kanunun 7. maddesindeki şartlar çerçevesinde silinmesini veya yok edilmesini isteme';
+
+    expect(
+      scanText(`<li>${quoted}</li><script>{"children":"${quoted}"}</script>`, {
+        file: 'fixture',
+        ext: '.html',
+        allowances: config.allow,
+      }).filter((v) => v.tier === 'error'),
+    ).toEqual([]);
+  });
 });
 
 /* ── Whole-page fixtures ───────────────────────────────────────────────────── */

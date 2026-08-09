@@ -166,6 +166,14 @@ test.describe('header — scroll state', () => {
   });
 });
 
+/**
+ * Every locator here is `[data-mobile-drawer]`, not `[role="dialog"]`.
+ *
+ * Since C13 the consent banner is also a `role="dialog"`, so the bare role
+ * matched two elements and Playwright's strict mode failed the assertion rather
+ * than picking one. The attribute is what the drawer already carries to
+ * identify itself, and scoping to it says which dialog is meant.
+ */
 test.describe('header — mobile drawer', () => {
   test.use({ viewport: { width: 375, height: 720 } });
 
@@ -177,13 +185,13 @@ test.describe('header — mobile drawer', () => {
     await expect(toggle).toBeVisible();
 
     await toggle.click();
-    const drawer = page.locator('[role="dialog"]');
+    const drawer = page.locator('[data-mobile-drawer]');
     await expect(drawer).toHaveAttribute('aria-modal', 'true');
 
     // Focus moved into the drawer.
     const focusedInside = await page.evaluate(() =>
       document
-        .querySelector('[role="dialog"]')!
+        .querySelector('[data-mobile-drawer]')!
         .contains(document.activeElement),
     );
     expect(focusedInside).toBe(true);
@@ -195,7 +203,7 @@ test.describe('header — mobile drawer', () => {
     expect(
       await page.evaluate(() =>
         document
-          .querySelector('[role="dialog"]')!
+          .querySelector('[data-mobile-drawer]')!
           .contains(document.activeElement),
       ),
     ).toBe(true);
@@ -210,7 +218,7 @@ test.describe('header — mobile drawer', () => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Menüyü aç' }).click();
 
-    const drawer = page.locator('[role="dialog"]');
+    const drawer = page.locator('[data-mobile-drawer]');
     await drawer.getByRole('link', { name: 'Blog', exact: true }).click();
 
     await expect(page).toHaveURL(/\/blog$/);
@@ -222,7 +230,10 @@ test.describe('header — mobile drawer', () => {
     page,
   }) => {
     await page.goto('/');
-    await expect(page.locator('[role="dialog"]')).toHaveAttribute('inert', '');
+    await expect(page.locator('[data-mobile-drawer]')).toHaveAttribute(
+      'inert',
+      '',
+    );
   });
 
   test('the body does not scroll behind the open drawer', async ({ page }) => {

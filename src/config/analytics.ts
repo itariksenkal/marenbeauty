@@ -1,22 +1,30 @@
 /**
  * Analytics and consent.
  *
- * Two decisions drive this (docs/OPEN-QUESTIONS.md C5, C6):
+ * Three decisions drive this (docs/OPEN-QUESTIONS.md C5, C6, C13):
  *
- *   C5 — NO analytics backend is deployed at launch. No Umami instance, no VPS,
- *        no DNS record. There is no traffic to measure before the centre opens
- *        and a second server is real cost for zero return.
+ *   C5  — NO analytics backend is deployed. No Umami instance, no VPS, no DNS
+ *         record. Still true.
  *
- *   C6 — The consent gate ships LIVE at launch with every tag off. Advertising
- *        is expected within 12 months, and adding a gate after tracking has
- *        begun leaves a window of data collected without consent that cannot be
- *        fixed retroactively. This ordering is the only one that works.
+ *   C6  — The consent gate ships LIVE with every tag off. Advertising was
+ *         expected within 12 months, and adding a gate after tracking has begun
+ *         leaves a window of data collected without consent that cannot be
+ *         fixed retroactively. This ordering is the only one that works.
  *
- * While every flag is false: zero cookies, zero third-party requests, and the
- * adapter code is **absent from the production bundle** — verified by searching
- * the built chunks, not by reading the source.
+ *   C13 — 2026-08-09: **advertising is starting**, which is the condition C6 was
+ *         waiting for. Google Tag Manager is enabled, behind the gate C6 built.
+ *
+ * C13 changes WHICH tags exist, not the rule they obey. GTM loads only after an
+ * explicit grant, Consent Mode v2 still defaults to denied, and rejecting is
+ * still exactly as easy as accepting. The container is measurement, not a
+ * loophole: nothing in it can run before the visitor has said yes, because the
+ * loader element does not render until then.
+ *
+ * GA4 and the Meta Pixel stay `false` and stay out of the module graph. If they
+ * are ever wanted they belong INSIDE the container now, configured in the GTM
+ * console, rather than as a second script tag in this repository.
  */
-export type AnalyticsProvider = 'umami' | 'ga4' | 'meta-pixel';
+export type AnalyticsProvider = 'umami' | 'ga4' | 'meta-pixel' | 'gtm';
 
 export const analytics = {
   /**
@@ -28,10 +36,25 @@ export const analytics = {
    */
   umami: { enabled: false },
 
-  /** Requires opt-in consent. Off until advertising actually starts (C6). */
+  /**
+   * Google Tag Manager. Requires opt-in consent. **ON** since C13.
+   *
+   * The container ID lives here rather than in `env` — unlike
+   * `GA4_MEASUREMENT_ID`, which set the precedent — for one reason: an absent
+   * env var fails SILENTLY. `analytics.gtm.enabled && env.GTM_CONTAINER_ID`
+   * renders nothing when the variable is missing from the hosting dashboard, so
+   * a deploy that everyone believes is measuring measures nothing, and the only
+   * symptom is an empty report three weeks later. A container ID is public — it
+   * ships in the HTML by definition — so there is no secret to protect and no
+   * reason to accept that failure mode. CLAUDE.md §7 puts tunable values in
+   * `src/config/` anyway; this is one.
+   */
+  gtm: { enabled: true, containerId: 'GTM-NP37MNW9' },
+
+  /** Requires opt-in consent. Off — and now belongs inside the container (C13). */
   ga4: { enabled: false },
 
-  /** Requires opt-in consent. Off until advertising actually starts (C6). */
+  /** Requires opt-in consent. Off — and now belongs inside the container (C13). */
   metaPixel: { enabled: false },
 
   /**
@@ -45,26 +68,33 @@ export const analytics = {
 /**
  * True only when something would actually set a cookie or call a third party.
  *
- * **This is what decides whether the banner renders**, and it is false today.
- * A consent banner on a site that sets no cookies and calls nobody is not
- * caution — it is a dialogue asking permission for something that is not
- * happening, on a page whose cookie policy says in its first line that there
- * are no cookies. The two would contradict each other, and a visitor would be
- * right to trust neither.
+ * **This is what decides whether the banner renders.** It was false for the
+ * whole pre-launch period, deliberately: a consent banner on a site that sets
+ * no cookies and calls nobody is not caution — it is a dialogue asking
+ * permission for something that is not happening, on a page whose cookie policy
+ * opened by saying there are no cookies. The two would have contradicted each
+ * other, and a visitor would have been right to trust neither.
  *
- * The MACHINERY is live regardless: the store, the persisted choice, the
- * preferences panel on `/cerez-politikasi`, and the rule that every adapter
- * reads consent before it loads. Flipping `ga4.enabled` makes the banner
- * appear with no further change — which is C6 satisfied, without the theatre.
+ * It is TRUE now, because GTM is on (C13) and that is a real third party. The
+ * banner appeared the moment the flag flipped, with no component edit — which
+ * is the promise C6 made, kept.
+ *
+ * Umami is deliberately NOT in this list. It is cookieless and identifies
+ * nobody, so enabling it must not summon a banner.
  */
 export function requiresConsentBanner(): boolean {
-  return analytics.ga4.enabled || analytics.metaPixel.enabled;
+  return (
+    analytics.gtm.enabled ||
+    analytics.ga4.enabled ||
+    analytics.metaPixel.enabled
+  );
 }
 
-/** Providers currently switched on. Empty at launch, by decision. */
+/** Providers currently switched on. */
 export function activeProviders(): readonly AnalyticsProvider[] {
   const active: AnalyticsProvider[] = [];
   if (analytics.umami.enabled) active.push('umami');
+  if (analytics.gtm.enabled) active.push('gtm');
   if (analytics.ga4.enabled) active.push('ga4');
   if (analytics.metaPixel.enabled) active.push('meta-pixel');
   return active;
@@ -92,7 +122,12 @@ export const consentCopy = {
   policyLink: 'Çerez Politikası',
 
   preferencesHeading: 'Tercihiniz',
-  /** Shown while nothing on the site requires consent — which is today. */
+  /**
+   * Shown while nothing on the site requires consent. Unused since C13 turned
+   * GTM on, and deliberately kept: setting every tag back to `false` must
+   * restore the honest "there is nothing to agree to" panel with no copy to
+   * rewrite.
+   */
   nothingToConsentTo:
     'Şu anda izin gerektiren bir araç kullanılmıyor. Site çerez yazmıyor, üçüncü taraf bir sunucuya istek göndermiyor. İzne bağlı bir ölçüm devreye alındığında bu bölümde seçiminizi yapabilecek ve istediğiniz zaman değiştirebileceksiniz.',
   statusGranted: 'İzin verdiniz.',
