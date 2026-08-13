@@ -89,6 +89,18 @@ describe('exactly one tag is on, and it is gated', () => {
 describe('tracker code is absent from the build', () => {
   const chunks = join(ROOT, '.next');
 
+  /**
+   * Every assertion below reads the WHOLE build output, once per needle, and
+   * the blog tripled in size when Batch 2 landed — three dozen posts is three
+   * dozen more prerendered documents and RSC payloads to walk. The default 5s
+   * became a coin toss on a cold filesystem.
+   *
+   * This is headroom, not leniency: the assertions are unchanged, and a
+   * genuine hit still fails. Narrowing the walk instead would be the real
+   * weakening — the point is that the tracker is absent EVERYWHERE.
+   */
+  const WALK_TIMEOUT_MS = 30_000;
+
   const filesContaining = (
     needle: string,
     extensions = /\.(js|json|html|rsc)$/,
@@ -118,6 +130,7 @@ describe('tracker code is absent from the build', () => {
       if (hits === null) return;
       expect(hits).toEqual([]);
     },
+    WALK_TIMEOUT_MS,
   );
 
   /**
@@ -131,19 +144,27 @@ describe('tracker code is absent from the build', () => {
    * between the two assertions below is the gate, expressed as a fact about
    * build output rather than a claim about a component.
    */
-  it('keeps the container out of every server-rendered document', () => {
-    const hits = filesContaining('googletagmanager', /\.(html|rsc)$/);
-    if (hits === null) return;
-    expect(hits).toEqual([]);
-  });
+  it(
+    'keeps the container out of every server-rendered document',
+    () => {
+      const hits = filesContaining('googletagmanager', /\.(html|rsc)$/);
+      if (hits === null) return;
+      expect(hits).toEqual([]);
+    },
+    WALK_TIMEOUT_MS,
+  );
 
-  it('does ship the container in client JavaScript, so it is really wired', () => {
-    // The other half. Without this, deleting the adapter would make the test
-    // above pass perfectly while measuring nothing at all.
-    const hits = filesContaining('googletagmanager', /\.js$/);
-    if (hits === null) return;
-    expect(hits.length).toBeGreaterThan(0);
-  });
+  it(
+    'does ship the container in client JavaScript, so it is really wired',
+    () => {
+      // The other half. Without this, deleting the adapter would make the test
+      // above pass perfectly while measuring nothing at all.
+      const hits = filesContaining('googletagmanager', /\.js$/);
+      if (hits === null) return;
+      expect(hits.length).toBeGreaterThan(0);
+    },
+    WALK_TIMEOUT_MS,
+  );
 
   /**
    * The reason the two advertising adapters are not imported at all.

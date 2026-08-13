@@ -1,3 +1,6 @@
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { expect, test } from '@playwright/test';
 
 /**
@@ -46,7 +49,14 @@ test.describe('the RSS feed', () => {
     expect(response.headers()['content-type']).toContain('application/rss+xml');
 
     const xml = await response.text();
-    expect((xml.match(/<item>/g) ?? []).length).toBe(12);
+    // "Every published post" — asserted against the collection on disk rather
+    // than a literal, because a feed that silently drops a post is the failure
+    // worth catching, and a hand-maintained count only catches it by accident.
+    const published = readdirSync(
+      join(process.cwd(), 'content', 'blog'),
+    ).filter((file) => file.endsWith('.mdx')).length;
+    expect(published).toBeGreaterThan(0);
+    expect((xml.match(/<item>/g) ?? []).length).toBe(published);
 
     // Every link is absolute and points at production, never at the test host.
     for (const link of xml.match(/<link>([^<]+)<\/link>/g) ?? []) {

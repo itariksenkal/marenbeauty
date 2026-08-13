@@ -236,12 +236,11 @@ test.describe('service detail', () => {
     await expect(first).toHaveAttribute('open', '');
   });
 
-  test('both related blocks render now that Batch 1 exists', async ({
+  test('both related blocks render now that the blog exists', async ({
     page,
   }) => {
     // Until M10 the posts block was absent, and that absence was the
-    // assertion. Twelve posts later it renders — for the twelve services a
-    // Batch 1 post maps to.
+    // assertion. It renders now, and links the service to its own editorial.
     await page.goto('/hizmetler/cilt-bakimi');
     await expect(
       page.getByRole('heading', { name: 'İlgili hizmetler' }),
@@ -254,15 +253,19 @@ test.describe('service detail', () => {
     ).toBeVisible();
   });
 
-  test('a service with no Batch 1 post shows no posts block', async ({
+  test('the service Batch 2 was written for now carries its own post', async ({
     page,
   }) => {
-    // `bb-glow` is Batch 2. Absence, not an empty heading — the same rule the
-    // block followed when nothing at all was published.
+    // `bb-glow` was the standing example of a service with no editorial, and
+    // this test asserted the block's ABSENCE. Batch 2 closed that gap for all
+    // eight uncovered services, so the assertion inverts: the block is there,
+    // and it points at the post written for this service rather than at a
+    // generic list.
     await page.goto('/hizmetler/bb-glow');
-    expect(
-      await page.getByRole('heading', { name: 'İlgili yazılar' }).count(),
-    ).toBe(0);
+    await expect(
+      page.getByRole('heading', { name: 'İlgili yazılar' }),
+    ).toBeVisible();
+    await expect(page.locator('a[href="/blog/bb-glow-nedir"]')).toBeVisible();
   });
 
   test('heading levels do not skip', async ({ page }) => {

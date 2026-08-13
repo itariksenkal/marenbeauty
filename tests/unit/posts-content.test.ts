@@ -15,22 +15,28 @@ import {
 } from '@/content-layer';
 
 /**
- * M10 — Batch 1, the twelve posts.
+ * M10 — the published blog: Batch 1's twelve posts and Batch 2's twenty-four.
  *
  * The copy rules are the hard part here and they are checked three ways: the
  * real guard rules run over each file, a numeric-claim sweep looks for the
  * things the guard does not know about (session counts, invented sourcing), and
  * the plan itself is pinned as a literal so a post cannot quietly drift onto a
  * different keyword or service.
+ *
+ * Batch 2 deliberately gives some services more than one post: a service's
+ * explainer, its prep/aftercare piece and a seasonal angle answer three
+ * different search intents. That invalidates Batch 1's "one post per service"
+ * assertion, which is replaced below by the rule the plan actually wants —
+ * every service carries editorial, and none is over-served.
  */
 
 const posts = getAllPosts();
 const services = getAllServices();
 
+type PlannedPost = { keyword: string; service: string; category: string };
+
 /** docs/CONTENT-PLAN.md §4, Batch 1 — copied from the plan, not derived. */
-const BATCH_1: Readonly<
-  Record<string, { keyword: string; service: string; category: string }>
-> = {
+const BATCH_1: Readonly<Record<string, PlannedPost>> = {
   'lazer-epilasyon-nedir': {
     keyword: 'lazer epilasyon nedir',
     service: 'lazer-epilasyon',
@@ -93,6 +99,150 @@ const BATCH_1: Readonly<
   },
 };
 
+/**
+ * Batch 2 — the twenty-four posts of the keyword plan, §5.1.
+ *
+ * Copied from the plan by hand rather than derived from the files, for the same
+ * reason BATCH_1 is: a derived list asserts that the content agrees with
+ * itself, which is never false. This one asserts it agrees with the plan.
+ */
+const BATCH_2: Readonly<Record<string, PlannedPost>> = {
+  'bb-glow-nedir': {
+    keyword: 'bb glow nedir',
+    service: 'bb-glow',
+    category: 'cilt-yenileme-rehberi',
+  },
+  'karbon-peeling-nedir': {
+    keyword: 'karbon peeling nedir',
+    service: 'karbon-peeling',
+    category: 'cilt-yenileme-rehberi',
+  },
+  'kolajen-bakimi-nedir': {
+    keyword: 'kolajen bakımı nedir',
+    service: 'kolajen-bakimi',
+    category: 'cilt-bakimi-rehberi',
+  },
+  'hucre-yenileme-bakimi-nedir': {
+    keyword: 'hücre yenileme bakımı',
+    service: 'hucre-yenileme',
+    category: 'cilt-yenileme-rehberi',
+  },
+  'gozenek-gorunumu-neden-belirginlesir': {
+    keyword: 'gözenek görünümü',
+    service: 'gozenek-sikilastirma',
+    category: 'cilt-ihtiyaclari',
+  },
+  'hassas-ciltte-bakim-yaklasimi': {
+    keyword: 'hassas cilt bakımı',
+    service: 'hassas-cilt-bakimi',
+    category: 'cilt-ihtiyaclari',
+  },
+  'cilt-nemi-neden-azalir': {
+    keyword: 'cilt nemi neden azalır',
+    service: 'nemlendirme-bakimi',
+    category: 'cilt-ihtiyaclari',
+  },
+  'yaslanma-karsiti-bakim-nedir': {
+    keyword: 'yaşlanma karşıtı bakım',
+    service: 'yaslanma-karsiti-bakim',
+    category: 'cilt-ihtiyaclari',
+  },
+  'peeling-cesitleri-nasil-ayrilir': {
+    keyword: 'peeling çeşitleri',
+    service: 'kimyasal-peeling',
+    category: 'cilt-yenileme-rehberi',
+  },
+  'microblading-mi-pudra-kas-mi': {
+    keyword: 'microblading mi pudra kaş mı',
+    service: 'microblading',
+    category: 'kas-kirpik-rehberi',
+  },
+  'kalici-makyaj-mi-kas-tasarimi-mi': {
+    keyword: 'kaş tasarımı mı kalıcı makyaj mı',
+    service: 'kas-tasarimi',
+    category: 'kas-kirpik-rehberi',
+  },
+  'evde-bakim-ile-merkez-bakimi': {
+    keyword: 'evde cilt bakımı merkez farkı',
+    service: 'cilt-bakimi',
+    category: 'cilt-bakimi-rehberi',
+  },
+  'yaz-gunesi-ve-leke-gorunumu': {
+    keyword: 'yaz sonrası cilt lekesi',
+    service: 'leke-bakimi',
+    category: 'ozel-gun-ve-mevsim',
+  },
+  'kis-aylarinda-cilt-nemi': {
+    keyword: 'kışın cilt kuruluğu',
+    service: 'nemlendirme-bakimi',
+    category: 'ozel-gun-ve-mevsim',
+  },
+  'mevsim-gecisinde-rutini-sadelestirmek': {
+    keyword: 'mevsim geçişinde cilt bakımı',
+    service: 'cilt-bakimi',
+    category: 'ozel-gun-ve-mevsim',
+  },
+  'yogun-sezonda-hazirlik-planlamak': {
+    keyword: 'düğün sezonu bakım planı',
+    service: 'gelin-bakim-paketi',
+    category: 'ozel-gun-ve-mevsim',
+  },
+  'lazer-epilasyon-oncesi-ve-sonrasi': {
+    keyword: 'lazer epilasyon öncesi ne yapılmalı',
+    service: 'lazer-epilasyon',
+    category: 'epilasyon-rehberi',
+  },
+  'dermapen-oncesi-ve-sonrasi': {
+    keyword: 'dermapen sonrası bakım',
+    service: 'dermapen',
+    category: 'cilt-yenileme-rehberi',
+  },
+  'kalici-makyaj-oncesi-bilinmesi-gerekenler': {
+    keyword: 'kalıcı makyaj öncesi',
+    service: 'kalici-makyaj',
+    category: 'kas-kirpik-rehberi',
+  },
+  'kirpik-lifting-sonrasi-bakim': {
+    keyword: 'kirpik lifting sonrası bakım',
+    service: 'kirpik-lifting',
+    category: 'kas-kirpik-rehberi',
+  },
+  'cilt-tipi-nasil-anlasilir': {
+    keyword: 'cilt tipi nasıl anlaşılır',
+    service: 'cilt-bakimi',
+    category: 'cilt-bakimi-rehberi',
+  },
+  'cilt-bariyeri-ve-nazik-rutin': {
+    keyword: 'cilt bariyeri nedir',
+    service: 'hassas-cilt-bakimi',
+    category: 'cilt-ihtiyaclari',
+  },
+  'icerik-okuma-rehberi': {
+    keyword: 'retinol niasinamid birlikte kullanımı',
+    service: 'hucre-yenileme',
+    category: 'cilt-bakimi-rehberi',
+  },
+  'bakim-vaatlerini-okumak': {
+    keyword: 'cilt bakımı doğru bilinen yanlışlar',
+    service: 'cilt-bakimi',
+    category: 'cilt-bakimi-rehberi',
+  },
+};
+
+/** Everything published. Both literals, merged in one place. */
+const PLANNED: Readonly<Record<string, PlannedPost>> = {
+  ...BATCH_1,
+  ...BATCH_2,
+};
+
+/**
+ * The most posts any one service may carry.
+ *
+ * Not a style preference: past this, a cluster stops being supporting editorial
+ * and starts competing with its own service page for the same query.
+ */
+const MAX_POSTS_PER_SERVICE = 5;
+
 const each = posts.map((post) => [post.slug, post] as const);
 
 /** Body prose with markdown syntax removed, for word counts. */
@@ -123,26 +273,56 @@ const linksIn = (post: Post, prefix: string) => [
 
 /* ── The inventory ────────────────────────────────────────────────────────── */
 
-describe('Batch 1', () => {
-  it('is exactly the twelve planned posts', () => {
+describe('the published batches', () => {
+  it('is exactly the planned set — both batches, nothing else', () => {
     expect(posts.map((p) => p.slug).sort()).toEqual(
-      Object.keys(BATCH_1).sort(),
+      Object.keys(PLANNED).sort(),
     );
+  });
+
+  it('publishes both batches in full', () => {
+    const slugs = new Set(posts.map((p) => p.slug));
+    for (const slug of Object.keys(BATCH_1))
+      expect(slugs.has(slug), slug).toBe(true);
+    for (const slug of Object.keys(BATCH_2))
+      expect(slugs.has(slug), slug).toBe(true);
   });
 
   it.each(each)(
     '%s carries its planned keyword, service and category',
     (slug, post) => {
-      const planned = BATCH_1[slug]!;
+      const planned = PLANNED[slug]!;
       expect(post.keyword).toBe(planned.keyword);
       expect(post.service).toBe(planned.service);
       expect(post.category).toBe(planned.category);
     },
   );
 
-  it('maps to twelve DISTINCT services — one post per service', () => {
-    const mapped = posts.map((p) => p.service);
-    expect(new Set(mapped).size).toBe(posts.length);
+  it('gives EVERY service editorial coverage', () => {
+    // Batch 1 mapped one post to each of twelve services; Batch 2 closes the
+    // gap on the remaining eight. The assertion is coverage, not arithmetic —
+    // it keeps holding when a twenty-first service is added.
+    const covered = new Set(posts.map((p) => p.service));
+    for (const service of services) {
+      expect(covered.has(service.slug), service.slug).toBe(true);
+    }
+  });
+
+  it('over-serves no single service', () => {
+    const perService = new Map<string, number>();
+    for (const post of posts) {
+      perService.set(post.service, (perService.get(post.service) ?? 0) + 1);
+    }
+    for (const [service, count] of perService) {
+      expect(count, service).toBeLessThanOrEqual(MAX_POSTS_PER_SERVICE);
+    }
+  });
+
+  it('targets a distinct keyword per post', () => {
+    // Two posts on one service is deliberate; two posts on one QUERY is
+    // cannibalisation, and that is what this catches.
+    const keywords = posts.map((p) => p.keyword);
+    expect(new Set(keywords).size).toBe(posts.length);
   });
 
   it('every mapped service exists and shows the post on its hub', () => {
@@ -171,7 +351,7 @@ describe('Batch 1', () => {
     }
   });
 
-  it('publishes all twelve — none left as a draft', () => {
+  it('publishes every one of them — none left as a draft', () => {
     for (const post of posts) {
       expect(post.draft, post.slug).toBe(false);
     }
@@ -261,10 +441,10 @@ describe('structure', () => {
     expect((post.body.match(/^## /gm) ?? []).length).toBeGreaterThanOrEqual(3);
   });
 
-  it('the twelve are not all the same length', () => {
-    // Twelve posts written in one pass drift toward one rhythm, and that
-    // sameness is the clearest signal of machine-written content. This is a
-    // blunt check on the most measurable dimension of it.
+  it('they are not all the same length', () => {
+    // Posts written in one pass drift toward one rhythm, and that sameness is
+    // the clearest signal of machine-written content. This is a blunt check on
+    // the most measurable dimension of it.
     const counts = posts.map(bodyWords);
     const spread = Math.max(...counts) - Math.min(...counts);
     // Broad topics (lazer epilasyon, kalıcı makyaj, leke, gelin) run long;
@@ -272,7 +452,7 @@ describe('structure', () => {
     expect(spread).toBeGreaterThan(150);
   });
 
-  it('the twelve do not all share one section count', () => {
+  it('they do not all share one section count', () => {
     const sections = posts.map(
       (post) => (post.body.match(/^## /gm) ?? []).length,
     );
@@ -328,7 +508,7 @@ describe('internal links', () => {
     }
   });
 
-  it('related posts resolve for all twelve and exclude the post itself', () => {
+  it('related posts resolve for every post and exclude the post itself', () => {
     for (const post of posts) {
       const related = getRelatedPosts(post, 3);
       expect(related.length, post.slug).toBeGreaterThan(0);
@@ -341,7 +521,7 @@ describe('internal links', () => {
 
 describe('the cosmetic disclaimer', () => {
   it('lives in exactly one place and is not copied into the content', () => {
-    // Twelve copies of a compliance sentence is twelve chances to drift.
+    // A copy of a compliance sentence per post is a chance to drift per post.
     for (const post of posts) {
       expect(post.body, post.slug).not.toContain(COSMETIC_DISCLAIMER);
     }

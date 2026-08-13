@@ -8,6 +8,7 @@ import { compileMdxBody } from '@/content-layer/mdx';
 import { checkIntegrity, assertIntegrity } from '@/content-layer/integrity';
 import { parseFrontmatter, type RawDoc } from '@/content-layer/load';
 import {
+  BLOG_CATEGORIES,
   postFrontmatterSchema,
   serviceFrontmatterSchema,
   type Post,
@@ -543,18 +544,34 @@ describe('query API', () => {
     expect(getServicesByGroup('ozel-paket')).toHaveLength(1);
   });
 
-  it('loads Batch 1 — twelve published posts', () => {
-    expect(getAllPosts()).toHaveLength(12);
+  it('loads both batches — every published post, once', () => {
+    // One count, derived from the files on disk, so this test measures the
+    // loader rather than restating a number the content plan owns. That the
+    // set is exactly the planned one is asserted in posts-content.test.ts.
+    const onDisk = readdirSync(join(process.cwd(), 'content', 'blog')).filter(
+      (file) => file.endsWith('.mdx'),
+    ).length;
+    expect(getAllPosts()).toHaveLength(onDisk);
+    expect(getAllSlugs('blog')).toHaveLength(onDisk);
     expect(getPostBySlug('lazer-epilasyon-nedir')).not.toBeNull();
     expect(getPostBySlug('herhangi-bir-yazi')).toBeNull();
-    expect(getAllSlugs('blog')).toHaveLength(12);
   });
 
   it('filters by service and category', () => {
-    expect(getPostsByService('cilt-bakimi')).toHaveLength(1);
-    expect(getPostsByService('bb-glow')).toEqual([]); // Batch 2
-    expect(getPostsByCategory('kas-kirpik-rehberi')).toHaveLength(4);
-    expect(getPostsByCategory('epilasyon-rehberi')).toHaveLength(1);
+    // Batch 2 gives some services more than one post on purpose, so these are
+    // "at least one" rather than exact counts — except the total, which must
+    // still partition cleanly across the six categories.
+    expect(getPostsByService('cilt-bakimi').length).toBeGreaterThan(1);
+    expect(getPostsByService('bb-glow')).toHaveLength(1); // was empty pre-Batch 2
+    expect(getPostsByService('yok-boyle-bir-hizmet')).toEqual([]);
+    for (const category of BLOG_CATEGORIES) {
+      expect(getPostsByCategory(category).length, category).toBeGreaterThan(0);
+    }
+    const perCategory = BLOG_CATEGORIES.reduce(
+      (total, category) => total + getPostsByCategory(category).length,
+      0,
+    );
+    expect(perCategory).toBe(getAllPosts().length);
   });
 
   it('related posts exclude the post itself and prefer the same category', () => {
